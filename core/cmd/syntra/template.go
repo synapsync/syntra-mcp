@@ -28,6 +28,9 @@ func printTemplate(kind, workspace, project, account string, ticket *v1.Ticket) 
 		if ticket == nil {
 			return errors.New("--ticket is required for a reply template")
 		}
+		if err := toolclient.CheckReplyState(ticket); err != nil {
+			return err
+		}
 		content["existingTicketId"] = ticket.Id
 		content["title"] = ticket.Title
 		request["expectedTicketRevision"] = ticket.Revision

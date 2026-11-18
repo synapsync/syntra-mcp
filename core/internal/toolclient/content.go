@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"connectrpc.com/connect"
@@ -14,6 +15,7 @@ import (
 
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	ci "syntra.local/mcp/internal/contentintegrity"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 )
 
 type attempt struct {
@@ -95,6 +97,15 @@ func (a *App) base(id string) (*v1.AuthoredContentSnapshot, error) {
 // Prepare permits new private content; replacement requires an exact retained
 // base. No name lookup, invitations, publication or lifecycle action is implicit.
 func (a *App) Prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID string) (*v1.AuthoredContentSnapshot, error) {
+	return a.prepare(ctx, in, baseID, nil)
+}
+
+// PrepareReply reuses the ticket just read to construct the CLI reply request.
+func (a *App) PrepareReply(ctx context.Context, in *v1.PrepareContentRequest, ticket *v1.Ticket) (*v1.AuthoredContentSnapshot, error) {
+	return a.prepare(ctx, in, "", ticket)
+}
+
+func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID string, ticket *v1.Ticket) (*v1.AuthoredContentSnapshot, error) {
 	if err := checkPreparePlaceholders(in); err != nil {
 		return nil, err
 	}
@@ -129,11 +140,19 @@ func (a *App) Prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 			return nil, e
 		}
 		x, e := expectation(s)
-		if e != nil || !proto.Equal(x, r.Update) || ci.ValidatePrepareUpdate(r, s.Content, a.profile.AccountID) != nil {
+		if e != nil || !proto.Equal(x, r.Update) {
 			return nil, ci.ErrIntegrity
+		}
+		if e = ci.ValidatePrepareUpdate(r, s.Content, a.profile.AccountID); e != nil {
+			return nil, draftValidationError(e)
 		}
 	} else if baseID != "" {
 		return nil, ci.ErrWire
+	}
+	if r.Content.ExistingTicketId != nil && slices.Contains(a.profile.Config.Capabilities, methodCap("prepare")) {
+		if err := a.preflightReply(ctx, r, ticket); err != nil {
+			return nil, err
+		}
 	}
 	return a.executeNew(ctx, "prepare", r, r.Content, r.RequestId, baseID)
 }
@@ -156,8 +175,11 @@ func (a *App) Link(ctx context.Context, in *v1.LinkContentRequest, baseID string
 		return nil, e
 	}
 	x, e := expectation(s)
-	if e != nil || !proto.Equal(x, r.Current) || ci.ValidateLink(r, s.Content, a.profile.AccountID) != nil {
+	if e != nil || !proto.Equal(x, r.Current) {
 		return nil, ci.ErrIntegrity
+	}
+	if e = ci.ValidateLink(r, s.Content, a.profile.AccountID); e != nil {
+		return nil, draftValidationError(e)
 	}
 	return a.executeNew(ctx, "link", r, r.LinkedContent, r.RequestId, baseID)
 }
@@ -183,8 +205,11 @@ func (a *App) Publish(ctx context.Context, in *v1.PublishContentRequest, baseID 
 		return nil, e
 	}
 	x, e := expectation(s)
-	if e != nil || !proto.Equal(x, r.Current) || ci.ValidatePublish(r, s.Content, a.profile.AccountID) != nil {
+	if e != nil || !proto.Equal(x, r.Current) || ci.ValidatePublishBinding(r, s.Content, a.profile.AccountID) != nil {
 		return nil, ci.ErrIntegrity
+	}
+	if s.Content.Destination.GetLinkedMemberId() == "" {
+		return nil, actionable.New(actionable.RecipientNotLinked)
 	}
 	return a.executeNew(ctx, "publish", r, s.Content, r.RequestId, baseID)
 }
@@ -206,10 +231,17 @@ func (a *App) executeNew(ctx context.Context, method string, req proto.Message, 
 		return nil, e
 	}
 	if e = a.store.retain("attempt", id, raw); e != nil {
+		if errors.Is(e, errRetainedConflict) {
+			return nil, actionable.New(actionable.RequestIDConflict)
+		}
 		return nil, e
 	}
 	result, err := a.Retry(ctx, id)
 	if err != nil {
+		var reason *actionable.Error
+		if errors.As(err, &reason) {
+			return nil, fmt.Errorf("%w (retained request %s)", err, id)
+		}
 		return nil, fmt.Errorf("retained request %s: %w", id, err)
 	}
 	return result, nil
@@ -279,19 +311,19 @@ func (a *App) Retry(ctx context.Context, id string) (*v1.AuthoredContentSnapshot
 	case *v1.PrepareContentRequest:
 		res, e := a.content().PrepareContent(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 		if e != nil {
-			return nil, SafeRPCError(e)
+			return nil, safeAuthoredRPCError(e)
 		}
 		s = res.Msg.Snapshot
 	case *v1.LinkContentRequest:
 		res, e := a.content().LinkContent(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 		if e != nil {
-			return nil, SafeRPCError(e)
+			return nil, safeAuthoredRPCError(e)
 		}
 		s = res.Msg.Snapshot
 	case *v1.PublishContentRequest:
 		res, e := a.content().PublishContent(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 		if e != nil {
-			return nil, SafeRPCError(e)
+			return nil, safeAuthoredRPCError(e)
 		}
 		s = res.Msg.Snapshot
 	}
@@ -324,7 +356,7 @@ func (a *App) Snapshot(ctx context.Context, r *v1.GetContentSnapshotRequest, anc
 	}
 	res, e := a.content().GetContentSnapshot(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 	if e != nil {
-		return nil, SafeRPCError(e)
+		return nil, safeAuthoredRPCError(e)
 	}
 	if l := res.Msg.GetLegacy(); l != nil {
 		if local != nil || l.Ticket == nil || l.Ticket.Id != r.TicketId || l.Ticket.WorkspaceId != r.WorkspaceId {
@@ -358,4 +390,19 @@ func (a *App) Snapshot(ctx context.Context, r *v1.GetContentSnapshotRequest, anc
 		mode = "retained-client-expectation"
 	}
 	return &VerifiedSnapshot{Verification: mode, Snapshot: s}, nil
+}
+
+func safeAuthoredRPCError(err error) error {
+	if public := actionable.FromConnect(err); public != nil {
+		return public
+	}
+	return SafeRPCError(err)
+}
+
+func draftValidationError(err error) error {
+	var reason *actionable.Error
+	if errors.As(err, &reason) {
+		return reason
+	}
+	return ci.ErrIntegrity
 }

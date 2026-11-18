@@ -28,6 +28,8 @@ func (s *Store) readRecord(name string) ([]byte, error) {
 	return raw, nil
 }
 
+var errRetainedConflict = errors.New("retained record differs; explicit recovery required")
+
 func (s *Store) writeOnce(name string, raw []byte) error {
 	return s.writeOnceWithSync(name, raw, s.syncDir)
 }
@@ -49,7 +51,7 @@ func (s *Store) writeOnceWithHooks(name string, raw []byte, beforeRename func() 
 	old, err := s.readRecord(name)
 	if err == nil {
 		if !bytes.Equal(old, raw) {
-			return errors.New("retained record differs; explicit recovery required")
+			return errRetainedConflict
 		}
 		if syncDir() != nil {
 			return ErrProfile

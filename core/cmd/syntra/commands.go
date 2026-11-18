@@ -239,7 +239,12 @@ func runContent(parent context.Context, args []string) error {
 		}
 		message, e = app.Messages(ctx, *workspace, *ticket, v)
 	case "ticket":
-		message, e = app.Ticket(ctx, *workspace, *ticket)
+		var t *v1.Ticket
+		t, e = app.Ticket(ctx, *workspace, *ticket)
+		if e == nil && t.State == v1.TicketState_TICKET_STATE_CLOSED {
+			fmt.Fprintln(os.Stderr, "Closed tickets accept no replies until a person reopens the ticket in the Syntra web app.")
+		}
+		message = t
 	case "resolve":
 		result, e = app.Resolve(ctx, toolclient.Selection{Workspace: *workspace, Project: *project, Team: *team, Recipient: *recipient})
 	case "retry":

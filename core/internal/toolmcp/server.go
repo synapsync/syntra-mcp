@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	ci "syntra.local/mcp/internal/contentintegrity"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 	"syntra.local/mcp/internal/toolclient"
 )
 
@@ -193,7 +194,8 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 			name := strings.TrimPrefix(missingCapability.Required.String(), "TOOL_CAPABILITY_")
 			return toolError("Syntra connection lacks " + name + " permission. Run syntra status in a terminal on this machine using the same profile as the MCP. Use the profile from a login that has " + name + ", or authorize a separate connection with that permission.")
 		}
-		if errors.Is(e, ci.ErrWire) || errors.Is(e, ci.ErrIntegrity) {
+		var reason *actionable.Error
+		if errors.As(e, &reason) || errors.Is(e, ci.ErrWire) || errors.Is(e, ci.ErrIntegrity) {
 			return toolError(e.Error())
 		}
 		return toolError("operation rejected or response could not be verified; no rollback is implied; reuse the same requestId for exact retry")
