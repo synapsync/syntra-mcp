@@ -698,9 +698,12 @@ function previewJsonRegistration(config, plan, before) {
   let proposedText;
   if (replacement) {
     const node = jsonc.findNodeAtLocation(before.tree, plan.registrationPath);
-    const value = serializeJsonValue(plan.registration, !/[\r\n]/.test(config.text.slice(node.offset, node.offset + node.length)),
-      indentationAt(config.text, node.parent.offset), jsonLineEnding(config.text));
-    proposedText = config.text.slice(0, node.offset) + value + config.text.slice(node.offset + node.length);
+    const indent = indentationAt(config.text, node.parent.offset);
+    const inline = !indent && !/[\r\n]/.test(config.text.slice(node.offset, node.offset + node.length));
+    const value = serializeJsonValue(plan.registration, inline, indent || '  '.repeat(plan.registrationPath.length),
+      jsonLineEnding(config.text));
+    proposedText = finishWithNewline(config.text.slice(0, node.offset) + value + config.text.slice(node.offset + node.length),
+      jsonLineEnding(config.text));
   } else {
     proposedText = computeJsonCandidate(config.text, plan.registrationPath, plan.registration, plan.format, before.tree);
   }
@@ -739,31 +742,88 @@ function normalizeTomlValue(value) {
   return normalized;
 }
 
+function tomlLineEnding(text) {
+  return text.includes('\r\n') && !text.replace(/\r\n/g, '').includes('\n') ? '\r\n' : '\n';
+}
+
+function finishWithNewline(text, eol) {
+  let end = text.length;
+  while (end > 0 && ' \t\r\n'.includes(text[end - 1])) end -= 1;
+  return text.slice(0, end) + eol;
+}
+
 function computeTomlCandidate(text, snippet) {
-  const remainder = text.replace(/\r\n/g, '');
-  const lineEnding = text.includes('\r\n') && !remainder.includes('\n') ? '\r\n' : '\n';
-  const separator = !text ? '' : (text.endsWith('\n') || text.endsWith('\r') ? '' : lineEnding);
-  const formattedSnippet = snippet.replace(/\r\n|\n/g, lineEnding);
-  return `${text}${separator}${formattedSnippet}`;
+  const eol = tomlLineEnding(text);
+  const prefix = /[^ \t\r\n]/.test(text) ? finishWithNewline(text, eol) + eol : '';
+  return prefix + finishWithNewline(snippet.replace(/\r?\n/g, eol), eol);
 }
 
 function replaceTomlRegistration(text, plan, statements, inlineValues) {
-  const owned = statements.filter(({ keys }) =>
-    plan.registrationPath.every((segment, index) => keys[index] === segment));
+  const keys = plan.registrationPath;
+  const owned = statements.filter(statement =>
+    keys.every((segment, index) => statement.keys[index] === segment));
+  const value = `{ command = ${tomlValue(plan.registration.command)}, args = ${tomlValue(plan.registration.args)} }`;
+  const eol = tomlLineEnding(text);
+
+  // An inline table can share its line with other servers. Edit only its value.
+  const inline = owned.find(statement => statement.keys.length === keys.length && statement.valueStart !== undefined);
+  if (inline) {
+    return finishWithNewline(text.slice(0, inline.valueStart) + value + text.slice(inline.end), eol);
+  }
   if (!owned.length) {
-    const [parentKey, entryKey] = plan.registrationPath;
-    const parent = statements.find(({ keys, valueStart }) => keys.length === 1 && keys[0] === parentKey && valueStart !== undefined);
-    const entry = inlineValues.find(({ tableStart, keys }) =>
-      tableStart === parent?.valueStart && keys.length === 1 && keys[0] === entryKey);
+    const [parentKey, entryKey] = keys;
+    const parent = statements.find(statement => statement.keys.length === 1 && statement.keys[0] === parentKey);
+    const entry = inlineValues.find(({ tableStart, keys: inlineKeys }) =>
+      tableStart === parent?.valueStart && inlineKeys.length === 1 && inlineKeys[0] === entryKey);
     if (!entry) fail('The Syntra registration is embedded in a TOML value. Move it to its own table before using --replace.');
-    const value = `{ command = ${tomlValue(plan.registration.command)}, args = ${tomlValue(plan.registration.args)} }`;
-    return text.slice(0, entry.start) + value + text.slice(entry.end);
+    return finishWithNewline(text.slice(0, entry.start) + value + text.slice(entry.end), eol);
   }
-  let candidate = text;
-  for (const { start, end } of owned.reverse()) {
-    candidate = candidate.slice(0, start) + candidate.slice(end);
+
+  const fields = owned.filter(statement => statement.valueStart !== undefined &&
+    statement.keys.length === keys.length + 1 && ['command', 'args'].includes(statement.keys.at(-1)));
+  const replaceInPlace = fields.length === 2;
+  const ownedSet = new Set(owned);
+  const keptFields = new Set(fields);
+  let candidate = '';
+  let previous;
+  let pendingGap = '';
+  let removed = false;
+  let cursor = 0;
+
+  for (const statement of statements) {
+    const isOwned = ownedSet.has(statement);
+    const isHeader = statement.valueStart === undefined;
+    const isRootHeader = isHeader && statement.keys.length === keys.length;
+    const keep = !isOwned || (replaceInPlace && (keptFields.has(statement) || isRootHeader));
+    let gap = pendingGap + text.slice(cursor, statement.start);
+
+    if (!keep) {
+      // Drop an entire statement line, preserving any trailing comment.
+      pendingGap = gap.replace(/(?:^|(?<=\n))[ \t]*$/, '');
+      const lineEnding = /^[ \t]*(\r?\n|$)/.exec(text.slice(statement.end));
+      cursor = statement.end + (lineEnding?.[0].length ?? 0);
+      removed = true;
+      continue;
+    }
+    if (removed || isOwned || ownedSet.has(previous)) {
+      // Only edit whitespace between parsed statements, never inside values.
+      gap = gap.replace(/(?:\r?\n[ \t]*)+\r?\n/g, eol + eol);
+      if (!previous && removed) gap = gap.replace(/^(?:[ \t]*\r?\n)+/, '');
+      if (previous && isHeader && /^[ \t\r\n]*$/.test(gap)) {
+        gap = eol + eol + /[ \t]*$/.exec(gap)[0];
+      }
+    }
+    const contents = keptFields.has(statement)
+      ? text.slice(statement.start, statement.valueStart) + tomlValue(plan.registration[statement.keys.at(-1)])
+      : text.slice(statement.start, statement.end);
+    candidate += gap + contents;
+    previous = statement;
+    pendingGap = '';
+    removed = false;
+    cursor = statement.end;
   }
-  return computeTomlCandidate(candidate, plan.tomlSnippet);
+  const edited = candidate + pendingGap + text.slice(cursor);
+  return replaceInPlace ? finishWithNewline(edited, eol) : computeTomlCandidate(edited, plan.tomlSnippet);
 }
 
 function previewTomlRegistration(config, plan) {

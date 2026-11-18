@@ -527,7 +527,7 @@ test('Codex TOML addition follows a consistent CRLF file without rewriting its p
   const addition = candidate.slice(config.length);
 
   assert.equal(candidate.slice(0, config.length), config);
-  assert.match(addition, /^\r\n\[mcp_servers\.syntra\]\r\n/);
+  assert.match(addition, /^\r\n\r\n\[mcp_servers\.syntra\]\r\n/);
   assert.equal(addition.replace(/\r\n/g, '').includes('\n'), false);
 });
 
@@ -882,4 +882,58 @@ test('retains the existing OpenCode layout when refreshing a legacy V1 entry', t
   assert.ok(mcp.syntra.command.includes(pinnedPackage));
   assert.deepEqual(mcp.other, { command: ['keep'] });
   assert.equal(mcp.servers, undefined);
+});
+
+test('Codex replaces the stale table in place with one blank line between tables', t => {
+  for (const eol of ['\n', '\r\n']) {
+    const fixture = sandbox(t);
+    const plan = setup.hostPlan('codex', fixture.env, process.platform);
+    const before = [
+      'model = "keep"', '', '[mcp_servers.other]', 'command = "keep"', '',
+      '[mcp_servers.syntra]', 'command = "/fixtures/old/syntra"',
+      'args = [', '  "mcp", "--profile-dir", "/fixture/profile"', ']',
+      '', '[mcp_servers.syntra.env]', 'DEPRECATED = "remove"', '', '',
+      '[projects."/x"]', 'trust_level = "trusted"', '', '',
+    ].join(eol);
+    const configPath = writeConfig('codex', fixture.env, before);
+    const result = spawnSync(process.execPath, [launcherPath, 'setup', '--agent', 'codex', '--replace'], {
+      env: fixture.env, encoding: 'utf8', timeout: 10000,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.readFileSync(configPath, 'utf8'), [
+      'model = "keep"', '', '[mcp_servers.other]', 'command = "keep"', '',
+      '[mcp_servers.syntra]', `command = ${JSON.stringify(plan.registration.command)}`,
+      `args = [${plan.registration.args.map(arg => JSON.stringify(arg)).join(', ')}]`,
+      '', '[projects."/x"]', 'trust_level = "trusted"', '',
+    ].join(eol));
+  }
+});
+
+test('Codex append keeps one separator and a single terminal newline', t => {
+  const fixture = sandbox(t);
+  const plan = setup.hostPlan('codex', fixture.env, process.platform);
+  const base = '[projects."/x"]\ntrust_level = "trusted"';
+  for (const end of ['', '\n', '\n\n', '\n  \n\n']) {
+    assert.equal(setup.computeTomlCandidate(base + end, plan.tomlSnippet), base + '\n\n' + plan.tomlSnippet);
+  }
+});
+
+test('JSON host replacements use two-space indentation and retain surrounding key order', t => {
+  for (const agent of ['claude-code', 'opencode']) {
+    const fixture = sandbox(t);
+    const plan = setup.hostPlan(agent, fixture.env, process.platform);
+    const legacy = agent === 'claude-code'
+      ? { type: 'stdio', command: 'syntra', args: ['mcp'] }
+      : { type: 'local', command: ['syntra', 'mcp'] };
+    const tree = registration => {
+      let config = { first: 'keep', syntra: registration, last: 'keep' };
+      for (const segment of [...plan.registrationPath.slice(0, -1)].reverse()) {
+        config = { first: 'keep', [segment]: config, last: 'keep' };
+      }
+      return JSON.stringify(config, null, 2) + '\n';
+    };
+    const configPath = writeConfig(agent, fixture.env, tree('inline-stale').replace('"inline-stale"', JSON.stringify(legacy)) + '\n');
+    assert.match(setup.runSetup(['--agent', agent, '--replace'], { env: fixture.env }), /MCP registration updated/);
+    assert.equal(fs.readFileSync(configPath, 'utf8'), tree(plan.registration));
+  }
 });
