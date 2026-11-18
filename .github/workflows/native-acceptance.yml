@@ -1,0 +1,49 @@
+name: Native Go acceptance
+
+on:
+  push:
+    branches: ['ci/native-acceptance-0.1.0']
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm, macos-15-intel, macos-15, windows-2025]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 18
+    env:
+      GOTOOLCHAIN: local
+      GOENV: 'off'
+      GOWORK: 'off'
+      GOTELEMETRY: 'off'
+    defaults:
+      run:
+        shell: bash
+        working-directory: core
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: core/go.mod
+          cache: false
+      - name: Test the native CLI and MCP
+        env:
+          RUNNER_OPERATING_SYSTEM: ${{ runner.os }}
+        run: |
+          go version
+          echo "Runner: $RUNNER_OS/$RUNNER_ARCH"
+          go mod download
+          args=()
+          if [[ "$RUNNER_OPERATING_SYSTEM" != Windows ]]; then
+            args+=(-race)
+          fi
+          go test -v -mod=readonly -count=1 -timeout=4m "${args[@]}" ./...
+          go vet -mod=readonly ./...
+          go build -mod=readonly -trimpath -buildvcs=false -o "$RUNNER_TEMP/syntra-native" ./cmd/syntra
+          sha256sum "$RUNNER_TEMP/syntra-native"
