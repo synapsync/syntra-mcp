@@ -10,6 +10,7 @@ import (
 type helpEntry struct{ purpose, flags, example, output string }
 
 var helpEntries = map[string]helpEntry{
+	"version":    {"Print native binary version.", "", "syntra version", "Native binary version."},
 	"login":      {"Connect a human account.", "[--method browser|otp] [--api URL] [--browser-origin URL] [--provider URL] [--publishable-key KEY] [--no-browser] [--reauthorize] [--prepare] [--publish] [--mark-read] [--label TEXT] [--lifetime-seconds N]", "syntra login --prepare", "Connection metadata; browser consent or human OTP authentication."},
 	"status":     {"Show local connection status.", "", "syntra status", "Local profile metadata."},
 	"identity":   {"Verify the current identity.", "", "syntra identity", "Account and connection metadata."},
@@ -24,16 +25,20 @@ var helpEntries = map[string]helpEntry{
 	"tickets":    {"List tickets.", "--workspace UUID [--view published|own-drafts]", "syntra tickets --workspace WORKSPACE_UUID", "Ticket JSON."},
 	"ticket":     {"Read one ticket and its opaque revision.", "--workspace UUID --ticket UUID", "syntra ticket --workspace WORKSPACE_UUID --ticket TICKET_UUID", "Ticket JSON, including revision."},
 	"messages":   {"Read ticket messages.", "--workspace UUID --ticket UUID [--view published|own-drafts]", "syntra messages --workspace WORKSPACE_UUID --ticket TICKET_UUID", "Message JSON."},
+	"reply":      {"Prepare a reply to the ticket creator.", "--workspace UUID --ticket UUID --summary TEXT --context-file PATH|-", "syntra reply --workspace WORKSPACE_UUID --ticket TICKET_UUID --summary Done --context-file context.md", "Draft ID and an exact command for explicit publication."},
 	"prepare":    {"Prepare private content without publishing.", "--file PATH|- [--base REQUEST_UUID] | --template new|reply --workspace UUID [--project UUID] [--ticket UUID]", "syntra prepare --template reply --workspace WORKSPACE_UUID --ticket TICKET_UUID", "Template JSON for --template; private draft snapshot JSON for --file."},
 	"link":       {"Link a private draft to a member without publishing.", "--file PATH|- --base REQUEST_UUID", "syntra link --file link.json --base REQUEST_UUID", "Private draft snapshot JSON."},
 	"publish":    {"Publish an exact retained private draft.", "--file PATH|- --base REQUEST_UUID", "syntra publish --file publish.json --base REQUEST_UUID", "Published snapshot JSON."},
 	"snapshot":   {"Read and verify a content snapshot.", "--file PATH|- [--base REQUEST_UUID]", "syntra snapshot --file snapshot.json", "Snapshot JSON and verification level."},
 	"retry":      {"Retry an exact retained request.", "--request UUID", "syntra retry --request REQUEST_UUID", "Original result JSON."},
 }
-var helpOrder = []string{"login", "status", "identity", "disconnect", "forget", "mcp", "workspaces", "projects", "teams", "members", "resolve", "tickets", "ticket", "messages", "prepare", "link", "publish", "snapshot", "retry"}
+var helpOrder = []string{"version", "login", "status", "identity", "disconnect", "forget", "mcp", "workspaces", "projects", "teams", "members", "resolve", "tickets", "ticket", "messages", "reply", "prepare", "link", "publish", "snapshot", "retry"}
 
 func usage(name string) string {
 	e := helpEntries[name]
+	if name == "mcp" {
+		return "Usage: syntra mcp [--profile-dir PATH] [--api URL] [--call-timeout DURATION]"
+	}
 	return strings.TrimSpace("Usage: syntra " + name + " " + e.flags + " [--profile-dir PATH] [--api URL] [--timeout DURATION]")
 }
 func printHelp(name string) {

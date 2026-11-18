@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"google.golang.org/protobuf/proto"
 	v1 "syntra.local/mcp/gen/syntra/v1"
@@ -102,10 +101,8 @@ func decodeClientContent(b []byte, target proto.Message, report func(string)) er
 	}
 
 	if q, ok := target.(*v1.PrepareContentRequest); ok && q.Content != nil {
-		for _, s := range []string{q.Content.Title, q.Content.OriginalDestinationIntent, q.Content.Summary, q.Content.ContextMarkdown, q.Content.GetDestination().GetUnlinkedLabel()} {
-			if strings.Contains(s, "TODO: SYNTRA") {
-				return fmt.Errorf("%w: replace all TODO: SYNTRA placeholders before preparing", ci.ErrWire)
-			}
+		if e := checkPreparePlaceholders(q); e != nil {
+			return e
 		}
 	}
 	return nil

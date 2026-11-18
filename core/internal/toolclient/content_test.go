@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -918,7 +919,7 @@ func (f *contentFixture) ListTickets(_ context.Context, r *connect.Request[v1.Li
 	return connect.NewResponse(&v1.ListTicketsResponse{Tickets: []*v1.Ticket{{Id: ticketID, WorkspaceId: workspaceID}}}), nil
 }
 func (f *contentFixture) GetTicket(_ context.Context, r *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error) {
-	return connect.NewResponse(&v1.GetTicketResponse{Ticket: &v1.Ticket{Id: r.Msg.TicketId, WorkspaceId: r.Msg.WorkspaceId}}), nil
+	return connect.NewResponse(&v1.GetTicketResponse{Ticket: &v1.Ticket{Id: r.Msg.TicketId, WorkspaceId: r.Msg.WorkspaceId, CreatorUserId: accountB, Title: "Fixture title", Revision: rev(88)}}), nil
 }
 func TestCompleteMessagesAndExplicitTicketViews(t *testing.T) {
 	a, _, _, _ := setupContent(t)
@@ -1176,5 +1177,83 @@ func TestNestedTicketRevisionNormalization(t *testing.T) {
 	}
 	if err := ReadContentInput(strings.NewReader(strings.Replace(raw, `"summary":"..."`, `"summary":"TODO: SYNTRA summary"`, 1)), &request); err == nil {
 		t.Fatal("placeholder accepted")
+	}
+}
+
+func TestCompiledReplyPublishesOnlyOnExplicitCommand(t *testing.T) {
+	a, f, dir, ca := setupContent(t)
+	binary := testsupport.BuildCLI(t, "../../cmd/syntra", ca)
+	a.store.Close()
+	contextPath := filepath.Join(t.TempDir(), "context.md")
+	if err := os.WriteFile(contextPath, []byte("Details"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	out, err := cliCall(t, binary, "reply", "--profile-dir", dir, "--workspace", workspaceID, "--ticket", ticketID, "--summary", "Resolved", "--context-file", contextPath)
+	if err != nil {
+		t.Fatalf("reply: %v %s", err, out)
+	}
+	parts := strings.SplitN(string(out), "Publish explicitly with:\n", 2)
+	if len(parts) != 2 || !strings.Contains(parts[0], draftID) {
+		t.Fatalf("missing next command: %s", out)
+	}
+	f.mu.Lock()
+	before := f.calls
+	f.mu.Unlock()
+	if before != 1 {
+		t.Fatalf("reply sent unexpected mutations: %d", before)
+	}
+	cmd := exec.Command("bash", "-c", strings.TrimSpace(parts[1]))
+	cmd.Env = append(testsupport.FixtureCLIEnv(), "PATH="+filepath.Dir(binary)+":"+os.Getenv("PATH"))
+	published, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("publish: %v %s", err, published)
+	}
+	var snapshot v1.AuthoredContentSnapshot
+	if protojson.Unmarshal(published, &snapshot) != nil || snapshot.GetPublishedMessageId() != messageID {
+		t.Fatalf("not published: %s", published)
+	}
+}
+
+func TestCompiledTemplateToPrepare(t *testing.T) {
+	a, f, dir, ca := setupContent(t)
+	binary := testsupport.BuildCLI(t, "../../cmd/syntra", ca)
+	a.store.Close()
+	out, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--template", "reply", "--workspace", workspaceID, "--ticket", ticketID)
+	if err != nil {
+		t.Fatalf("template: %v %s", err, out)
+	}
+	var raw map[string]any
+	if err = json.Unmarshal(out, &raw); err != nil {
+		t.Fatal(err)
+	}
+	content := raw["content"].(map[string]any)
+	if raw["expectedTicketRevision"] != rev(88) || content["originalDestinationIntent"] != "TODO: SYNTRA recipient name" {
+		t.Fatalf("incorrect template: %s", out)
+	}
+	input := filepath.Join(t.TempDir(), "reply.json")
+	if err = os.WriteFile(input, out, 0600); err != nil {
+		t.Fatal(err)
+	}
+	rejected, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--file", input)
+	if err == nil || !bytes.Contains(rejected, []byte("originalDestinationIntent")) {
+		t.Fatalf("placeholder: %v %s", err, rejected)
+	}
+	content["originalDestinationIntent"] = "Pedro"
+	content["summary"] = "Done"
+	content["contextMarkdown"] = "Details"
+	body, err := json.Marshal(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(input, body, 0600); err != nil {
+		t.Fatal(err)
+	}
+	result, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--file", input)
+	if err != nil {
+		t.Fatalf("prepare: %v %s", err, result)
+	}
+	var snap v1.AuthoredContentSnapshot
+	if err = protojson.Unmarshal(result, &snap); err != nil || snap.Content.GetOriginalDestinationIntent() != "Pedro" || snap.GetPrivateDraft() == nil || f.calls != 1 {
+		t.Fatalf("bad result %v %s", err, result)
 	}
 }

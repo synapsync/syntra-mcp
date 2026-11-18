@@ -325,3 +325,16 @@ test('launcher invokes PATH npm with fixed arguments and reports check exit stat
   assert.equal(result.status, 10);
   assert.deepEqual(fs.readFileSync(argsFile, 'utf8').trim().split('\n'), ['view', '@synapsync/syntra-mcp', 'version']);
 });
+
+test('launcher delegates both help forms to the native executable', { skip: process.platform === 'win32' }, t => {
+  const fixture = fixturePackage(t);
+  for (const args of [['--help'], ['help', 'prepare']]) {
+    const result = spawnSync(process.execPath, [launcherPath, ...args], {
+      cwd: fixture.directory, env: launcherEnvironment(fixture.modules), input: '', encoding: 'utf8', timeout: 10000,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const firstLine = result.stdout.split('\n')[0];
+    assert.deepEqual(JSON.parse(firstLine), { args, input: '' });
+    if (args.length === 1) assert.match(result.stdout, /update[\s\S]*--version/);
+  }
+});

@@ -85,19 +85,19 @@ func run(parent context.Context, args []string) error {
 		return optionError(command, nil)
 	}
 	if *timeout <= 0 || *timeout > 10*time.Minute {
-		return errors.New("timeout must be positive and at most 10m")
+		return fmt.Errorf("--timeout must be positive and at most 10m. %s", usage(command))
 	}
 	ctx, cancel := context.WithTimeout(parent, *timeout)
 	defer cancel()
 	if command != "login" {
-		bad := false
+		bad := ""
 		flags.Visit(func(f *flag.Flag) {
 			if f.Name != "api" && f.Name != "profile-dir" && f.Name != "timeout" {
-				bad = true
+				bad = f.Name
 			}
 		})
-		if bad {
-			return errors.New("login configuration flags are unavailable for this command")
+		if bad != "" {
+			return fmt.Errorf("login option --%s is unavailable for this command. %s", bad, usage(command))
 		}
 	}
 	if *dir == "" {

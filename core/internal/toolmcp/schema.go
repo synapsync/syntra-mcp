@@ -13,7 +13,7 @@ func toolDefinition(name string) *mcp.Tool {
 	properties := map[string]any{}
 	required := []string{}
 	str := func(k, description string, req bool) {
-		properties[k] = map[string]any{"type": "string", "description": description, "minLength": 1, "maxLength": 2048}
+		properties[k] = map[string]any{"type": "string", "description": description, "minLength": 1, "maxLength": 2048, "examples": []any{fieldExample(k, protoreflect.StringKind)}}
 		if req {
 			required = append(required, k)
 		}
@@ -65,6 +65,15 @@ func toolDefinition(name string) *mcp.Tool {
 	if name == "tickets" || name == "messages" {
 		properties["view"] = map[string]any{"type": "string", "enum": []string{"published", "own-drafts"}, "description": "Explicit read-only view; defaults to published. No read/review marking."}
 	}
+	examples := map[string]string{
+		"resolve": `{"workspace":"Acme","project":"Backend","recipient":"Alex"}`,
+		"ticket":  `{"workspaceId":"44444444-4444-4444-8444-444444444444","ticketId":"77777777-7777-4777-8777-777777777777"}`,
+		"link":    `{"base":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","request":{"requestId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","current":{"ticketId":"77777777-7777-4777-8777-777777777777","draftId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedDraftRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedContentDigest":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},"linkedContent":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"44444444-4444-4444-8444-444444444444","title":"Title","originalDestinationIntent":"Alex","destination":{"linkedMemberId":"88888888-8888-4888-8888-888888888888"},"summary":"Summary","contextMarkdown":"Context"}}}`,
+		"publish": `{"base":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","request":{"requestId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","workspaceId":"44444444-4444-4444-8444-444444444444","expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","current":{"ticketId":"77777777-7777-4777-8777-777777777777","draftId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedDraftRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedContentDigest":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}}}`,
+	}
+	if example, ok := examples[name]; ok {
+		description += " Example arguments (replace example IDs and retained values): " + example
+	}
 	readOnly := name != "prepare" && name != "link" && name != "publish" && name != "retry"
 	return &mcp.Tool{Name: name, Description: description, InputSchema: map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false}, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, IdempotentHint: true}}
 }
@@ -90,7 +99,12 @@ func messageSchema(d protoreflect.MessageDescriptor) map[string]any {
 			schema = map[string]any{"type": "string"}
 		}
 		if m, ok := schema.(map[string]any); ok {
-			description := "Canonical " + f.JSONName() + " field."
+			description := fieldDescription(f.JSONName())
+			if f.Kind() == protoreflect.MessageKind {
+				m["examples"] = []any{exampleMessage(f.Message())}
+			} else {
+				m["examples"] = []any{fieldExample(f.JSONName(), f.Kind())}
+			}
 			switch f.JSONName() {
 			case "expectedTicketRevision":
 				description = "Opaque ticket revision; copy exactly from ticket. For a new reply this is at request top level, beside content; within current/update it belongs in that expectation object."
@@ -109,5 +123,72 @@ func messageSchema(d protoreflect.MessageDescriptor) map[string]any {
 		}
 		properties[f.JSONName()] = schema
 	}
-	return map[string]any{"type": "object", "properties": properties, "additionalProperties": false, "description": "Canonical Protobuf JSON only; exact strings and optional presence preserved. requestId is mandatory for mutation. Unknown/duplicate/null/alias/oneof violations reject before decoding."}
+	return map[string]any{"type": "object", "properties": properties, "examples": []any{exampleMessage(d)}, "additionalProperties": false, "description": "Canonical Protobuf JSON only; exact strings and optional presence preserved. requestId is mandatory for mutation. Unknown/duplicate/null/alias/oneof violations reject before decoding."}
+}
+
+func fieldDescription(name string) string {
+	descriptions := map[string]string{
+		"formatVersion": "Required content encoding version; use 1.", "workspaceId": "Required authorized workspace UUID.", "projectId": "Optional project UUID; omit if none.", "existingTicketId": "Existing ticket UUID for a reply; omit for a new ticket.", "title": "Required exact ticket title.", "originalDestinationIntent": "Required human-readable original recipient intent.", "destination": "Required target; exactly one linkedMemberId or unlinkedLabel.", "linkedMemberId": "Authorized destination member user UUID; required to publish.", "unlinkedLabel": "Nonempty unresolved recipient name; remains private until explicitly linked.", "summary": "Required nonempty human-readable summary.", "contextMarkdown": "Free-form Markdown context; empty string is allowed.", "current": "Required exact retained private draft expectation for link or publish.", "update": "Optional exact retained private draft expectation for a replacement.", "linkedContent": "Exact retained content with only destination changed to linkedMemberId.", "ticketId": "Ticket UUID from the retained snapshot receipt.", "draftId": "Private draft UUID from the retained snapshot.", "provider": "Optional unverified provider assertion.", "model": "Optional unverified model assertion.", "tool": "Optional unverified tool assertion.", "run": "Optional unverified run assertion.", "clientReported": "Optional unverified provider/model/tool/run assertions.", "publishedMessageId": "Published message UUID; mutually exclusive with privateDraft.", "privateDraft": "Private draft identifier and exact revision; mutually exclusive with publishedMessageId.", "revision": "Opaque private draft revision from the retained snapshot.",
+	}
+	if d, ok := descriptions[name]; ok {
+		return d
+	}
+	return "Canonical " + name + " field."
+}
+func fieldExample(name string, kind protoreflect.Kind) any {
+	if kind == protoreflect.MessageKind {
+		return map[string]any{}
+	}
+	if kind == protoreflect.Uint32Kind || kind == protoreflect.Int32Kind {
+		return 1
+	}
+	switch name {
+	case "expectedTicketRevision", "expectedDraftRevision", "revision":
+		return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+	case "expectedContentDigest":
+		return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+	case "summary":
+		return "Summary"
+	case "contextMarkdown":
+		return "Context"
+	case "title":
+		return "Title"
+	case "originalDestinationIntent", "unlinkedLabel":
+		return "Alex"
+	case "tool":
+		return "Claude Code"
+	case "model":
+		return "reported-model"
+	}
+	return "11111111-1111-4111-8111-111111111111"
+}
+
+func exampleMessage(d protoreflect.MessageDescriptor) map[string]any {
+	const account = "11111111-1111-4111-8111-111111111111"
+	const workspace = "44444444-4444-4444-8444-444444444444"
+	const request = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+	const revision = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+	const digest = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+	content := map[string]any{"formatVersion": 1, "expectedAuthorUserId": account, "workspaceId": workspace, "title": "Title", "originalDestinationIntent": "Alex", "destination": map[string]any{"linkedMemberId": account}, "summary": "Summary", "contextMarkdown": "Context"}
+	current := map[string]any{"ticketId": "77777777-7777-4777-8777-777777777777", "draftId": "88888888-8888-4888-8888-888888888888", "expectedTicketRevision": revision, "expectedDraftRevision": revision, "expectedContentDigest": digest}
+	switch d.Name() {
+	case "ContentDestination":
+		return map[string]any{"linkedMemberId": account}
+	case "AuthoredContent":
+		return content
+	case "ContentDraftExpectation":
+		return current
+	case "ClientReportedProvenance":
+		return map[string]any{"tool": "Claude Code", "model": "reported-model"}
+	case "PrepareContentRequest":
+		return map[string]any{"requestId": request, "content": content}
+	case "LinkContentRequest":
+		return map[string]any{"requestId": request, "current": current, "linkedContent": content}
+	case "PublishContentRequest":
+		return map[string]any{"requestId": request, "workspaceId": workspace, "expectedAuthorUserId": account, "current": current}
+	case "PrivateContentRevision":
+		return map[string]any{"draftId": "88888888-8888-4888-8888-888888888888", "revision": revision}
+	default:
+		return map[string]any{}
+	}
 }

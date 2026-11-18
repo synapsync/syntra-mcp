@@ -95,20 +95,24 @@ func (a *App) base(id string) (*v1.AuthoredContentSnapshot, error) {
 // Prepare permits new private content; replacement requires an exact retained
 // base. No name lookup, invitations, publication or lifecycle action is implicit.
 func (a *App) Prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID string) (*v1.AuthoredContentSnapshot, error) {
+	if err := checkPreparePlaceholders(in); err != nil {
+		return nil, err
+	}
 	if in == nil || !validUUID(in.RequestId) {
 		return nil, fmt.Errorf("%w: requestId must be a fresh canonical lowercase UUID at the top level", ci.ErrWire)
 	}
 	r := proto.Clone(in).(*v1.PrepareContentRequest)
-	if r.Content == nil {
-		return nil, fmt.Errorf("%w: content is required at the top level", ci.ErrWire)
+	if e := clientContent("content", r.Content, a.profile.AccountID); e != nil {
+		return nil, e
 	}
-	for _, f := range []struct{ name, value string }{{"expectedAuthorUserId", r.Content.ExpectedAuthorUserId}, {"workspaceId", r.Content.WorkspaceId}} {
-		if !validUUID(f.value) {
-			return nil, fmt.Errorf("%w: content.%s must be a canonical lowercase UUID", ci.ErrWire, f.name)
+	if r.Update != nil {
+		if e := clientExpectation("update", r.Update); e != nil {
+			return nil, e
 		}
-	}
-	if r.Content != nil && r.Content.ExpectedAuthorUserId != a.profile.AccountID {
-		return nil, fmt.Errorf("%w: content.expectedAuthorUserId must equal the account shown by syntra identity", ci.ErrIntegrity)
+	} else if r.Content.ExistingTicketId != nil {
+		if e := clientRevision("expectedTicketRevision", r.GetExpectedTicketRevision()); e != nil {
+			return nil, e
+		}
 	}
 	if e := fillDigest(r.Content, &r.ExpectedContentDigest); e != nil {
 		return nil, e
@@ -135,9 +139,15 @@ func (a *App) Prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 }
 func (a *App) Link(ctx context.Context, in *v1.LinkContentRequest, baseID string) (*v1.AuthoredContentSnapshot, error) {
 	if in == nil || !validUUID(in.RequestId) {
-		return nil, errors.New("explicit canonical requestId required before mutation")
+		return nil, clientField("requestId", "must be a fresh canonical lowercase UUID at the top level")
 	}
 	r := proto.Clone(in).(*v1.LinkContentRequest)
+	if e := clientExpectation("current", r.Current); e != nil {
+		return nil, e
+	}
+	if e := clientContent("linkedContent", r.LinkedContent, a.profile.AccountID); e != nil {
+		return nil, e
+	}
 	s, e := a.base(baseID)
 	if e != nil {
 		return nil, e
@@ -153,9 +163,21 @@ func (a *App) Link(ctx context.Context, in *v1.LinkContentRequest, baseID string
 }
 func (a *App) Publish(ctx context.Context, in *v1.PublishContentRequest, baseID string) (*v1.AuthoredContentSnapshot, error) {
 	if in == nil || !validUUID(in.RequestId) {
-		return nil, errors.New("explicit canonical requestId required before mutation")
+		return nil, clientField("requestId", "must be a fresh canonical lowercase UUID at the top level")
 	}
 	r := proto.Clone(in).(*v1.PublishContentRequest)
+	if e := clientID("workspaceId", r.WorkspaceId); e != nil {
+		return nil, e
+	}
+	if e := clientID("expectedAuthorUserId", r.ExpectedAuthorUserId); e != nil {
+		return nil, e
+	}
+	if r.ExpectedAuthorUserId != a.profile.AccountID {
+		return nil, fmt.Errorf("%w: expectedAuthorUserId must equal syntra identity", ci.ErrIntegrity)
+	}
+	if e := clientExpectation("current", r.Current); e != nil {
+		return nil, e
+	}
 	s, e := a.base(baseID)
 	if e != nil {
 		return nil, e

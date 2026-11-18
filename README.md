@@ -1,5 +1,11 @@
 # Syntra CLI and MCP
 
+A reply to another active ticket creator can be prepared with `syntra reply
+--workspace WORKSPACE_UUID --ticket TICKET_UUID --summary "Summary" --context-file
+context.md`. It prints the draft ID and a separate explicit publish command.
+If the creator is the caller or cannot be resolved to an active named member, use
+the template and select a recipient. Publication is never implicit.
+
 Start with `syntra --help`. To reply, run `syntra prepare --template reply --workspace WORKSPACE_UUID --ticket TICKET_UUID`, save the JSON privately, replace all `TODO: SYNTRA` placeholders, and run `syntra prepare --file request.json`. Publish separately. The ticket revision belongs at request top level beside `content`.
 
 Syntra connects your agent to the workspaces, project teams and tickets you can

@@ -106,7 +106,7 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 	// calling a typed shared method. Invalid args cannot reach legacy handlers.
 	args, e := decodeArgs(name, raw)
 	if e != nil {
-		return toolError(e.Error() + "; no operation attempted")
+		return toolError(e.Error())
 	}
 	app, close, e := openApp(ctx, cfg)
 	if e != nil {
@@ -238,6 +238,29 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 		required = []string{"requestId"}
 	default:
 		return a, errArguments
+	}
+	// On malformed nested authored input, recover a diagnostic from its raw
+	// bytes only. The authoritative outer gate still rejects the whole object.
+	if toolclient.ValidateRawObject(raw, MaxArgumentsBytes) != nil {
+		var outer map[string]json.RawMessage
+		if json.Unmarshal(raw, &outer) == nil {
+			var target proto.Message
+			switch name {
+			case "prepare":
+				target = &v1.PrepareContentRequest{}
+			case "link":
+				target = &v1.LinkContentRequest{}
+			case "publish":
+				target = &v1.PublishContentRequest{}
+			case "snapshot":
+				target = &v1.GetContentSnapshotRequest{}
+			}
+			if target != nil && len(outer["request"]) > 0 {
+				if e := toolclient.ReadContentInput(bytes.NewReader(outer["request"]), target); e != nil {
+					return a, e
+				}
+			}
+		}
 	}
 	m, e := object(raw, required, optional)
 	if e != nil {

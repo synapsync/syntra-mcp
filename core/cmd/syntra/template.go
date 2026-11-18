@@ -41,7 +41,7 @@ func printTemplate(kind, workspace, project, account string, ticket *v1.Ticket) 
 		}
 		if ticket.CreatorUserId != account && ticket.CreatorUserId != "" {
 			content["destination"] = map[string]any{"linkedMemberId": ticket.CreatorUserId}
-			content["originalDestinationIntent"] = ticket.CreatorUserId
+			content["originalDestinationIntent"] = "TODO: SYNTRA recipient name"
 		}
 	} else if kind != "new" {
 		return errors.New("--template must be reply or new")

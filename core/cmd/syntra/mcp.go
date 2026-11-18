@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,8 +20,14 @@ func runMCP(ctx context.Context, args []string) error {
 	dir := flags.String("profile-dir", "", "shared private profile directory")
 	api := flags.String("api", "", "exact retained API origin")
 	timeout := flags.Duration("call-timeout", time.Minute, "per-call deadline, not session lifetime")
-	if flags.Parse(args) != nil || flags.NArg() != 0 || *timeout <= 0 || *timeout > 10*time.Minute {
-		return errors.New("invalid local MCP options")
+	if err := flags.Parse(args); err != nil {
+		return optionError("mcp", err)
+	}
+	if flags.NArg() != 0 {
+		return optionError("mcp", nil)
+	}
+	if *timeout <= 0 || *timeout > 10*time.Minute {
+		return fmt.Errorf("--call-timeout must be positive and at most 10m. %s", usage("mcp"))
 	}
 	if term.IsTerminal(int(os.Stdin.Fd())) || term.IsTerminal(int(os.Stdout.Fd())) {
 		return errors.New("MCP requires piped stdin and stdout; human login is a separate command")

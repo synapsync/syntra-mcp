@@ -20,7 +20,7 @@ import (
 
 func isContentCommand(c string) bool {
 	switch c {
-	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "link", "publish", "retry", "snapshot", "tickets", "ticket", "messages":
+	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "retry", "snapshot", "tickets", "ticket", "messages":
 		return true
 	}
 	return false
@@ -32,6 +32,8 @@ func runContent(parent context.Context, args []string) error {
 	api := f.String("api", "", "exact retained API origin")
 	timeout := f.Duration("timeout", time.Minute, "operation deadline")
 	template := f.String("template", "", "new or reply template")
+	summary := f.String("summary", "", "reply summary")
+	contextFile := f.String("context-file", "", "Markdown file or - for stdin")
 	file := f.String("file", "", "strict bounded request JSON file, or - for stdin")
 	base := f.String("base", "", "retained request ID anchoring exact CAS/preimage")
 	request := f.String("request", "", "retained request UUID for retry")
@@ -71,6 +73,10 @@ func runContent(parent context.Context, args []string) error {
 		}
 	case "retry":
 		allowed["request"] = true
+	case "reply":
+		for _, s := range []string{"workspace", "ticket", "summary", "context-file"} {
+			allowed[s] = true
+		}
 	case "prepare":
 		for _, s := range []string{"file", "base", "template", "workspace", "project", "ticket"} {
 			allowed[s] = true
@@ -116,6 +122,9 @@ func runContent(parent context.Context, args []string) error {
 	app, e := toolclient.NewApp(ctx, client, store)
 	if e != nil {
 		return e
+	}
+	if args[0] == "reply" {
+		return reply(ctx, app, p.AccountID, *workspace, *ticket, *summary, *contextFile, *dir)
 	}
 	if args[0] == "prepare" && *template != "" {
 		if *file != "" || *base != "" {
