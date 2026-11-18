@@ -289,7 +289,7 @@ func (a *App) Resolve(ctx context.Context, s Selection) (*Resolution, error) {
 type NotFound struct{ Kind, Query, Scope, ScopeID string }
 
 func (n *NotFound) Error() string {
-	return n.Kind + " " + strconv.Quote(n.Query) + " is not assigned to " + n.Scope + " " + n.ScopeID
+	return SafeDiagnosticToken(n.Kind) + " " + strconv.Quote(SafeDiagnosticToken(n.Query)) + " is not assigned to " + SafeDiagnosticToken(n.Scope) + " " + SafeDiagnosticToken(n.ScopeID)
 }
 
 // rosterCandidates returns the distinct ACTIVE roster members of the given project teams.

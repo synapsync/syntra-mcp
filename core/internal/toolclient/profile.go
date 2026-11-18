@@ -136,16 +136,26 @@ func validUUID(s string) bool {
 	}
 	return true
 }
-func randomUUID() string {
+
+// NewRequestID generates a fresh RFC 4122 version 4 request identifier.
+func NewRequestID() (string, error) {
 	var b [16]byte
-	if _, e := rand.Read(b[:]); e != nil {
-		panic("system randomness unavailable")
+	if _, err := rand.Read(b[:]); err != nil {
+		return "", errors.New("system randomness unavailable")
 	}
 	b[6] = (b[6] & 15) | 64
 	b[8] = (b[8] & 63) | 128
 	s := hex.EncodeToString(b[:])
-	return s[:8] + "-" + s[8:12] + "-" + s[12:16] + "-" + s[16:20] + "-" + s[20:]
+	return s[:8] + "-" + s[8:12] + "-" + s[12:16] + "-" + s[16:20] + "-" + s[20:], nil
 }
+func randomUUID() string {
+	id, err := NewRequestID()
+	if err != nil {
+		panic("system randomness unavailable")
+	}
+	return id
+}
+
 func (c Config) Validate() error {
 	if ValidateOrigin(c.APIOrigin) != nil || ValidateOrigin(c.ProviderOrigin) != nil {
 		return ErrProfile

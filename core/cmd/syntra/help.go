@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"syntra.local/mcp/internal/toolclient"
 )
 
 type helpEntry struct{ purpose, flags, example, output string }
@@ -54,6 +55,9 @@ func printHelp(name string) {
 	fmt.Fprintf(os.Stdout, "%s\n\n%s\n\nRequired flags are shown without brackets; bracketed flags are optional.\nCommon options: --profile-dir PATH, --api URL, --timeout DURATION (mcp uses --call-timeout).\n\nExample: %s\nPrints: %s\n", usage(name), e.purpose, e.example, e.output)
 }
 func unknownCommand(s string) error {
+	if !toolclient.IsSafeDiagnosticToken(s) {
+		return fmt.Errorf("unknown command: an invalid value. Run \"syntra --help\".")
+	}
 	best := ""
 	d := 4
 	for _, n := range helpOrder {
@@ -101,7 +105,7 @@ func optionError(command string, err error) error {
 	name := ""
 	if err != nil {
 		if m := optionName.FindStringSubmatch(err.Error()); len(m) > 1 {
-			name = " --" + strings.TrimLeft(m[1], "-")
+			name = " --" + toolclient.SafeDiagnosticToken(strings.TrimLeft(m[1], "-"))
 		}
 	}
 	return fmt.Errorf("invalid or missing option%s; OTP and credentials are never accepted as arguments. %s", name, usage(command))

@@ -10,7 +10,7 @@ func TestClientDiagnosticClasses(t *testing.T) {
 	const base = `{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"44444444-4444-4444-8444-444444444444","title":"secret-message-content","originalDestinationIntent":"Alex","summary":"ok","contextMarkdown":"","destination":{"unlinkedLabel":"Alex"}}}`
 	cases := []struct{ name, raw, want string }{
 		{"unknown", strings.Replace(base, `"summary":"ok"`, `"unknownKey":"ok"`, 1), "unknownKey"},
-		{"misplaced", strings.Replace(base, `"summary":"ok"`, `"draftId":"ok"`, 1), "belongs in current/update"},
+		{"misplaced", strings.Replace(base, `"summary":"ok"`, `"draftId":"ok"`, 1), "it belongs at request.update.draftId"},
 		{"duplicate", strings.Replace(base, `"summary":"ok"`, `"summary":"ok","summary":"again"`, 1), "duplicate key summary"},
 		{"type", strings.Replace(base, `"summary":"ok"`, `"summary":12`, 1), "wrong JSON type"},
 		{"null", strings.Replace(base, `"summary":"ok"`, `"summary":null`, 1), "cannot be null"},

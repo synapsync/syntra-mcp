@@ -761,3 +761,15 @@ test('the setup dispatch bypasses native binary lookup while existing launcher t
   assert.equal(result.stderr, '');
   assert.equal(result.stdout.includes('binary for'), false);
 });
+
+test('setup lock errors never echo control characters from a configured path', { skip: process.platform === 'win32' }, t => {
+  const fixture = sandbox(t);
+  const unsafeHome = path.join(fixture.root, '\u001b[31munsafe');
+  fs.mkdirSync(unsafeHome, { recursive: true });
+  fixture.env.HOME = unsafeHome;
+  delete fixture.env.XDG_CONFIG_HOME;
+  const config = writeConfig('codex', fixture.env, configTextFor('codex'));
+  fs.writeFileSync(`${config}.syntra.lock`, 'lock', { mode: 0o600 });
+  assert.throws(() => setup.runSetup(['--agent', 'codex'], { env: fixture.env }), error =>
+    error instanceof setup.SetupError && /setup lock already exists/.test(error.message) && !error.message.includes('\u001b'));
+});

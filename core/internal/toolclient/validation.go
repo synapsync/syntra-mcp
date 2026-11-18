@@ -6,6 +6,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"google.golang.org/protobuf/proto"
+
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	ci "syntra.local/mcp/internal/contentintegrity"
 )
@@ -70,7 +72,7 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 			}
 		}
 	}
-	if c.ExpectedAuthorUserId != owner {
+	if owner != "" && c.ExpectedAuthorUserId != owner {
 		return fmt.Errorf("%w: %s.expectedAuthorUserId must equal the account shown by syntra identity", ci.ErrIntegrity, name)
 	}
 	for _, f := range []struct{ name, value string }{{"title", c.Title}, {"originalDestinationIntent", c.OriginalDestinationIntent}, {"summary", c.Summary}} {
@@ -103,4 +105,122 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 		}
 	}
 	return checkPlaceholders(c)
+}
+
+// ValidateLocalContentRequest checks all identity-independent properties before
+// loading a local profile. Authentication and retained-base checks remain in App.
+func ValidateLocalContentRequest(target proto.Message, baseID string) error {
+	switch q := target.(type) {
+	case *v1.PrepareContentRequest:
+		if q == nil {
+			return clientField("request", "is required")
+		}
+		if err := checkPreparePlaceholders(q); err != nil {
+			return err
+		}
+		if err := clientID("requestId", q.RequestId); err != nil {
+			return err
+		}
+		if err := clientContent("content", q.Content, ""); err != nil {
+			return err
+		}
+		if q.Update == nil && baseID != "" {
+			return clientField("base", "is allowed only for an existing draft update")
+		}
+		if q.Update != nil {
+			if err := clientExpectation("update", q.Update); err != nil {
+				return err
+			}
+			if err := clientID("base", baseID); err != nil {
+				return err
+			}
+		} else if q.Content.ExistingTicketId != nil {
+			if err := clientRevision("expectedTicketRevision", q.GetExpectedTicketRevision()); err != nil {
+				return err
+			}
+		}
+		clone := proto.Clone(q).(*v1.PrepareContentRequest)
+		if err := fillDigest(clone.Content, &clone.ExpectedContentDigest); err != nil {
+			return err
+		}
+		return ci.ValidatePrepare(clone, clone.Content.ExpectedAuthorUserId)
+	case *v1.LinkContentRequest:
+		if q == nil {
+			return clientField("request", "is required")
+		}
+		if err := clientID("requestId", q.RequestId); err != nil {
+			return err
+		}
+		if err := clientExpectation("current", q.Current); err != nil {
+			return err
+		}
+		if err := clientContent("linkedContent", q.LinkedContent, ""); err != nil {
+			return err
+		}
+		if err := clientID("base", baseID); err != nil {
+			return err
+		}
+		clone := proto.Clone(q).(*v1.LinkContentRequest)
+		return fillDigest(clone.LinkedContent, &clone.ExpectedContentDigest)
+	case *v1.PublishContentRequest:
+		if q == nil {
+			return clientField("request", "is required")
+		}
+		for _, f := range []struct{ name, value string }{{"requestId", q.RequestId}, {"workspaceId", q.WorkspaceId}, {"expectedAuthorUserId", q.ExpectedAuthorUserId}, {"base", baseID}} {
+			if err := clientID(f.name, f.value); err != nil {
+				return err
+			}
+		}
+		return clientExpectation("current", q.Current)
+	case *v1.GetContentSnapshotRequest:
+		return ci.ValidateSnapshotRequest(q)
+	default:
+		return ci.ErrWire
+	}
+}
+
+// ValidateReplyInput checks locally supplied arguments without touching a profile.
+func ValidateReplyInput(workspace, ticket, summary, context string) error {
+	if err := clientID("workspace", workspace); err != nil {
+		return err
+	}
+	if err := clientID("ticket", ticket); err != nil {
+		return err
+	}
+	if summary == "" {
+		return clientField("summary", "is required")
+	}
+	for _, f := range []struct {
+		name, value string
+		max         int
+	}{{"summary", summary, 8192}, {"contextMarkdown", context, 131072}} {
+		if len(f.value) > f.max || !utf8.ValidString(f.value) || strings.ContainsRune(f.value, 0) {
+			return clientField(f.name, fmt.Sprintf("must be valid UTF-8 without NUL and at most %d bytes", f.max))
+		}
+		if strings.Contains(f.value, "TODO: SYNTRA") {
+			return clientField(f.name, "contains a TODO: SYNTRA placeholder; replace it before preparing")
+		}
+	}
+	return nil
+}
+
+// ValidateTemplateInput checks the selected template and routing IDs locally.
+func ValidateTemplateInput(kind, workspace, project, ticket string) error {
+	if kind != "new" && kind != "reply" {
+		return clientField("template", "must be new or reply")
+	}
+	if err := clientID("workspace", workspace); err != nil {
+		return err
+	}
+	if project != "" {
+		if err := clientID("project", project); err != nil {
+			return err
+		}
+	}
+	if kind == "reply" {
+		if err := clientID("ticket", ticket); err != nil {
+			return err
+		}
+	}
+	return nil
 }

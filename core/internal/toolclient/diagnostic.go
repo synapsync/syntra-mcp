@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	v1 "syntra.local/mcp/gen/syntra/v1"
@@ -16,6 +17,9 @@ import (
 // diagnoseJSON only describes names and types, never values. It is client-side;
 // the server's strict wire decoder remains unchanged.
 func diagnoseJSON(raw []byte, desc protoreflect.MessageDescriptor, path string) error {
+	return diagnoseObject(raw, desc, path, descriptorLocations(desc))
+}
+func diagnoseObject(raw []byte, desc protoreflect.MessageDescriptor, path string, locations map[string][]string) error {
 	d := json.NewDecoder(bytes.NewReader(raw))
 	tok, e := d.Token()
 	if e != nil || tok != json.Delim('{') {
@@ -40,8 +44,8 @@ func diagnoseJSON(raw []byte, desc protoreflect.MessageDescriptor, path string) 
 		if !ok {
 			return ci.ErrWire
 		}
-		if len(name) > 80 || strings.ContainsAny(name, "\n\r\t") {
-			return fmt.Errorf("%w: invalid key at %s", ci.ErrWire, path)
+		if !safeDiagnosticToken(name) {
+			return fmt.Errorf("%w: an invalid key at %s", ci.ErrWire, path)
 		}
 		if seen[name] {
 			return fmt.Errorf("%w: duplicate key %s at %s", ci.ErrWire, name, path)
@@ -53,12 +57,15 @@ func diagnoseJSON(raw []byte, desc protoreflect.MessageDescriptor, path string) 
 		}
 		f, ok := fields[name]
 		if !ok {
-			hint := "it is not allowed in the request"
-			locations := map[string]string{"requestId": "the request top level", "content": "the request top level", "linkedContent": "the link request top level", "expectedTicketRevision": "the prepare request top level or current/update expectation", "expectedDraftRevision": "the current/update expectation", "expectedAuthorUserId": "content or the publish request top level", "workspaceId": "content or the publish request top level", "projectId": "content", "existingTicketId": "content", "title": "content", "summary": "content", "contextMarkdown": "content", "destination": "content", "linkedMemberId": "content.destination", "unlinkedLabel": "content.destination", "originalDestinationIntent": "content", "current": "the link or publish request top level", "update": "the prepare request top level", "clientReported": "the request top level", "ticketId": "current/update", "draftId": "current/update"}
-			if where, found := locations[name]; found {
-				hint = "it belongs in " + where
+			hint := "it is not allowed in this request"
+			if paths := locations[name]; len(paths) > 0 {
+				hint = "it belongs at " + strings.Join(paths, ", ")
 			}
-			return fmt.Errorf("%w: unknown or misplaced key %s at %s (%s; allowed keys: %s)", ci.ErrWire, name, path, hint, strings.Join(names, ", "))
+			suggestion := ""
+			if candidate := closestField(name, names); candidate != "" {
+				suggestion = "; did you mean " + candidate + "?"
+			}
+			return fmt.Errorf("%w: unknown or misplaced key %s at %s (%s%s; allowed keys: %s)", ci.ErrWire, name, path, hint, suggestion, strings.Join(names, ", "))
 		}
 		if group := f.ContainingOneof(); group != nil && !group.IsSynthetic() {
 			if oneofs[group.FullName()] {
@@ -70,7 +77,7 @@ func diagnoseJSON(raw []byte, desc protoreflect.MessageDescriptor, path string) 
 			return fmt.Errorf("%w: %s.%s cannot be null", ci.ErrWire, path, name)
 		}
 		if f.Kind() == protoreflect.MessageKind {
-			if e := diagnoseJSON(value, f.Message(), name); e != nil {
+			if e := diagnoseObject(value, f.Message(), path+"."+name, locations); e != nil {
 				return e
 			}
 			continue
@@ -104,6 +111,114 @@ func diagnoseJSON(raw []byte, desc protoreflect.MessageDescriptor, path string) 
 		}
 	}
 	return nil
+}
+
+// diagnosticToken restricts all untrusted identifiers echoed in errors to a
+// small ASCII alphabet. It also bounds output and suggestion work.
+func safeDiagnosticToken(s string) bool {
+	if len(s) == 0 || len(s) > 64 {
+		return false
+	}
+	for _, c := range []byte(s) {
+		if !(c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_' || c == '.' || c == '-') {
+			return false
+		}
+	}
+	return true
+}
+
+// IsSafeDiagnosticToken reports whether an identifier can appear in errors.
+func IsSafeDiagnosticToken(s string) bool { return safeDiagnosticToken(s) }
+
+// SafeDiagnosticToken is for other CLI error surfaces; never use it to alter data.
+func SafeDiagnosticToken(s string) string {
+	if !safeDiagnosticToken(s) {
+		return "an invalid value"
+	}
+	return s
+}
+
+type locationEntry struct {
+	once      sync.Once
+	locations map[string][]string
+}
+
+var locationsCache sync.Map // protoreflect.FullName -> *locationEntry
+func descriptorLocations(root protoreflect.MessageDescriptor) map[string][]string {
+	cached, _ := locationsCache.LoadOrStore(root.FullName(), &locationEntry{})
+	entry := cached.(*locationEntry)
+	entry.once.Do(func() {
+		locations := map[string][]string{}
+		var walk func(protoreflect.MessageDescriptor, string, map[protoreflect.FullName]bool)
+		walk = func(d protoreflect.MessageDescriptor, path string, ancestors map[protoreflect.FullName]bool) {
+			if ancestors[d.FullName()] {
+				return
+			}
+			ancestors[d.FullName()] = true
+			defer delete(ancestors, d.FullName())
+			for i := 0; i < d.Fields().Len(); i++ {
+				f := d.Fields().Get(i)
+				key := f.JSONName()
+				fieldPath := path + "." + key
+				locations[key] = append(locations[key], fieldPath)
+				if f.Kind() == protoreflect.MessageKind && !f.IsMap() && !f.IsList() {
+					walk(f.Message(), fieldPath, ancestors)
+				}
+			}
+		}
+		walk(root, "request", map[protoreflect.FullName]bool{})
+		for _, paths := range locations {
+			sort.Strings(paths)
+		}
+		entry.locations = locations
+	})
+	return entry.locations
+}
+
+func closestField(name string, candidates []string) string {
+	if !safeDiagnosticToken(name) {
+		return ""
+	}
+	best := ""
+	distance := 3
+	for _, candidate := range candidates {
+		d := diagnosticDistance(strings.ToLower(name), strings.ToLower(candidate))
+		if d < distance {
+			distance = d
+			best = candidate
+		}
+	}
+	return best
+}
+func diagnosticDistance(a, b string) int {
+	if len(a) > 64 || len(b) > 64 {
+		return 65
+	}
+	row := make([]int, len(b)+1)
+	for i := range row {
+		row[i] = i
+	}
+	for i := 1; i <= len(a); i++ {
+		previous := row[0]
+		row[0] = i
+		for j := 1; j <= len(b); j++ {
+			old := row[j]
+			cost := 0
+			if a[i-1] != b[j-1] {
+				cost = 1
+			}
+			v := row[j] + 1
+			if row[j-1]+1 < v {
+				v = row[j-1] + 1
+			}
+			if previous+cost < v {
+				v = previous + cost
+			}
+			row[j] = v
+			previous = old
+		}
+	}
+	return row[len(b)]
 }
 
 func checkPlaceholders(c *v1.AuthoredContent) error {

@@ -19,6 +19,93 @@ func ReadContentInputWithCorrections(r io.Reader, target proto.Message, report f
 	}
 	return decodeClientContent(b, target, report)
 }
+
+// rejectDuplicates validates raw bytes before any lossy JSON map conversion.
+func rejectDuplicates(b []byte, target proto.Message) error {
+	if ValidateRawObject(b, maxResponseBytes) == nil {
+		return nil
+	}
+	if json.Valid(b) {
+		if err := diagnoseJSON(b, target.ProtoReflect().Descriptor(), "request"); err != nil {
+			return err
+		}
+	}
+	return ci.ErrWire
+}
+
+// moveMisplacedRevision only moves recognized concurrency fields. Ambiguous
+// placement fails closed; authored content itself is never interpreted here.
+func moveMisplacedRevision(root, content map[string]json.RawMessage, contentKey, expectationKey, key string) (string, bool, error) {
+	rev, exists := content[key]
+	if !exists {
+		return "", false, nil
+	}
+	destination := "top level"
+	if _, has := root[expectationKey]; has {
+		var expectation map[string]json.RawMessage
+		if json.Unmarshal(root[expectationKey], &expectation) != nil || expectation == nil {
+			return "", false, fmt.Errorf("%w: %s must be an object", ci.ErrWire, expectationKey)
+		}
+		if _, exists = expectation[key]; exists {
+			return "", false, fmt.Errorf("%w: duplicate %s in %s and %s", ci.ErrWire, key, contentKey, expectationKey)
+		}
+		expectation[key] = rev
+		raw, err := json.Marshal(expectation)
+		if err != nil {
+			return "", false, ci.ErrWire
+		}
+		root[expectationKey] = raw
+		destination = expectationKey
+	} else {
+		if key != "expectedTicketRevision" || contentKey != "content" {
+			return "", false, fmt.Errorf("%w: %s belongs in %s", ci.ErrWire, key, expectationKey)
+		}
+		if _, exists = root[key]; exists {
+			return "", false, fmt.Errorf("%w: duplicate %s in content and top level", ci.ErrWire, key)
+		}
+		root[key] = rev
+	}
+	delete(content, key)
+	return destination, true, nil
+}
+
+func normalizeRoot(b []byte, contentKey, expectationKey string, report func(string)) ([]byte, error) {
+	var root map[string]json.RawMessage
+	if json.Unmarshal(b, &root) != nil {
+		return nil, ci.ErrWire
+	}
+	var content map[string]json.RawMessage
+	if json.Unmarshal(root[contentKey], &content) != nil || content == nil {
+		return b, nil
+	}
+	changed := false
+	for _, key := range []string{"expectedTicketRevision", "expectedDraftRevision"} {
+		destination, moved, err := moveMisplacedRevision(root, content, contentKey, expectationKey, key)
+		if err != nil {
+			return nil, err
+		}
+		if moved {
+			changed = true
+			if report != nil {
+				report("moved " + contentKey + "." + key + " to " + destination)
+			}
+		}
+	}
+	if !changed {
+		return b, nil
+	}
+	raw, err := json.Marshal(content)
+	if err != nil {
+		return nil, ci.ErrWire
+	}
+	root[contentKey] = raw
+	raw, err = json.Marshal(root)
+	if err != nil {
+		return nil, ci.ErrWire
+	}
+	return raw, nil
+}
+
 func decodeClientContent(b []byte, target proto.Message, report func(string)) error {
 	contentKey, expectationKey := "", ""
 	switch target.(type) {
@@ -28,81 +115,24 @@ func decodeClientContent(b []byte, target proto.Message, report func(string)) er
 		contentKey, expectationKey = "linkedContent", "current"
 	}
 	if contentKey != "" {
-		if ValidateRawObject(b, maxResponseBytes) != nil {
-			if json.Valid(b) {
-				if e := diagnoseJSON(b, target.ProtoReflect().Descriptor(), "request"); e != nil {
-					return e
-				}
-			}
-			return ci.ErrWire
+		if err := rejectDuplicates(b, target); err != nil {
+			return err
 		}
-		var root map[string]json.RawMessage
-		if json.Unmarshal(b, &root) != nil {
-			return ci.ErrWire
-		}
-		var content map[string]json.RawMessage
-		if json.Unmarshal(root[contentKey], &content) == nil && content != nil {
-			changed := false
-			for _, key := range []string{"expectedTicketRevision", "expectedDraftRevision"} {
-				rev, exists := content[key]
-				if !exists {
-					continue
-				}
-				destination := "top level"
-				if _, hasExpectation := root[expectationKey]; hasExpectation {
-					var expectation map[string]json.RawMessage
-					if json.Unmarshal(root[expectationKey], &expectation) != nil || expectation == nil {
-						return fmt.Errorf("%w: %s must be an object", ci.ErrWire, expectationKey)
-					}
-					if _, exists := expectation[key]; exists {
-						return fmt.Errorf("%w: duplicate %s in %s and %s", ci.ErrWire, key, contentKey, expectationKey)
-					}
-					expectation[key] = rev
-					raw, err := json.Marshal(expectation)
-					if err != nil {
-						return ci.ErrWire
-					}
-					root[expectationKey] = raw
-					destination = expectationKey
-				} else {
-					if key != "expectedTicketRevision" || contentKey != "content" {
-						return fmt.Errorf("%w: %s belongs in %s", ci.ErrWire, key, expectationKey)
-					}
-					if _, exists := root[key]; exists {
-						return fmt.Errorf("%w: duplicate %s in content and top level", ci.ErrWire, key)
-					}
-					root[key] = rev
-				}
-				delete(content, key)
-				changed = true
-				if report != nil {
-					report("moved " + contentKey + "." + key + " to " + destination)
-				}
-			}
-			if changed {
-				raw, err := json.Marshal(content)
-				if err != nil {
-					return ci.ErrWire
-				}
-				root[contentKey] = raw
-				b, err = json.Marshal(root)
-				if err != nil {
-					return ci.ErrWire
-				}
-			}
+		var err error
+		b, err = normalizeRoot(b, contentKey, expectationKey, report)
+		if err != nil {
+			return err
 		}
 	}
-
-	if e := ci.DecodeStrictJSON(b, target); e != nil {
-		if diagnostic := diagnoseJSON(b, target.ProtoReflect().Descriptor(), "request"); diagnostic != nil {
-			return diagnostic
+	if err := ci.DecodeStrictJSON(b, target); err != nil {
+		if detail := diagnoseJSON(b, target.ProtoReflect().Descriptor(), "request"); detail != nil {
+			return detail
 		}
-		return e
+		return err
 	}
-
 	if q, ok := target.(*v1.PrepareContentRequest); ok && q.Content != nil {
-		if e := checkPreparePlaceholders(q); e != nil {
-			return e
+		if err := checkPreparePlaceholders(q); err != nil {
+			return err
 		}
 	}
 	return nil

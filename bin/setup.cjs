@@ -1006,7 +1006,7 @@ function acquireSetupLock(lockPath, agent, platform) {
   try {
     const existing = fs.lstatSync(lockPath);
     if (existing.isSymbolicLink()) fail('The Syntra setup lock path is a symbolic link.');
-    fail(`A Syntra setup lock already exists at ${lockPath}. Confirm no setup is active, then remove this stale lock manually before retrying.`);
+    fail(`A Syntra setup lock already exists next to the selected host config. Confirm no setup is active, then remove this stale lock manually before retrying.`);
   } catch (error) {
     if (error instanceof SetupError) throw error;
     if (!error || error.code !== 'ENOENT') fail('The Syntra setup lock could not be inspected safely.');
@@ -1036,7 +1036,7 @@ function acquireSetupLock(lockPath, agent, platform) {
     }
     if (error instanceof SetupError) throw error;
     if (error && error.code === 'EEXIST') {
-      fail(`A Syntra setup lock already exists at ${lockPath}. Confirm no setup is active, then remove this stale lock manually before retrying.`);
+      fail(`A Syntra setup lock already exists next to the selected host config. Confirm no setup is active, then remove this stale lock manually before retrying.`);
     }
     fail('A Syntra setup lock could not be created safely.');
   }
@@ -1239,7 +1239,7 @@ function applySetup(agent, options = {}) {
     }
 
     if (!rollbackSafe) {
-      fail(`Setup stopped after a filesystem change it could not safely roll back. The lock remains at ${lockPath}; confirm no setup is active, inspect the config, backup, and skill, then remove the lock manually before retrying.`);
+      fail(`Setup stopped after a filesystem change it could not safely roll back. The lock remains next to the selected host config; confirm no setup is active, inspect the config, backup, and skill, then remove the lock manually before retrying.`);
     }
     if (error instanceof SetupError) throw error;
     fail(configCommitted

@@ -39,7 +39,7 @@ func runContent(parent context.Context, args []string) error {
 	request := f.String("request", "", "retained request UUID for retry")
 	workspace := f.String("workspace", "", "workspace ID or resolve name")
 	project := f.String("project", "", "project ID or resolve name")
-	team := f.String("team", "", "team name for resolve")
+	team := f.String("team", "", "project team name or ID for resolve")
 	recipient := f.String("recipient", "", "recipient name for resolve")
 	ticket := f.String("ticket", "", "ticket ID")
 	view := f.String("view", "published", "messages: published or own-drafts")
@@ -96,6 +96,56 @@ func runContent(parent context.Context, args []string) error {
 	}
 	ctx, cancel := context.WithTimeout(parent, *timeout)
 	defer cancel()
+	var target proto.Message
+	switch args[0] {
+	case "prepare":
+		if *template == "" {
+			target = &v1.PrepareContentRequest{}
+		} else if *file != "" || *base != "" {
+			return errors.New("--template cannot be combined with --file or --base")
+		} else if err := toolclient.ValidateTemplateInput(*template, *workspace, *project, *ticket); err != nil {
+			return err
+		}
+	case "link":
+		target = &v1.LinkContentRequest{}
+	case "publish":
+		target = &v1.PublishContentRequest{}
+	case "snapshot":
+		target = &v1.GetContentSnapshotRequest{}
+	}
+	if target != nil {
+		if *file == "" {
+			return errors.New("explicit --file required; use - for bounded stdin")
+		}
+		input, closeInput, err := openBoundedInput(*file, 1048576, "request")
+		if err != nil {
+			return err
+		}
+		defer closeInput()
+		if err = readContentWithContext(ctx, input, target); err != nil {
+			return err
+		}
+		if err = toolclient.ValidateLocalContentRequest(target, *base); err != nil {
+			return err
+		}
+	}
+	replyOpts := replyOptions{Workspace: *workspace, TicketID: *ticket, Summary: *summary}
+	if args[0] == "reply" {
+		if *contextFile == "" {
+			return errors.New("reply requires --workspace, --ticket, --summary and --context-file")
+		}
+		if err := toolclient.ValidateReplyInput(*workspace, *ticket, *summary, ""); err != nil {
+			return err
+		}
+		data, err := readReplyContext(ctx, *contextFile)
+		if err != nil {
+			return err
+		}
+		replyOpts.ContextMarkdown = string(data)
+		if err = toolclient.ValidateReplyInput(*workspace, *ticket, *summary, replyOpts.ContextMarkdown); err != nil {
+			return err
+		}
+	}
 	if *dir == "" {
 		root, e := os.UserConfigDir()
 		if e != nil {
@@ -124,7 +174,9 @@ func runContent(parent context.Context, args []string) error {
 		return e
 	}
 	if args[0] == "reply" {
-		return reply(ctx, app, p.AccountID, *workspace, *ticket, *summary, *contextFile, *dir)
+		replyOpts.Account = p.AccountID
+		replyOpts.ProfileDir = *dir
+		return reply(ctx, app, replyOpts)
 	}
 	if args[0] == "prepare" && *template != "" {
 		if *file != "" || *base != "" {
@@ -193,36 +245,7 @@ func runContent(parent context.Context, args []string) error {
 	case "retry":
 		message, e = app.Retry(ctx, *request)
 	default:
-		var target proto.Message
-		switch args[0] {
-		case "prepare":
-			target = &v1.PrepareContentRequest{}
-		case "link":
-			target = &v1.LinkContentRequest{}
-		case "publish":
-			target = &v1.PublishContentRequest{}
-		case "snapshot":
-			target = &v1.GetContentSnapshotRequest{}
-		}
-		if *file == "" {
-			return errors.New("explicit --file required; use - for bounded stdin")
-		}
-		var r io.Reader = os.Stdin
-		if *file != "-" {
-			input, err := openRequestFile(*file)
-			if err != nil {
-				return errors.New("request file unavailable")
-			}
-			defer input.Close()
-			stat, err := input.Stat()
-			if err != nil || !stat.Mode().IsRegular() || stat.Size() > 1048576 {
-				return errors.New("request file must be a bounded regular file")
-			}
-			r = input
-		}
-		if e = readContentWithContext(ctx, r, target); e != nil {
-			return e
-		}
+
 		switch q := target.(type) {
 		case *v1.PrepareContentRequest:
 			message, e = app.Prepare(ctx, q, *base)
@@ -270,14 +293,61 @@ func runContent(parent context.Context, args []string) error {
 // A stalled stdin pipe cannot outlive the operation deadline. The command exits
 // after cancellation; no blocked input reader is reused for another operation.
 func readContentWithContext(ctx context.Context, r io.Reader, target proto.Message) error {
+	return runInputWithContext(ctx, func() error {
+		return toolclient.ReadContentInputWithCorrections(r, target, func(s string) { fmt.Fprintln(os.Stderr, "syntra:", s) })
+	})
+}
+func runInputWithContext(ctx context.Context, read func() error) error {
 	done := make(chan error, 1)
-	go func() {
-		done <- toolclient.ReadContentInputWithCorrections(r, target, func(s string) { fmt.Fprintln(os.Stderr, "syntra:", s) })
-	}()
+	go func() { done <- read() }()
 	select {
-	case e := <-done:
-		return e
+	case err := <-done:
+		return err
 	case <-ctx.Done():
 		return errors.New("request input cancelled or deadline exceeded")
 	}
+}
+
+// openBoundedInput preserves the existing no-follow and regular-file checks.
+func openBoundedInput(path string, max int64, label string) (io.Reader, func(), error) {
+	if path == "-" {
+		return os.Stdin, func() {}, nil
+	}
+	file, err := openRequestFile(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%s file unavailable", label)
+	}
+	info, err := file.Stat()
+	if err != nil || !info.Mode().IsRegular() || info.Size() > max {
+		file.Close()
+		return nil, nil, fmt.Errorf("%s file must be a bounded regular file", label)
+	}
+	return file, func() { file.Close() }, nil
+}
+func readReplyContext(ctx context.Context, path string) ([]byte, error) {
+	reader, closeInput, err := openBoundedInput(path, 131072, "context")
+	if err != nil {
+		return nil, err
+	}
+	defer closeInput()
+	// Regular files cannot block on a producer; stdin may be a stalled pipe and
+	// retains the operation deadline via the same cancellation wrapper as JSON.
+	var data []byte
+	read := func() error {
+		var e error
+		data, e = io.ReadAll(io.LimitReader(reader, 131073))
+		if e != nil || len(data) > 131072 {
+			return errors.New("context file exceeds limit or cannot be read")
+		}
+		return nil
+	}
+	if path != "-" {
+		err = read()
+	} else {
+		err = runInputWithContext(ctx, read)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
