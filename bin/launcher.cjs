@@ -171,6 +171,9 @@ function launch(args = process.argv.slice(2)) {
       }
       return;
     }
+    if (code === 0 && args.length === 1 && (args[0] === '--help' || args[0] === '-h' || args[0] === 'help')) {
+      process.stdout.write('\nLauncher commands:\n  setup       Configure an agent host.\n  update      Update the installed package.\n  --version   Print the package version.\n');
+    }
     process.exitCode = Number.isInteger(code) ? code : 1;
   });
 }

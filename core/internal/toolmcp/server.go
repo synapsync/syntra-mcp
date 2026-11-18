@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	v1 "syntra.local/mcp/gen/syntra/v1"
+	ci "syntra.local/mcp/internal/contentintegrity"
 	"syntra.local/mcp/internal/toolclient"
 )
 
@@ -105,7 +106,7 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 	// calling a typed shared method. Invalid args cannot reach legacy handlers.
 	args, e := decodeArgs(name, raw)
 	if e != nil {
-		return toolError("invalid tool arguments; no operation attempted")
+		return toolError(e.Error() + "; no operation attempted")
 	}
 	app, close, e := openApp(ctx, cfg)
 	if e != nil {
@@ -192,6 +193,9 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 			name := strings.TrimPrefix(missingCapability.Required.String(), "TOOL_CAPABILITY_")
 			return toolError("Syntra connection lacks " + name + " permission. Run syntra status in a terminal on this machine using the same profile as the MCP. Use the profile from a login that has " + name + ", or authorize a separate connection with that permission.")
 		}
+		if errors.Is(e, ci.ErrWire) || errors.Is(e, ci.ErrIntegrity) {
+			return toolError(e.Error())
+		}
 		return toolError("operation rejected or response could not be verified; no rollback is implied; reuse the same requestId for exact retry")
 	}
 	return result(out, false)
@@ -262,8 +266,8 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 		case "snapshot":
 			a.request = &v1.GetContentSnapshotRequest{}
 		}
-		if toolclient.ReadContentInput(bytes.NewReader(r), a.request) != nil {
-			return a, errArguments
+		if err := toolclient.ReadContentInput(bytes.NewReader(r), a.request); err != nil {
+			return a, err
 		}
 	}
 	return a, nil

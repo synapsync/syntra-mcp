@@ -6,6 +6,8 @@ compatibility: Requires a configured Syntra stdio MCP server and a profile authe
 
 # Syntra
 
+Start with `syntra --help`. To reply, run `syntra prepare --template reply --workspace WORKSPACE_UUID --ticket TICKET_UUID`, save the JSON privately, replace all `TODO: SYNTRA` placeholders, and run `syntra prepare --file request.json`. Publish separately. The ticket revision belongs at request top level beside `content`.
+
 ## Start and discover
 
 Use the configured Syntra MCP tools. First call `identity` when the active account is not established. If authentication is missing, tell the user to run the human CLI login outside MCP; never ask for an OTP, password, bearer token or profile file, and never attempt to log in through another tool.

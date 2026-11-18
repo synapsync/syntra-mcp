@@ -1149,3 +1149,32 @@ func TestCompiledCLIReplyRevision(t *testing.T) {
 		}
 	}
 }
+
+func TestNestedTicketRevisionNormalization(t *testing.T) {
+	raw := `{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"22222222-2222-4222-8222-222222222222","projectId":"33333333-3333-4333-8333-333333333333","existingTicketId":"44444444-4444-4444-8444-444444444444","expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title":"...","originalDestinationIntent":"...","summary":"...","contextMarkdown":"","destination":{"unlinkedLabel":"..."}},"clientReported":{"tool":"Claude Code","model":"..."}}`
+	var request v1.PrepareContentRequest
+	var correction string
+	if err := ReadContentInputWithCorrections(strings.NewReader(raw), &request, func(s string) { correction = s }); err != nil {
+		t.Fatal(err)
+	}
+	if request.GetExpectedTicketRevision() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" || correction == "" {
+		t.Fatalf("revision or correction missing")
+	}
+	first, err := digest(request.Content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	correct := strings.Replace(raw, `"content":{`, `"expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","content":{`, 1)
+	correct = strings.Replace(correct, `"expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title"`, `"title"`, 1)
+	var canonical v1.PrepareContentRequest
+	if err := ReadContentInput(strings.NewReader(correct), &canonical); err != nil {
+		t.Fatal(err)
+	}
+	second, err := digest(canonical.Content)
+	if err != nil || !bytes.Equal(first, second) {
+		t.Fatal("normalization changed content digest")
+	}
+	if err := ReadContentInput(strings.NewReader(strings.Replace(raw, `"summary":"..."`, `"summary":"TODO: SYNTRA summary"`, 1)), &request); err == nil {
+		t.Fatal("placeholder accepted")
+	}
+}

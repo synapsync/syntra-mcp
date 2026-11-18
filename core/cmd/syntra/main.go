@@ -34,6 +34,21 @@ func run(parent context.Context, args []string) error {
 		return errors.New("usage: syntra login|status|identity|disconnect|forget [options]")
 	}
 	command := args[0]
+	if command == "--help" || command == "-h" || command == "help" && len(args) == 1 {
+		printHelp("")
+		return nil
+	}
+	if command == "help" && len(args) == 2 {
+		if _, ok := helpEntries[args[1]]; !ok {
+			return unknownCommand(args[1])
+		}
+		printHelp(args[1])
+		return nil
+	}
+	if _, ok := helpEntries[command]; ok && len(args) == 2 && (args[1] == "--help" || args[1] == "-h") {
+		printHelp(command)
+		return nil
+	}
 	if (command == "version" || command == "--version") && len(args) == 1 {
 		fmt.Println(version)
 		return nil
@@ -45,7 +60,7 @@ func run(parent context.Context, args []string) error {
 		return runContent(parent, args)
 	}
 	if command != "login" && command != "status" && command != "identity" && command != "disconnect" && command != "forget" {
-		return errors.New("unknown command")
+		return unknownCommand(command)
 	}
 	flags := flag.NewFlagSet(command, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
@@ -63,8 +78,11 @@ func run(parent context.Context, args []string) error {
 	publish := flags.Bool("publish", false, "enable publication, requires --prepare (login)")
 	markRead := flags.Bool("mark-read", false, "enable explicit mark-read (login)")
 	timeout := flags.Duration("timeout", 5*time.Minute, "operation/lock deadline")
-	if flags.Parse(args[1:]) != nil || flags.NArg() != 0 {
-		return errors.New("invalid command options; OTP and credentials are never accepted as arguments")
+	if err := flags.Parse(args[1:]); err != nil {
+		return optionError(command, err)
+	}
+	if flags.NArg() != 0 {
+		return optionError(command, nil)
 	}
 	if *timeout <= 0 || *timeout > 10*time.Minute {
 		return errors.New("timeout must be positive and at most 10m")

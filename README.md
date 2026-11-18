@@ -1,5 +1,7 @@
 # Syntra CLI and MCP
 
+Start with `syntra --help`. To reply, run `syntra prepare --template reply --workspace WORKSPACE_UUID --ticket TICKET_UUID`, save the JSON privately, replace all `TODO: SYNTRA` placeholders, and run `syntra prepare --file request.json`. Publish separately. The ticket revision belongs at request top level beside `content`.
+
 Syntra connects your agent to the workspaces, project teams and tickets you can
 access. Read shared work, prepare private drafts and send tickets or replies
 when you ask. The client runs locally over stdio and connects to the Syntra API

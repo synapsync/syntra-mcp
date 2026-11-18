@@ -31,6 +31,7 @@ func runContent(parent context.Context, args []string) error {
 	dir := f.String("profile-dir", "", "private shared profile directory")
 	api := f.String("api", "", "exact retained API origin")
 	timeout := f.Duration("timeout", time.Minute, "operation deadline")
+	template := f.String("template", "", "new or reply template")
 	file := f.String("file", "", "strict bounded request JSON file, or - for stdin")
 	base := f.String("base", "", "retained request ID anchoring exact CAS/preimage")
 	request := f.String("request", "", "retained request UUID for retry")
@@ -40,8 +41,11 @@ func runContent(parent context.Context, args []string) error {
 	recipient := f.String("recipient", "", "recipient name for resolve")
 	ticket := f.String("ticket", "", "ticket ID")
 	view := f.String("view", "published", "messages: published or own-drafts")
-	if f.Parse(args[1:]) != nil || f.NArg() != 0 || *timeout <= 0 || *timeout > 10*time.Minute {
-		return errors.New("invalid command options")
+	if err := f.Parse(args[1:]); err != nil {
+		return optionError(args[0], err)
+	}
+	if f.NArg() != 0 || *timeout <= 0 || *timeout > 10*time.Minute {
+		return optionError(args[0], nil)
 	}
 	allowed := map[string]bool{"profile-dir": true, "api": true, "timeout": true}
 	switch args[0] {
@@ -67,18 +71,22 @@ func runContent(parent context.Context, args []string) error {
 		}
 	case "retry":
 		allowed["request"] = true
+	case "prepare":
+		for _, s := range []string{"file", "base", "template", "workspace", "project", "ticket"} {
+			allowed[s] = true
+		}
 	default:
 		allowed["file"] = true
 		allowed["base"] = true
 	}
-	invalid := false
+	invalid := ""
 	f.Visit(func(x *flag.Flag) {
 		if !allowed[x.Name] {
-			invalid = true
+			invalid = x.Name
 		}
 	})
-	if invalid {
-		return errors.New("option unavailable for this command")
+	if invalid != "" {
+		return fmt.Errorf("option unavailable for this command: --%s. %s", invalid, usage(args[0]))
 	}
 	ctx, cancel := context.WithTimeout(parent, *timeout)
 	defer cancel()
@@ -108,6 +116,19 @@ func runContent(parent context.Context, args []string) error {
 	app, e := toolclient.NewApp(ctx, client, store)
 	if e != nil {
 		return e
+	}
+	if args[0] == "prepare" && *template != "" {
+		if *file != "" || *base != "" {
+			return errors.New("--template cannot be combined with --file or --base")
+		}
+		if *template == "reply" {
+			t, err := app.Ticket(ctx, *workspace, *ticket)
+			if err != nil {
+				return err
+			}
+			return printTemplate(*template, *workspace, *project, p.AccountID, t)
+		}
+		return printTemplate(*template, *workspace, *project, p.AccountID, nil)
 	}
 	var result any
 	var message proto.Message
@@ -241,7 +262,9 @@ func runContent(parent context.Context, args []string) error {
 // after cancellation; no blocked input reader is reused for another operation.
 func readContentWithContext(ctx context.Context, r io.Reader, target proto.Message) error {
 	done := make(chan error, 1)
-	go func() { done <- toolclient.ReadContentInput(r, target) }()
+	go func() {
+		done <- toolclient.ReadContentInputWithCorrections(r, target, func(s string) { fmt.Fprintln(os.Stderr, "syntra:", s) })
+	}()
 	select {
 	case e := <-done:
 		return e

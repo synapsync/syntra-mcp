@@ -63,7 +63,7 @@ func ReadContentInput(r io.Reader, target proto.Message) error {
 	if e != nil || len(b) > maxResponseBytes {
 		return ci.ErrWire
 	}
-	return ci.DecodeStrictJSON(b, target)
+	return decodeClientContent(b, target, nil)
 }
 func digest(c *v1.AuthoredContent) ([]byte, error) {
 	x, e := ci.FromProto(c)

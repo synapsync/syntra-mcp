@@ -47,7 +47,7 @@ func toolDefinition(name string) *mcp.Tool {
 		switch name {
 		case "prepare":
 			request = &v1.PrepareContentRequest{}
-			description = "Prepare owner-private exact Resumen/Markdown, no send. Explicit unlinkedLabel remains undelivered. Existing edits require retained base. Reported provenance is unverified."
+			description = "Prepare private content, no send. For replies copy ticket revision to request.expectedTicketRevision (beside content). Example: {\"request\":{\"requestId\":\"UUID\",\"expectedTicketRevision\":\"TICKET_REVISION\",\"content\":{\"formatVersion\":1,\"expectedAuthorUserId\":\"ACCOUNT_UUID\",\"workspaceId\":\"WORKSPACE_UUID\",\"existingTicketId\":\"TICKET_UUID\",\"title\":\"Title\",\"originalDestinationIntent\":\"Alex\",\"destination\":{\"linkedMemberId\":\"MEMBER_UUID\"},\"summary\":\"Summary\",\"contextMarkdown\":\"Context\"}}}. CLI: syntra prepare --template reply --workspace UUID --ticket UUID."
 		case "link":
 			request = &v1.LinkContentRequest{}
 			description = "Explicitly link private unlinked content to a real authorized member; preserves original intent and every other byte. Never publishes."
@@ -88,6 +88,24 @@ func messageSchema(d protoreflect.MessageDescriptor) map[string]any {
 			schema = map[string]any{"type": "boolean"}
 		default:
 			schema = map[string]any{"type": "string"}
+		}
+		if m, ok := schema.(map[string]any); ok {
+			description := "Canonical " + f.JSONName() + " field."
+			switch f.JSONName() {
+			case "expectedTicketRevision":
+				description = "Opaque ticket revision; copy exactly from ticket. For a new reply this is at request top level, beside content; within current/update it belongs in that expectation object."
+			case "expectedDraftRevision":
+				description = "Opaque private draft revision from the retained snapshot; belongs in current/update."
+			case "expectedAuthorUserId":
+				description = "Authenticated account UUID from identity."
+			case "requestId":
+				description = "Fresh canonical UUID; retain it for exact retry."
+			case "expectedContentDigest":
+				description = "Optional for prepare; computed from exact content when omitted. Current/update must use the retained snapshot digest."
+			case "content":
+				description = "Exact authored content; revisions are not content fields."
+			}
+			m["description"] = description
 		}
 		properties[f.JSONName()] = schema
 	}

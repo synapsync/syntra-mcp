@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -95,13 +96,27 @@ func (a *App) base(id string) (*v1.AuthoredContentSnapshot, error) {
 // base. No name lookup, invitations, publication or lifecycle action is implicit.
 func (a *App) Prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID string) (*v1.AuthoredContentSnapshot, error) {
 	if in == nil || !validUUID(in.RequestId) {
-		return nil, errors.New("explicit canonical requestId required before mutation")
+		return nil, fmt.Errorf("%w: requestId must be a fresh canonical lowercase UUID at the top level", ci.ErrWire)
 	}
 	r := proto.Clone(in).(*v1.PrepareContentRequest)
+	if r.Content == nil {
+		return nil, fmt.Errorf("%w: content is required at the top level", ci.ErrWire)
+	}
+	for _, f := range []struct{ name, value string }{{"expectedAuthorUserId", r.Content.ExpectedAuthorUserId}, {"workspaceId", r.Content.WorkspaceId}} {
+		if !validUUID(f.value) {
+			return nil, fmt.Errorf("%w: content.%s must be a canonical lowercase UUID", ci.ErrWire, f.name)
+		}
+	}
+	if r.Content != nil && r.Content.ExpectedAuthorUserId != a.profile.AccountID {
+		return nil, fmt.Errorf("%w: content.expectedAuthorUserId must equal the account shown by syntra identity", ci.ErrIntegrity)
+	}
 	if e := fillDigest(r.Content, &r.ExpectedContentDigest); e != nil {
 		return nil, e
 	}
 	if e := ci.ValidatePrepare(r, a.profile.AccountID); e != nil {
+		if strings.Contains(e.Error(), "expectedTicketRevision") {
+			return nil, fmt.Errorf("%w: expectedTicketRevision must be the opaque revision printed by syntra ticket; copy it exactly at the top level beside content", ci.ErrWire)
+		}
 		return nil, e
 	}
 	if r.Update != nil {
