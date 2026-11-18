@@ -1,0 +1,147 @@
+syntax = "proto3";
+package syntra.v1;
+import "syntra/v1/identity.proto";
+import "google/protobuf/timestamp.proto";
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+// Human administration only. Operators gain no collaboration visibility.
+service AdministrationService {
+  rpc ListCreationAccounts(ListCreationAccountsRequest) returns (ListCreationAccountsResponse);
+  rpc GetWorkspaceSettings(GetWorkspaceSettingsRequest) returns (GetWorkspaceSettingsResponse);
+  rpc GetCapabilities(GetCapabilitiesRequest) returns (GetCapabilitiesResponse);
+  rpc CreateWorkspace(CreateWorkspaceRequest) returns (CreateWorkspaceResponse);
+  rpc RenameWorkspace(RenameWorkspaceRequest) returns (RenameWorkspaceResponse);
+  rpc ListDirectoryMembers(ListDirectoryMembersRequest) returns (ListDirectoryMembersResponse);
+  rpc ChangeMember(ChangeMemberRequest) returns (ChangeMemberResponse);
+  rpc GetMemberDependencies(GetMemberDependenciesRequest) returns (GetMemberDependenciesResponse);
+  rpc ListTeams(ListTeamsRequest) returns (ListTeamsResponse);
+  rpc GetTeam(GetTeamRequest) returns (GetTeamResponse);
+  rpc ListTeamMembers(ListTeamMembersRequest) returns (ListTeamMembersResponse);
+  rpc SaveTeam(SaveTeamRequest) returns (SaveTeamResponse);
+  rpc ListAudit(ListAuditRequest) returns (ListAuditResponse);
+  rpc SetCreationPermission(SetCreationPermissionRequest) returns (SetCreationPermissionResponse);
+  rpc CreateManagedWorkspace(CreateManagedWorkspaceRequest) returns (CreateManagedWorkspaceResponse);
+  rpc ListManagedWorkspaces(ListManagedWorkspacesRequest) returns (ListManagedWorkspacesResponse);
+}
+message GetCapabilitiesRequest {}
+message GetCapabilitiesResponse { bool can_create_workspace = 1; bool platform_operator = 2; }
+message CreateWorkspaceRequest { string name = 1; string request_id = 2; }
+message CreateWorkspaceResponse { Workspace workspace = 1; }
+message RenameWorkspaceRequest { string workspace_id = 1; string name = 2; string expected_name = 3; string request_id = 4; }
+message AdministrationResult {}
+// revoke=false requires explicit admin/member. Removal blocks on responsibilities.
+message ChangeMemberRequest {
+  string workspace_id = 1; string user_id = 2; WorkspaceRole role = 3; bool revoke = 4;
+  WorkspaceRole expected_role = 5; bool expected_revoked = 6; string request_id = 7;
+}
+message GetMemberDependenciesRequest { string workspace_id = 1; string user_id = 2; int32 page_size = 3; string page_token = 4; }
+message MemberDependency { string kind = 1; string id = 2; string label = 3; string project_id = 4; reserved 5; reserved "area_id"; MemberDependencyType type = 6; }
+message GetMemberDependenciesResponse {
+  repeated MemberDependency dependencies = 1; string next_page_token = 2;
+  bool private_responsibility_blocked = 3; MemberState member = 4;
+}
+// UUID keyset pagination; page token is signed and actor/method/workspace bound.
+message AdministrationPageRequest { string workspace_id = 1; int32 page_size = 2; string page_token = 3; }
+message Team { string id = 1; string name = 2; bool archived = 3; repeated string user_ids = 4; string revision = 5; int32 member_count = 6; }
+message ListTeamsResponse { repeated Team teams = 1; string next_page_token = 2; }
+// Empty team_id creates using request_id; updates require expected_revision.
+// Atomic FULL roster replacement, <=100 distinct active workspace user IDs.
+// Empty user_ids explicitly clears the roster. GetTeam always returns all IDs.
+// request_id binds the exact protobuf payload, including user_ids order.
+message SaveTeamRequest { string workspace_id = 1; string team_id = 2; string name = 3; bool archived = 4; repeated string user_ids = 5; string request_id = 6; string expected_revision = 7; }
+message AuditEntry { string id = 1; string actor_user_id = 2; string action = 3; string target_id = 4; string detail = 5; string occurred_at = 6; AdministrativeAction typed_action = 7; AdministrativeDetail typed_detail = 8; google.protobuf.Timestamp timestamp = 9; string actor_display_name = 10; bool actor_is_operator = 11; }
+message ListAuditResponse { repeated AuditEntry entries = 1; string next_page_token = 2; }
+// Operator only. Existing admitted application account; no persisted email claim.
+// Missing confirmation fails closed after authorization; legacy subject is validated too.
+message SetCreationPermissionRequest { string provider_subject = 1; bool allowed = 2; string user_id = 3; optional bool expected_allowed = 4; string expected_revision = 5; string request_id = 6; }
+message CreateManagedWorkspaceRequest { string name = 1; string email = 2; string request_id = 3; bool send_email = 4; }
+message OperationalWorkspace { string id = 1; string name = 2; int64 active_members = 3; string created_at = 4; }
+message ListManagedWorkspacesResponse { repeated OperationalWorkspace workspaces = 1; string next_page_token = 2; }
+
+message RenameWorkspaceResponse { Workspace workspace = 1; bool replayed = 2; bool changed = 3; }
+
+message ChangeMemberResponse { MemberState member = 1; bool replayed = 2; bool changed = 3; }
+
+// Existing WorkspaceService/ListMembers remains unchanged.
+message ListDirectoryMembersRequest {
+  string workspace_id = 1; int32 page_size = 2; string page_token = 3;
+  string search = 4; WorkspaceRole role = 5; string team_id = 6;
+}
+message ListDirectoryMembersResponse { repeated WorkspaceMember members = 1; string next_page_token = 2; }
+message MemberState { WorkspaceMember member = 1; bool revoked = 2; bool disabled = 3; }
+enum MemberDependencyType {
+  MEMBER_DEPENDENCY_TYPE_UNSPECIFIED = 0;
+  reserved 1;
+  reserved "MEMBER_DEPENDENCY_TYPE_AREA";
+  MEMBER_DEPENDENCY_TYPE_TICKET = 2;
+}
+enum MemberChangeFailure {
+  MEMBER_CHANGE_FAILURE_UNSPECIFIED = 0;
+  MEMBER_CHANGE_FAILURE_STALE_STATE = 1;
+  MEMBER_CHANGE_FAILURE_TARGET_UNAVAILABLE = 2;
+  MEMBER_CHANGE_FAILURE_LAST_ADMIN = 3;
+  MEMBER_CHANGE_FAILURE_RESPONSIBILITIES = 4;
+  MEMBER_CHANGE_FAILURE_CONFIRMATION_REQUIRED = 5;
+}
+// FailedPrecondition detail, only after current workspace-admin authorization.
+message MemberChangeDetail { MemberState member = 1; MemberChangeFailure reason = 2; }
+
+
+// Canonical current entity, including on exact retry; a retry never reapplies a write.
+message SaveTeamResponse { Team team = 1; bool replayed = 2; }
+
+message SetCreationPermissionResponse { CreationAccount account = 1; bool replayed = 2; bool changed = 3; }
+
+// Zero preserves the original all-teams listing. UI should explicitly select ACTIVE.
+enum TeamArchiveFilter {
+  TEAM_ARCHIVE_FILTER_UNSPECIFIED = 0;
+  TEAM_ARCHIVE_FILTER_ACTIVE = 1;
+  TEAM_ARCHIVE_FILTER_ARCHIVED = 2;
+}
+message ListTeamsRequest {
+  string workspace_id = 1; int32 page_size = 2; string page_token = 3;
+  string search = 4; TeamArchiveFilter archive_filter = 5;
+}
+message GetTeamRequest { string workspace_id = 1; string team_id = 2; }
+message GetTeamResponse { Team team = 1; }
+// Only active workspace members; no email/provider identity. UUID ascending.
+// expected_revision is required. Restart from GetTeam after a stale roster.
+message ListTeamMembersRequest {
+  string workspace_id = 1; string team_id = 2;
+  int32 page_size = 3; string page_token = 4;
+  string search = 5; WorkspaceRole role = 6; string expected_revision = 7;
+}
+message ListTeamMembersResponse {
+  repeated WorkspaceMember members = 1; string next_page_token = 2;
+  string team_revision = 3;
+}
+
+message ListAuditRequest { string workspace_id = 1; int32 page_size = 2; string page_token = 3; AdministrativeAction action_filter = 4; }
+
+message ListManagedWorkspacesRequest { string workspace_id = 1; int32 page_size = 2; string page_token = 3; string search = 4; }
+
+message CreateManagedWorkspaceResponse { Invitation invitation = 1; string token = 2; Workspace workspace = 3; bool replayed = 4; }
+
+// Only admitted accounts and stale granted accounts; never a provider directory.
+message CreationAccount {
+ string user_id = 1; string display_name = 2; bool disabled = 3;
+ bool eligible = 4; bool allowed = 5; string revision = 6;
+}
+message ListCreationAccountsRequest { int32 page_size = 1; string page_token = 2; string search = 3; }
+message ListCreationAccountsResponse { repeated CreationAccount accounts = 1; string next_page_token = 2; }
+message GetWorkspaceSettingsRequest { string workspace_id = 1; }
+message GetWorkspaceSettingsResponse { Workspace workspace = 1; }
+enum AdministrativeAction {
+ ADMINISTRATIVE_ACTION_UNSPECIFIED = 0;
+ ADMINISTRATIVE_ACTION_WORKSPACE_CREATED = 1;
+ ADMINISTRATIVE_ACTION_WORKSPACE_RENAMED = 2;
+ ADMINISTRATIVE_ACTION_MANAGED_WORKSPACE_CREATED = 3;
+ ADMINISTRATIVE_ACTION_TEAM_SAVED = 4;
+ ADMINISTRATIVE_ACTION_ROLE_CHANGED = 5;
+ ADMINISTRATIVE_ACTION_ACCESS_REVOKED = 6;
+ ADMINISTRATIVE_ACTION_CREATION_PERMISSION = 7;
+}
+// Allowlisted server-authored projection; no raw JSON, emails, or private resources.
+message AdministrativeDetail {
+ string name = 1; WorkspaceRole role = 2; bool archived = 3;
+ int32 member_count = 4; optional bool allowed = 5;
+}

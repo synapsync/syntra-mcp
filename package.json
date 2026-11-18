@@ -1,0 +1,31 @@
+{
+  "name": "@synapsync/syntra",
+  "version": "0.0.0-handoff",
+  "private": true,
+  "description": "Syntra CLI and local Model Context Protocol server",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "bin": {
+    "syntra": "bin/launcher.cjs"
+  },
+  "files": [
+    "README.md",
+    "bin/launcher.cjs",
+    "bin/setup.cjs",
+    "bin/vendor/**",
+    "skills/syntra/**"
+  ],
+  "optionalDependencies": {
+    "@synapsync/syntra-linux-x64": "0.0.0-handoff",
+    "@synapsync/syntra-linux-arm64": "0.0.0-handoff",
+    "@synapsync/syntra-darwin-x64": "0.0.0-handoff",
+    "@synapsync/syntra-darwin-arm64": "0.0.0-handoff",
+    "@synapsync/syntra-win32-x64": "0.0.0-handoff"
+  },
+  "scripts": {
+    "test:core": "python3 scripts/test-core.py",
+    "test:launcher": "node --test scripts/launcher.test.cjs",
+    "test:setup": "node --test scripts/setup.test.cjs"
+  }
+}

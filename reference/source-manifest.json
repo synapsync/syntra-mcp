@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "baseline": "syntra-mcp-wire-v1",
+  "files": [
+    {
+      "destination": "reference/proto/syntra/v1/identity.proto",
+      "exportSha256": "4f3cc9e5edef3d4d8df28bd1a3372c4253940e847ce04b8c65aae38f0d232b46"
+    },
+    {
+      "destination": "core/gen/syntra/v1/identity.pb.go",
+      "exportSha256": "d73549cbd0154513f676552ffad4c7e1079ec7cbb49daf14955bbadfa63ed925"
+    },
+    {
+      "destination": "core/gen/syntra/v1/syntrav1connect/identity.connect.go",
+      "exportSha256": "5edd801edc98924c03ca1f49f11ce995a41da6d7955945ef6a2207f52ca28c88"
+    },
+    {
+      "destination": "reference/proto/syntra/v1/collaboration.proto",
+      "exportSha256": "c91fb2769fe1e0817af2d7184c92741be8f49e241d1c2397fdd844b38866f90e"
+    },
+    {
+      "destination": "core/gen/syntra/v1/collaboration.pb.go",
+      "exportSha256": "bcfe668c26d75feb5b61f64af211b79d1411cc9089886c448f74cf78a165ea92"
+    },
+    {
+      "destination": "core/gen/syntra/v1/syntrav1connect/collaboration.connect.go",
+      "exportSha256": "71b8256143ba2cf310694b30636eee77b66b9ec0a6da7a18a5956bb3e6e2308e"
+    },
+    {
+      "destination": "reference/proto/syntra/v1/authored_content.proto",
+      "exportSha256": "654398d803982f268b75e8599e3373918af419a7fd3df31bee466717f8de00cb"
+    },
+    {
+      "destination": "core/gen/syntra/v1/authored_content.pb.go",
+      "exportSha256": "601916edbb78e6bf66c8553df3d947c72fa0da1e609ae7abbde9a1ec6203c567"
+    },
+    {
+      "destination": "reference/proto/syntra/v1/content_service.proto",
+      "exportSha256": "8d97e6de0dab21f0b54c6118e221e9c33505ef33ae914ff3a3ebb6f30f0a1e72"
+    },
+    {
+      "destination": "core/gen/syntra/v1/content_service.pb.go",
+      "exportSha256": "1c0ab2b84e8584d2c26e6be454956ef94d583b9c7ecd2d2b67d022bfbae69a1b"
+    },
+    {
+      "destination": "core/gen/syntra/v1/syntrav1connect/content_service.connect.go",
+      "exportSha256": "9ba1c526c378c4d128c10507eae3cb1385d70d5a049e6f8d80eb1e58570ec356"
+    },
+    {
+      "destination": "reference/proto/syntra/v1/tool_connection.proto",
+      "exportSha256": "6c1b06c03d14510c68ada42a33cd332b9334b92625f7681ab795a37d2fe58bba"
+    },
+    {
+      "destination": "core/gen/syntra/v1/tool_connection.pb.go",
+      "exportSha256": "369727fdf876ab4e69cf06b3e2c3d6281ffb85473756a5399beeaf1944758ca7"
+    },
+    {
+      "destination": "core/gen/syntra/v1/syntrav1connect/tool_connection.connect.go",
+      "exportSha256": "73f3ff700a2d4e0013e84ed5754992c8dc157c17cfe409282bf6acc795d34516"
+    },
+    {
+      "destination": "reference/proto/syntra/v1/tool_login.proto",
+      "exportSha256": "6040b8d94f211ba2d6272d697ae6d0c39e3c110f60543929a8ca4353d97bc0bb"
+    },
+    {
+      "destination": "core/gen/syntra/v1/tool_login.pb.go",
+      "exportSha256": "d1294f46d8e5011e981488a6dd0ad112aed48c5fb74e777e8505066dd9bc7169"
+    },
+    {
+      "destination": "core/gen/syntra/v1/syntrav1connect/tool_login.connect.go",
+      "exportSha256": "89f03d5dea8dfd9e6dacebd699f3da6e7976217b8d22e76c5c0b61c6a9f1b65d"
+    },
+    {
+      "destination": "core/fixtures/content-integrity-v1.json",
+      "exportSha256": "78c1aa7989ab9ac8d74ea3b822537a74719fc204cbc42d88c2c929f7a9418fe6"
+    }
+  ]
+}

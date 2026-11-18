@@ -1,0 +1,81 @@
+syntax = "proto3";
+package syntra.v1;
+import "google/protobuf/timestamp.proto";
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// Contract only. Account-owned connections do not confer workspace membership.
+service ToolConnectionService {
+  rpc HumanCreate(HumanCreateRequest) returns (HumanCreateResponse);
+  rpc HumanList(HumanListRequest) returns (HumanListResponse);
+  rpc HumanRevoke(HumanRevokeRequest) returns (HumanRevokeResponse);
+  rpc GetIdentity(GetIdentityRequest) returns (GetIdentityResponse);
+  rpc ListAccessibleWorkspaces(ListAccessibleWorkspacesRequest) returns (ListAccessibleWorkspacesResponse);
+  rpc Disconnect(DisconnectRequest) returns (DisconnectResponse);
+}
+enum ToolCapability {
+  TOOL_CAPABILITY_UNSPECIFIED = 0;
+  TOOL_CAPABILITY_READ = 1;
+  TOOL_CAPABILITY_PREPARE = 2;
+  TOOL_CAPABILITY_PUBLISH = 3;
+  TOOL_CAPABILITY_MARK_READ = 4;
+}
+enum ToolConnectionState {
+  TOOL_CONNECTION_STATE_UNSPECIFIED = 0;
+  TOOL_CONNECTION_STATE_ACTIVE = 1;
+  TOOL_CONNECTION_STATE_REVOKED = 2;
+  TOOL_CONNECTION_STATE_EXPIRED = 3;
+}
+// Metadata only: never secret, digest, email or provider subject.
+message ToolConnection {
+  string id = 1;
+  string owner_user_id = 2;
+  string label = 3;
+  repeated ToolCapability capabilities = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  ToolConnectionState state = 7;
+  google.protobuf.Timestamp revoked_at = 8;
+}
+// Human-only. Owner is derived; digest is SHA-256 of the complete canonical token.
+message HumanCreateRequest {
+  string label = 1;
+  repeated ToolCapability capabilities = 2;
+  // Zero defaults to 2592000; explicit 300..7776000 seconds.
+  int32 expires_in_seconds = 3;
+  string request_id = 4;
+  // Globally unique across owners/requests/connections, including expired/revoked.
+  // Exact owner/request/payload retries recover original metadata; other reuse
+  // returns generic AlreadyExists without disclosing metadata or ownership.
+  bytes secret_digest = 5;
+}
+message HumanCreateResponse { ToolConnection connection = 1; }
+// Human-only owner list, including expired/revoked records. No admin view.
+message HumanListRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+message HumanListResponse {
+  repeated ToolConnection connections = 1;
+  string next_page_token = 2;
+}
+message HumanRevokeRequest { string connection_id = 1; }
+message HumanRevokeResponse { ToolConnection connection = 1; }
+// Connection-only identity and self disconnect have no selector.
+message GetIdentityRequest {}
+message GetIdentityResponse { ToolConnection connection = 1; }
+message ListAccessibleWorkspacesRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+// Application identity only. Current memberships, including later additions.
+message AccessibleWorkspace {
+  string workspace_id = 1;
+  string name = 2;
+  string member_user_id = 3;
+}
+message ListAccessibleWorkspacesResponse {
+  repeated AccessibleWorkspace workspaces = 1;
+  string next_page_token = 2;
+}
+message DisconnectRequest {}
+message DisconnectResponse { ToolConnection connection = 1; }

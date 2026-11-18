@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.cache/
+*.exe
+.DS_Store
+.env
+.env.*
+!*.example
+__pycache__/
+*.py[cod]
+*.agekey
+*.key
+profile.json
+login-attempt.json
+/core/syntra
+/.export-stage-*/
+/.export-transaction.json
