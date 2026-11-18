@@ -552,6 +552,8 @@ message ListMessagesRequest {
   int32 page_size = 4;
   // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
   string page_token = 5;
+  // Page published messages from newest to oldest. Applies only to the published view.
+  bool newest_first = 6;
 }
 
 message ListMessagesResponse {
@@ -680,6 +682,8 @@ message ListTicketEventsRequest {
   int32 page_size = 3;
   // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
   string page_token = 4;
+  // Page events from newest to oldest.
+  bool newest_first = 5;
 }
 
 message ListTicketEventsResponse {
