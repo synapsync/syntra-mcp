@@ -29,7 +29,7 @@ VENDOR_FILE_HASHES = {
     "bin/vendor/jsonc-parser/lib/umd/impl/scanner.js": "581d82c4f1aa84b0605369c01f414fb0164ee462e03daa298cb960076a2a9e82",
     "bin/vendor/jsonc-parser/lib/umd/impl/string-intern.js": "e590d27909a7c132382fbf9b8c4668054ab425734c1e0789753063356826c30f",
     "bin/vendor/smol-toml/LICENSE": "fa5659948374d4f555594f47f6da073b40dc503e921aeeece30df4362b3051a5",
-    "bin/vendor/smol-toml/index.cjs": "f9029370259e9a43a2f3e64fa1d39e72f3598188380ace83a0abb8261fa33555",
+    "bin/vendor/smol-toml/index.cjs": "cc8c3f0169184a26c5d1b7971b247e7d98d33516c86f80716ea9eb3dbca13670",
 }
 VENDOR_METADATA = {
     "format": 1,
@@ -56,6 +56,7 @@ VENDOR_METADATA = {
             "source": "https://registry.npmjs.org/smol-toml/-/smol-toml-1.9.1.tgz",
             "integrity": "sha512-j7WyPdf0CJoutMzMoPLF/bVXHtKZIT9Rb4eGeEbWw8X2t5oirjPgpL+OpaENZrILYaXqYwnVH+qgUwVbl+pUJQ==",
             "license": "BSD-3-Clause",
+            "localPatch": "Expose parsed TOML statement and inline value spans for targeted host config replacement.",
             "files": {
                 "smol-toml/LICENSE": VENDOR_FILE_HASHES["bin/vendor/smol-toml/LICENSE"],
                 "smol-toml/index.cjs": VENDOR_FILE_HASHES["bin/vendor/smol-toml/index.cjs"],

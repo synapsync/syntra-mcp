@@ -2,7 +2,7 @@
 
 | Tool | Use |
 | --- | --- |
-| `identity` | Current verified connection/account metadata, without secrets |
+| `identity` | Current verified account and connection, profile directory, named permissions and time until expiry |
 | `workspaces` | All currently accessible spaces |
 | `projects` | Projects in one explicit space |
 | `members` | Current authorized directory in one space |

@@ -1227,6 +1227,8 @@ SOFTWARE.
 
 Source: `bin/vendor/smol-toml/LICENSE`
 
+The vendored parser has a local change to report statement and inline value spans for targeted TOML edits.
+
 ````text
 Copyright (c) Squirrel Chat et al., All rights reserved.
 

@@ -7,6 +7,7 @@ const { isDeepStrictEqual, TextDecoder } = require('node:util');
 const jsonc = require('./vendor/jsonc-parser/lib/umd/main.js');
 const toml = require('./vendor/smol-toml/index.cjs');
 const packageManifest = require('../package.json');
+const readline = require('node:readline/promises');
 
 const MAX_CONFIG_BYTES = 4 * 1024 * 1024;
 const SKILL_FILES = Object.freeze(['SKILL.md', 'references/tools.md']);
@@ -29,6 +30,7 @@ function parseSetupArgs(args) {
   let dryRun = false;
   let sawAgent = false;
   let sawDryRun = false;
+  let replace = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -43,14 +45,17 @@ function parseSetupArgs(args) {
       if (sawDryRun) fail('--dry-run may be supplied only once.');
       sawDryRun = true;
       dryRun = true;
+    } else if (argument === '--replace') {
+      if (replace) fail('--replace may be supplied only once.');
+      replace = true;
     } else {
-      fail('Unknown setup option. Use --agent and --dry-run only.');
+      fail('Unknown setup option. Use --agent, --dry-run, and --replace only.');
     }
   }
 
   if (!agent) fail('Choose a host with --agent codex, --agent claude-code, or --agent opencode.');
   if (!AGENT_NAMES.includes(agent)) fail('Supported setup hosts are codex, claude-code, and opencode.');
-  return { agent, dryRun };
+  return { agent, dryRun, replace };
 }
 
 function pathApi(platform) {
@@ -625,30 +630,80 @@ function computeJsonCandidate(text, registrationPath, registration, format, exis
   }
 }
 
-function previewJsonRegistration(config, plan) {
+// The entry name alone is insufficient. Recognize only the Syntra executable
+// or its exact npm package in a known launcher invocation.
+function identifyRegistration(registration) {
+  if (!registration || typeof registration !== 'object') return null;
+  if (Object.hasOwn(registration, 'type') && !['stdio', 'local'].includes(registration.type)) return null;
+  let command = registration.command;
+  let args = registration.args ?? [];
+  if (Array.isArray(command)) [command, ...args] = command;
+  if (typeof command !== 'string' || !Array.isArray(args) || args.some(arg => typeof arg !== 'string')) return null;
+
+  const basename = value => path.win32.basename(value).toLowerCase();
+  let launcher = basename(command);
+  if (['cmd', 'cmd.exe'].includes(launcher)) {
+    if (args[0]?.toLowerCase() !== '/d' || args[1]?.toLowerCase() !== '/c') return null;
+    launcher = basename(args[2] ?? '');
+    args = args.slice(3);
+    if (!['npx', 'npx.cmd', 'npx.exe'].includes(launcher)) return null;
+  }
+  let pin = null;
+  if (['npx', 'npx.cmd', 'npx.exe'].includes(launcher)) {
+    const packageIndex = ['-y', '--yes'].includes(args[0]) ? 1 : 0;
+    const match = /^@synapsync\/syntra-mcp(?:@([0-9A-Za-z][0-9A-Za-z.+-]*))?$/.exec(args[packageIndex] ?? '');
+    if (!match || args[packageIndex + 1] !== 'mcp') return null;
+    pin = match[1] ?? null;
+    args = args.slice(packageIndex + 1);
+  } else if (!['syntra', 'syntra.exe', 'syntra-mcp', 'syntra-mcp.exe'].includes(launcher) || args[0] !== 'mcp') {
+    return null;
+  }
+  return { launcher, pin, customProfile: args.some(arg => arg === '--profile-dir' || arg.startsWith('--profile-dir=')) };
+}
+
+function staleRegistration(existing, plan) {
+  const identified = identifyRegistration(existing);
+  if (!identified) {
+    fail('A different Syntra host registration already exists and could not be identified as Syntra. Rename or remove that entry before running setup.');
+  }
+  return {
+    changed: true,
+    status: 'replace',
+    safeBefore: identified,
+    safeDelta: { path: plan.registrationPath.join('.'), value: plan.registration },
+  };
+}
+
+function jsonRegistrationPath(plan, value) {
+  if (plan.agent !== 'opencode') return plan.registrationPath;
+  const legacy = ['mcp', 'syntra'];
+  if (!getOwnPath(value, legacy).exists) return plan.registrationPath;
+  if (getOwnPath(value, plan.registrationPath).exists) {
+    fail('OpenCode has both legacy and current Syntra registrations. Resolve the duplicate before using --replace.');
+  }
+  return legacy;
+}
+
+function previewJsonRegistration(config, plan, before) {
   const allowComments = plan.format === 'jsonc';
-  const before = config.exists
-    ? parseJsonDocument(config.text, plan.format, allowComments)
-    : { tree: null, value: {} };
   if (before.tree) checkJsonParentTypes(before.tree, plan.registrationPath);
   const existing = before.tree
     ? getOwnPath(before.value, plan.registrationPath)
     : { exists: false, value: undefined };
 
-  if (existing.exists) {
-    if (!isDeepStrictEqual(deepPlainCopy(existing.value), deepPlainCopy(plan.registration))) {
-      fail('A different Syntra host registration already exists; it was not changed.');
-    }
+  if (existing.exists && isDeepStrictEqual(deepPlainCopy(existing.value), deepPlainCopy(plan.registration))) {
     return { changed: false, status: 'matching', safeDelta: null };
   }
-
-  const proposedText = computeJsonCandidate(
-    config.text,
-    plan.registrationPath,
-    plan.registration,
-    plan.format,
-    before.tree,
-  );
+  const replacement = existing.exists ? staleRegistration(existing.value, plan) : null;
+  let proposedText;
+  if (replacement) {
+    const node = jsonc.findNodeAtLocation(before.tree, plan.registrationPath);
+    const value = serializeJsonValue(plan.registration, !/[\r\n]/.test(config.text.slice(node.offset, node.offset + node.length)),
+      indentationAt(config.text, node.parent.offset), jsonLineEnding(config.text));
+    proposedText = config.text.slice(0, node.offset) + value + config.text.slice(node.offset + node.length);
+  } else {
+    proposedText = computeJsonCandidate(config.text, plan.registrationPath, plan.registration, plan.format, before.tree);
+  }
 
   const after = parseJsonDocument(proposedText, plan.format, allowComments);
   const afterRegistration = getOwnPath(after.value, plan.registrationPath);
@@ -664,6 +719,7 @@ function previewJsonRegistration(config, plan) {
     fail('The proposed host edit would alter unrelated settings.');
   }
 
+  if (replacement) return { ...replacement, proposedText };
   return {
     changed: true,
     status: 'add',
@@ -691,23 +747,48 @@ function computeTomlCandidate(text, snippet) {
   return `${text}${separator}${formattedSnippet}`;
 }
 
+function replaceTomlRegistration(text, plan, statements, inlineValues) {
+  const owned = statements.filter(({ keys }) =>
+    plan.registrationPath.every((segment, index) => keys[index] === segment));
+  if (!owned.length) {
+    const [parentKey, entryKey] = plan.registrationPath;
+    const parent = statements.find(({ keys, valueStart }) => keys.length === 1 && keys[0] === parentKey && valueStart !== undefined);
+    const entry = inlineValues.find(({ tableStart, keys }) =>
+      tableStart === parent?.valueStart && keys.length === 1 && keys[0] === entryKey);
+    if (!entry) fail('The Syntra registration is embedded in a TOML value. Move it to its own table before using --replace.');
+    const value = `{ command = ${tomlValue(plan.registration.command)}, args = ${tomlValue(plan.registration.args)} }`;
+    return text.slice(0, entry.start) + value + text.slice(entry.end);
+  }
+  let candidate = text;
+  for (const { start, end } of owned.reverse()) {
+    candidate = candidate.slice(0, start) + candidate.slice(end);
+  }
+  return computeTomlCandidate(candidate, plan.tomlSnippet);
+}
+
 function previewTomlRegistration(config, plan) {
   let before;
+  const statements = [];
+  const inlineValues = [];
   try {
-    before = config.exists ? toml.parse(config.text) : Object.create(null);
+    before = config.exists
+      ? toml.parse(config.text, {
+        onStatement: statement => statements.push(statement),
+        onInlineValue: value => inlineValues.push(value),
+      })
+      : Object.create(null);
   } catch {
     fail('The TOML host config is malformed.');
   }
   const existing = getOwnPath(before, plan.registrationPath);
-  if (existing.exists) {
-    if (!isDeepStrictEqual(normalizeTomlValue(existing.value), normalizeTomlValue(plan.registration))) {
-      fail('A different Syntra host registration already exists; it was not changed.');
-    }
+  if (existing.exists && isDeepStrictEqual(normalizeTomlValue(existing.value), normalizeTomlValue(plan.registration))) {
     return { changed: false, status: 'matching', safeDelta: null };
   }
-
+  const replacement = existing.exists ? staleRegistration(existing.value, plan) : null;
   const snippet = plan.tomlSnippet;
-  const proposedText = computeTomlCandidate(config.text, snippet);
+  const proposedText = replacement
+    ? replaceTomlRegistration(config.text, plan, statements, inlineValues)
+    : computeTomlCandidate(config.text, snippet);
   let after;
   try {
     after = toml.parse(proposedText);
@@ -727,6 +808,9 @@ function previewTomlRegistration(config, plan) {
   )) {
     fail('The proposed TOML edit would alter unrelated settings.');
   }
+  if (replacement) {
+    return { ...replacement, proposedText, safeDelta: { ...replacement.safeDelta, toml: snippet } };
+  }
   return {
     changed: true,
     status: 'add',
@@ -739,14 +823,21 @@ function buildPlan(agent, env = process.env, platform = process.platform) {
   inspectPath(plan.configPath, 'file', platform);
   inspectPath(plan.skillPath, 'directory', platform);
   const config = readConfig(plan.configPath, plan.format, platform);
+  let registration;
+  if (plan.format === 'toml') {
+    registration = previewTomlRegistration(config, plan);
+  } else {
+    const document = config.exists
+      ? parseJsonDocument(config.text, plan.format, plan.format === 'jsonc')
+      : { tree: null, value: {} };
+    plan.registrationPath = jsonRegistrationPath(plan, document.value);
+    registration = previewJsonRegistration(config, plan, document);
+  }
   const bundle = readBundledSkill();
   const skillStatus = inspectExistingSkill(plan.skillPath, bundle.files, platform);
-  if (skillStatus === 'conflict') {
+  if (skillStatus === 'conflict' && registration.status === 'add') {
     fail('The existing Syntra skill differs from the bundled files; it was preserved.');
   }
-  const registration = plan.format === 'toml'
-    ? previewTomlRegistration(config, plan)
-    : previewJsonRegistration(config, plan);
   return {
     ...plan,
     configExists: config.exists,
@@ -757,7 +848,7 @@ function buildPlan(agent, env = process.env, platform = process.platform) {
   };
 }
 
-function renderPlan(plan) {
+function renderPlan(plan, dryRun = true) {
   const lines = [
     `Syntra setup preview for ${plan.displayName}`,
     `Config: ${plan.configPath}${plan.configExists ? '' : ' (not created)'}`,
@@ -768,6 +859,14 @@ function renderPlan(plan) {
     lines.push('MCP registration: the exact pinned Syntra entry is already present.');
   } else {
     lines.push('Proposed Syntra-only config change (unrelated settings are omitted):');
+    if (plan.registration.status === 'replace') {
+      const before = plan.registration.safeBefore;
+      const shownPin = before.pin && /^(?:latest|[0-9]+\.[0-9]+\.[0-9]+)$/.test(before.pin);
+      const version = before.pin ? (shownPin ? `@${before.pin}` : '@<custom tag>') : '';
+      const packageName = before.launcher.startsWith('npx') ? ` ${packageManifest.name}${version}` : '';
+      const profile = before.customProfile ? ' --profile-dir <custom directory>' : '';
+      lines.push(`- ${before.launcher}${packageName} mcp${profile} (other arguments or settings omitted)`);
+    }
     if (plan.registration.safeDelta.toml) {
       for (const line of plan.registration.safeDelta.toml.trimEnd().split('\n')) lines.push(`+ ${line}`);
     } else {
@@ -777,10 +876,12 @@ function renderPlan(plan) {
 
   if (plan.skillStatus === 'matching') {
     lines.push('Bundled skill: the destination already matches the packaged files.');
+  } else if (plan.skillStatus === 'conflict') {
+    lines.push('Bundled skill: the existing different files will be preserved.');
   } else {
     lines.push('+ install the bundled skill files (SKILL.md and references/tools.md).');
   }
-  lines.push('Dry run only: no files were changed.');
+  if (dryRun) lines.push('Dry run only: no files were changed.');
   return `${lines.join('\n')}\n`;
 }
 
@@ -980,7 +1081,8 @@ function installStagedSkill(plan, stage, platform) {
     stage.files = [];
     stage.directories = [];
     stage.root = null;
-    if (inspectExistingSkill(plan.skillPath, plan.bundleFiles, platform) !== 'matching') {
+    if (plan.skillStatus === 'conflict') return;
+  if (inspectExistingSkill(plan.skillPath, plan.bundleFiles, platform) !== 'matching') {
       fail('The installed Syntra skill did not match its packaged files.');
     }
     return installed;
@@ -1077,6 +1179,7 @@ function createBackup(plan, token, platform) {
 
 function configCandidate(plan) {
   if (!plan.registration.changed) return null;
+  if (plan.registration.status === 'replace') return Buffer.from(plan.registration.proposedText, 'utf8');
   const text = plan.format === 'toml'
     ? computeTomlCandidate(plan.configSnapshot.exists ? new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(plan.configSnapshot.bytes) : '', plan.tomlSnippet)
     : computeJsonCandidate(
@@ -1097,6 +1200,7 @@ function assertConfigUnchanged(plan, platform) {
 
 function assertInstalledSkill(plan, platform) {
   inspectPath(plan.skillPath, 'directory', platform);
+  if (plan.skillStatus === 'conflict') return;
   if (inspectExistingSkill(plan.skillPath, plan.bundleFiles, platform) !== 'matching') {
     fail('The bundled skill changed during setup; it was preserved and the registration was not committed.');
   }
@@ -1132,7 +1236,8 @@ function applySetup(agent, options = {}) {
   const env = options.env || process.env;
   const platform = options.platform || process.platform;
   const testHooks = options.testHooks || Object.create(null);
-  const initialPlan = buildPlan(agent, env, platform);
+  const initialPlan = options.preview || buildPlan(agent, env, platform);
+  if (initialPlan.registration.status === 'replace' && !options.replace) refuseReplacement(agent);
   const initiallyChanged = initialPlan.registration.changed || initialPlan.skillStatus === 'absent';
   if (!initiallyChanged) {
     return { plan: initialPlan, configChanged: false, skillInstalled: false, backupPath: null, unchanged: true };
@@ -1162,6 +1267,11 @@ function applySetup(agent, options = {}) {
     phase('lock-acquired', { lockPath });
 
     const plan = buildPlan(agent, env, platform);
+    if ((initialPlan.registration.status === 'replace' || plan.registration.status === 'replace') &&
+        (plan.configPath !== initialPlan.configPath || !sameConfigSnapshot(initialPlan.configSnapshot, plan.configSnapshot))) {
+      fail('The host config changed after the setup preview. Run setup again to review the new entry.');
+    }
+    if (plan.registration.status === 'replace' && !options.replace) refuseReplacement(agent);
     if (!plan.registration.changed && plan.skillStatus === 'matching') {
       result = { plan, configChanged: false, skillInstalled: false, backupPath: null, unchanged: true };
       return result;
@@ -1262,7 +1372,9 @@ function applySetup(agent, options = {}) {
 function renderApplied(result) {
   const lines = [`Syntra setup complete for ${result.plan.displayName}`];
   if (result.unchanged) {
-    lines.push('MCP registration and bundled skill already match the packaged files.');
+    lines.push(result.plan.skillStatus === 'conflict'
+      ? `MCP registration already matches. Existing skill preserved: ${result.plan.skillPath}`
+      : 'MCP registration and bundled skill already match the packaged files.');
     lines.push('No files were changed.');
   } else {
     if (result.configChanged) {
@@ -1273,7 +1385,9 @@ function renderApplied(result) {
     }
     lines.push(result.skillInstalled
       ? `Bundled skill installed: ${result.plan.skillPath}`
-      : `Bundled skill already matches: ${result.plan.skillPath}`);
+      : result.plan.skillStatus === 'conflict'
+        ? `Existing skill preserved: ${result.plan.skillPath}`
+        : `Bundled skill already matches: ${result.plan.skillPath}`);
   }
   const packagePin = `${packageManifest.name}@${packageManifest.version}`;
   lines.push(`First time on this machine? Run: npx -y ${packagePin} login`);
@@ -1283,22 +1397,67 @@ function renderApplied(result) {
   return `${lines.join('\n')}\n`;
 }
 
+function refuseReplacement(agent) {
+  fail(`A stale Syntra host registration already exists. Run: syntra setup --agent ${agent} --replace`);
+}
+
 function runSetup(args, options = {}) {
   const parsed = parseSetupArgs(args);
-  const env = options.env || process.env;
-  const platform = options.platform || process.platform;
-  if (parsed.dryRun) return renderPlan(buildPlan(parsed.agent, env, platform));
-  return renderApplied(applySetup(parsed.agent, { ...options, env, platform }));
+  const plan = buildPlan(parsed.agent, options.env, options.platform);
+  if (parsed.dryRun) return renderPlan(plan);
+  if (plan.registration.status === 'replace' && !parsed.replace) refuseReplacement(parsed.agent);
+  const applied = applySetup(parsed.agent, { ...options, preview: plan, replace: parsed.replace });
+  return (plan.registration.status === 'replace' ? renderPlan(plan, false) : '') + renderApplied(applied);
+}
+
+async function setupCLI(args, options = {}) {
+  const out = options.out || (message => process.stdout.write(message));
+  if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
+    out('Usage: syntra setup --agent codex|claude-code|opencode [--dry-run] [--replace]\n' +
+      'Preview and confirm a recognized stale registration, or use --replace to apply without prompting.\n');
+    return;
+  }
+  const parsed = parseSetupArgs(args);
+  const plan = buildPlan(parsed.agent, options.env, options.platform);
+  if (parsed.dryRun) {
+    out(renderPlan(plan));
+    return;
+  }
+  if (plan.registration.status === 'replace') {
+    out(renderPlan(plan, false));
+    if (!parsed.replace) {
+      const tty = options.tty ?? Boolean(process.stdin.isTTY && process.stdout.isTTY);
+      if (!tty) refuseReplacement(parsed.agent);
+      const prompt = options.prompt || (async () => {
+        const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+        try { return await rl.question('Replace this Syntra registration? [y/N] '); } finally { rl.close(); }
+      });
+      const answer = await prompt();
+      if (!/^y(?:es)?$/i.test(answer.trim())) {
+        out('Setup cancelled. No files were changed.\n');
+        return;
+      }
+    }
+  }
+  out(renderApplied(applySetup(parsed.agent, { ...options, preview: plan, replace: true })));
+}
+
+function registrationPin(agent, env = process.env, platform = process.platform) {
+  const plan = hostPlan(agent, env, platform);
+  const config = readConfig(plan.configPath, plan.format, platform);
+  if (!config.exists) return null;
+  const value = plan.format === 'toml'
+    ? toml.parse(config.text)
+    : parseJsonDocument(config.text, plan.format, plan.format === 'jsonc').value;
+  return identifyRegistration(getOwnPath(value, jsonRegistrationPath(plan, value)).value)?.pin ?? null;
 }
 
 if (require.main === module) {
-  try {
-    process.stdout.write(runSetup(process.argv.slice(2)));
-  } catch (error) {
-    const message = error instanceof SetupError ? error.message : 'Setup preview could not be completed safely.';
+  setupCLI(process.argv.slice(2)).catch(error => {
+    const message = error instanceof SetupError ? error.message : 'Setup could not be completed safely.';
     process.stderr.write(`syntra: ${message}\n`);
     process.exitCode = 1;
-  }
+  });
 }
 
 module.exports = {
@@ -1311,7 +1470,9 @@ module.exports = {
   hostPlan,
   inspectPath,
   parseSetupArgs,
+  registrationPin,
   renderPlan,
   runSetup,
+  setupCLI,
   shellCommand,
 };
