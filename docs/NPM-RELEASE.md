@@ -5,6 +5,16 @@ executables. The launcher pins the exact same version of each optional
 platform package. The client can be built without access to the Syntra backend
 source.
 
+## Published release
+
+Version `0.1.1` was published through npm Staged Packages after the artifacts
+passed [installation tests on all five platforms](https://github.com/synapsync/syntra-mcp/actions/runs/44306641423).
+All six registry integrities matched that run's manifest SHA-256
+`2f601377df2268d9528e19d9e6635eb38ab0b22965ccd06316727156b35aa48f`.
+A fresh Linux x64 install from npm verified automatic native package
+selection and MCP startup. The [npm package page](https://www.npmjs.com/package/@synapsync/syntra-mcp)
+shows the current release.
+
 ## Build a candidate
 
 Use Go 1.27.3, Python 3, and Node.js 22.12 or newer. Download the dependencies

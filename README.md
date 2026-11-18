@@ -1,47 +1,72 @@
 # Syntra CLI and MCP
 
-Syntra runs as a local MCP server over standard input and output. It connects to
-the hosted Syntra API using an account you authorize in the browser.
+Syntra connects your agent to the workspaces, project teams and tickets you can
+access. Read shared work, prepare private drafts and send tickets or replies
+when you ask. The client runs locally over stdio and connects to the Syntra API
+using a profile you authorize in the browser.
 
-The launcher requires Node.js 22.12 or newer. npm installs the matching Go
-executable for Linux x64/arm64, macOS Intel/Apple Silicon, or Windows x64.
+**[Official documentation](https://syntra.synapsynclabs.com/docs/) · [npm package](https://www.npmjs.com/package/@synapsync/syntra-mcp)**
+
+## Get started
+
+Use Node.js 22.12 or later. npm installs the matching Go executable for Linux
+x64 or arm64, macOS Intel or Apple Silicon, or Windows x64.
 
 ```sh
 npm install --global @synapsync/syntra-mcp
 syntra login
 syntra status
+syntra workspaces
 ```
 
-Start the server with `syntra mcp`, or configure a supported host with
-`syntra setup --agent codex`, `syntra setup --agent claude-code`, or
-`syntra setup --agent opencode`. Add `--dry-run` to preview the host changes.
-After applying setup, start a fresh host session.
+Approve the permissions you need in the browser. The CLI and agent hosts using
+the same local profile share that login. To run without a global install, use
+`npx -y @synapsync/syntra-mcp login`.
 
-## Shared login and permissions
+## Connect your agent
 
-Run `syntra login` once on the machine running the MCP and approve the
-permissions you need in the browser. The CLI and registrations created by
-`syntra setup` use the same default profile. If a manual registration supplies
-`--profile-dir`, use that same flag and directory for `syntra login` and
-`syntra status`, or update the registration to use your existing login profile.
+Choose one host:
 
-`syntra status` shows the permissions granted and the expiration. Read lets
-agents query Syntra. Prepare lets them save private drafts. Publish is also
-required to send. If you already have a profile with the required permissions,
-point the MCP at it. To request additional permissions, use `syntra login`
-with a separate profile and approve the new grant in your browser.
+```sh
+syntra setup --agent codex
+syntra setup --agent claude-code
+syntra setup --agent opencode
+```
 
-A new connection requests 30 days by default. For a new connection you can
-request up to 90 days with `syntra login --lifetime-seconds 7776000`, subject
-to what you approve in the browser. Renew an expired connection with
-`syntra login --reauthorize` against the same profile.
+Add `--dry-run` to preview the registration and skill installation. Start a
+fresh host session after applying setup, then ask it to list your Syntra
+workspaces. For other stdio hosts or a custom profile, use the
+[manual configuration templates](https://syntra.synapsynclabs.com/docs/agent-setup/host-configurations.html).
 
-See the included license and third-party notices for distribution terms.
+## Permissions and renewal
 
-## Build from source
+| Capability | Use |
+| --- | --- |
+| `READ` | Discover workspaces, projects, teams and members, and read authorized tickets and messages. |
+| `PREPARE` | Create private drafts and link them to a member. |
+| `PUBLISH` | Send an exact retained draft in a separate call. Requires `PREPARE`. |
 
-Use Go 1.27.3, Python 3, and Node.js 22.12 or newer. The standalone Go
-client, launcher, and protocol tests run without a Syntra backend checkout.
+A new connection requests 30 days by default. You can request up to 90 days
+with `syntra login --lifetime-seconds 7776000`. When a compatible connection
+expires, run `syntra login --reauthorize` with the same profile.
+
+If the terminal works and the agent lacks a permission, check the agent's
+selected profile with `syntra status`. If the registration specifies
+`--profile-dir`, use that same directory in the CLI. See
+[troubleshooting](https://syntra.synapsynclabs.com/docs/troubleshooting.html)
+for permission changes, profile mismatches and startup errors.
+
+## Reference
+
+- [CLI commands and flags](https://syntra.synapsynclabs.com/docs/reference/cli.html)
+- [MCP tools and effects](https://syntra.synapsynclabs.com/docs/reference/tools.html)
+- [Find project teams and send a ticket](https://syntra.synapsynclabs.com/docs/guides/workspaces-to-ticket.html)
+- [Replies, retry and recovery](https://syntra.synapsynclabs.com/docs/guides/replies-and-retry.html)
+
+## Build and test
+
+Use Go 1.27.3, Python 3 and Node.js 22.12 or later. The client builds from this
+repository with its own Go module.
 
 ```sh
 python3 scripts/check-protocol-parity.py
@@ -51,4 +76,6 @@ npm run test:launcher
 npm run test:setup
 ```
 
-See [release operations](docs/NPM-RELEASE.md) for packaging and CI.
+See [release operations](docs/NPM-RELEASE.md) for the build matrix and publishing
+workflow. The client is [MIT licensed](LICENSE). Compiled dependencies and
+bundled components have [third-party notices](THIRD-PARTY-NOTICES.md).

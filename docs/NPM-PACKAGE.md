@@ -3,6 +3,9 @@
 Syntra runs as a local MCP server over standard input and output. It connects to
 the hosted Syntra API using an account you authorize in the browser.
 
+**[Official documentation](https://syntra.synapsynclabs.com/docs/)** covers
+installation, host setup, tool reference and troubleshooting.
+
 Requires Node.js 22.12 or newer. npm installs the matching Go executable for
 Linux x64/arm64, macOS Intel/Apple Silicon, or Windows x64.
 
