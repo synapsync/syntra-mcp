@@ -12,9 +12,9 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// OpenStore uses descriptor-relative no-follow operations and holds an
+// openPlatformStore uses descriptor-relative no-follow operations and holds an
 // exclusive flock until Close. The Unix adapter handles its shared state.
-func OpenStore(ctx context.Context, path string) (*Store, error) {
+func openPlatformStore(ctx context.Context, path string) (*Store, error) {
 	return openStore(ctx, path, syncDirectoryDescriptor, unix.Mkdirat)
 }
 

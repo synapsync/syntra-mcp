@@ -91,8 +91,8 @@ func (s *Store) activateBrowserProfile(attempt *PendingBrowserAttempt, profile *
 		return errors.New("active profile changed during browser authorization; retained without replacement")
 	}
 	if currentExists {
-		if current.State != "active" || current.AccountID != profile.AccountID || current.Config.APIOrigin != profile.Config.APIOrigin || (current.Version == browserProfileVersion && current.BrowserOrigin != profile.BrowserOrigin) || !capabilitySubset(profile.Config.Capabilities, current.Config.Capabilities) || profile.Config.LifetimeSeconds > current.Config.LifetimeSeconds {
-			return errors.New("browser grant would change account, origin or expand existing permissions")
+		if current.State != "active" || current.AccountID != profile.AccountID || current.Config.APIOrigin != profile.Config.APIOrigin || (current.Version == browserProfileVersion && current.BrowserOrigin != profile.BrowserOrigin) || profile.Config.LifetimeSeconds > current.Config.LifetimeSeconds {
+			return errors.New("browser grant would change account, origin or lifetime")
 		}
 	}
 	syncDir := hooks.syncProfileDir
@@ -197,7 +197,7 @@ func (s *Store) removePendingBrowserAttempt(attempt *PendingBrowserAttempt, reta
 	return ErrProfile
 }
 
-func (s *Store) SaveBrowserAttemptBeforeBegin(attempt *PendingBrowserAttempt) (*Profile, []byte, error) {
+func (s *Store) saveBrowserAttemptBeforeBegin(attempt *PendingBrowserAttempt, reauthorize bool) (*Profile, []byte, error) {
 	if attempt == nil || attempt.Validate() != nil {
 		return nil, nil, ErrProfile
 	}
@@ -206,8 +206,8 @@ func (s *Store) SaveBrowserAttemptBeforeBegin(attempt *PendingBrowserAttempt) (*
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, nil, err
 	}
-	if previousExists && (previous.State != "active" || previous.Config.APIOrigin != attempt.Config.APIOrigin || (previous.Version == browserProfileVersion && previous.BrowserOrigin != attempt.Config.BrowserOrigin) || !capabilitySubset(attempt.Config.Capabilities, previous.Config.Capabilities) || attempt.Config.LifetimeSeconds > previous.Config.LifetimeSeconds) {
-		return nil, nil, errors.New("active profile origin, scope or lifetime differs; retained without replacement")
+	if previousExists && (previous.State != "active" || previous.Config.APIOrigin != attempt.Config.APIOrigin || (previous.Version == browserProfileVersion && previous.BrowserOrigin != attempt.Config.BrowserOrigin) || attempt.Config.LifetimeSeconds > previous.Config.LifetimeSeconds) {
+		return nil, nil, errors.New("active profile origin or lifetime differs; retained without replacement")
 	}
 	if existing, err := s.LoadPendingBrowserAttempt(); err == nil {
 		if !reflect.DeepEqual(existing, attempt) {
@@ -219,6 +219,9 @@ func (s *Store) SaveBrowserAttemptBeforeBegin(attempt *PendingBrowserAttempt) (*
 		return previous, previousRaw, nil
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return nil, nil, err
+	}
+	if previousExists && !reauthorize {
+		return nil, nil, errors.New("an active profile requires explicit --reauthorize")
 	}
 	if err = s.SavePendingBrowserAttempt(attempt); err != nil {
 		return nil, nil, err

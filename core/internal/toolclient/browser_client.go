@@ -110,7 +110,7 @@ func (c *Client) RunBrowserLogin(ctx context.Context, storePath string, config B
 			return nil, err
 		}
 	}
-	previous, previousRaw, err = store.SaveBrowserAttemptBeforeBegin(attempt)
+	previous, previousRaw, err = store.saveBrowserAttemptBeforeBegin(attempt, options.Reauthorize)
 	if err != nil {
 		store.Close()
 		return nil, err
@@ -174,6 +174,9 @@ func (c *Client) RunBrowserLogin(ctx context.Context, storePath string, config B
 		verificationURL, err = validateVerificationURL(started.Msg.VerificationUri, attempt.Config.BrowserOrigin)
 		if err != nil {
 			return nil, err
+		}
+		if _, err = fmt.Fprintf(options.Output, "Requested permissions: %s. Choose from these permissions in the browser.\n", strings.Join(capabilityNames(attempt.Config.Capabilities), ", ")); err != nil {
+			return nil, errors.New("could not print browser authorization instructions")
 		}
 		if err = writeBrowserInstructions(options.Output, verificationURL, started.Msg.Request.UserCode); err != nil {
 			return nil, err

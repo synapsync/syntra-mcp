@@ -19,6 +19,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	"syntra.local/mcp/gen/syntra/v1/syntrav1connect"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 )
 
 const maxResponseBytes = 1048576
@@ -98,6 +99,19 @@ func SafeRPCError(e error) error {
 	}
 	return fmt.Errorf("API request failed (%s)", connect.CodeOf(e))
 }
+
+// Preserve only a documented denial or a sanitized unauthenticated code for
+// the caller to attach profile-specific guidance.
+func safeConnectionRPCError(err error) error {
+	if cap := actionable.CapabilityFromConnect(err); cap != v1.ToolCapability_TOOL_CAPABILITY_UNSPECIFIED {
+		return actionable.DeniedCapability(cap)
+	}
+	if connect.CodeOf(err) == connect.CodeUnauthenticated {
+		return connect.NewError(connect.CodeUnauthenticated, SafeRPCError(err))
+	}
+	return SafeRPCError(err)
+}
+
 func bearer[T any](r *connect.Request[T], token string) *connect.Request[T] {
 	r.Header().Set("Authorization", "Bearer "+token)
 	return r
@@ -110,7 +124,7 @@ func (c *Client) Identity(ctx context.Context, p *Profile) (*v1.ToolConnection, 
 	}
 	r, e := c.Tools().GetIdentity(ctx, bearer(connect.NewRequest(&v1.GetIdentityRequest{}), p.Secret))
 	if e != nil {
-		return nil, SafeRPCError(e)
+		return nil, safeConnectionRPCError(e)
 	}
 	if e = validateConnection(p, r.Msg.Connection, true); e != nil {
 		return nil, e
@@ -123,7 +137,7 @@ func (c *Client) Disconnect(ctx context.Context, p *Profile) error {
 	}
 	r, e := c.Tools().Disconnect(ctx, bearer(connect.NewRequest(&v1.DisconnectRequest{}), p.Secret))
 	if e != nil {
-		return SafeRPCError(e)
+		return safeConnectionRPCError(e)
 	}
 	q := r.Msg.Connection
 	if q == nil || q.State != v1.ToolConnectionState_TOOL_CONNECTION_STATE_REVOKED || q.RevokedAt == nil || q.RevokedAt.CheckValid() != nil {

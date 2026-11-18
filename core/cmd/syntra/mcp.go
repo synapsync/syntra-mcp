@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"golang.org/x/term"
+	"syntra.local/mcp/internal/toolclient"
 	"syntra.local/mcp/internal/toolmcp"
 )
 
@@ -33,11 +33,11 @@ func runMCP(ctx context.Context, args []string) error {
 		return errors.New("MCP requires piped stdin and stdout; human login is a separate command")
 	}
 	if *dir == "" {
-		root, err := os.UserConfigDir()
+		resolved, err := toolclient.DefaultProfileDir()
 		if err != nil {
-			return errors.New("explicit private profile directory required")
+			return err
 		}
-		*dir = filepath.Join(root, "syntra")
+		*dir = resolved
 	}
 
 	input, err := duplicateMCPStdin()

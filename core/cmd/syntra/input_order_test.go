@@ -52,7 +52,7 @@ func TestBadInputBeforeProfile(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, err = exec.Command(binary, "prepare", "--profile-dir", profile, "--file", valid).CombinedOutput()
-	if err == nil || !strings.Contains(string(out), "file does not exist") || strings.Contains(string(out), "syntra identity") {
+	if err == nil || !strings.Contains(string(out), "No Syntra connection. Run: syntra login --profile-dir") || strings.Contains(string(out), "syntra identity") {
 		t.Fatalf("identity was checked before loading profile: %v %s", err, out)
 	}
 }

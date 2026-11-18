@@ -7,9 +7,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
-	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -59,12 +57,12 @@ func Run(ctx context.Context, cfg Config, input io.ReadCloser, output io.WriteCl
 func openApp(ctx context.Context, cfg Config) (*toolclient.App, func(), error) {
 	store, e := toolclient.OpenStore(ctx, cfg.ProfileDir)
 	if e != nil {
-		return nil, nil, e
+		return nil, nil, toolclient.ProfileError(cfg.ProfileDir, e)
 	}
 	fail := func(e error) (*toolclient.App, func(), error) { store.Close(); return nil, nil, e }
 	p, e := store.Load()
 	if e != nil {
-		return fail(e)
+		return fail(toolclient.ProfileError(cfg.ProfileDir, e))
 	}
 	if cfg.APIOrigin != "" && cfg.APIOrigin != p.Config.APIOrigin {
 		return fail(toolclient.ErrProfile)
@@ -111,8 +109,8 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 	}
 	app, close, e := openApp(ctx, cfg)
 	if e != nil {
-		if errors.Is(e, os.ErrNotExist) {
-			return toolError("local connection unavailable or unauthorized: no Syntra login in the MCP profile. Run syntra login in a terminal on this machine. If the MCP uses --profile-dir, use the same flag and directory for login.")
+		if toolclient.IsConnectionDiagnostic(e) {
+			return toolError(e.Error())
 		}
 		return toolError("local connection unavailable or unauthorized. Run syntra status in a terminal on this machine using the same profile as the MCP. If the connection expired, renew it with syntra login --reauthorize using that profile.")
 	}
@@ -120,7 +118,11 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 	var out any
 	switch name {
 	case "identity":
-		out, e = app.Identity(ctx)
+		var identity *v1.ToolConnection
+		identity, e = app.Identity(ctx)
+		if e == nil {
+			out, e = identityStatus(identity, app.Status(ctx))
+		}
 	case "workspaces":
 		var rows []*v1.AccessibleWorkspace
 		rows, e = app.Workspaces(ctx)
@@ -189,10 +191,8 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		if ctx.Err() != nil {
 			return toolError("operation cancelled or deadline exceeded; retain the original requestId for exact retry")
 		}
-		var missingCapability *toolclient.MissingCapability
-		if errors.As(e, &missingCapability) {
-			name := strings.TrimPrefix(missingCapability.Required.String(), "TOOL_CAPABILITY_")
-			return toolError("Syntra connection lacks " + name + " permission. Run syntra status in a terminal on this machine using the same profile as the MCP. Use the profile from a login that has " + name + ", or authorize a separate connection with that permission.")
+		if toolclient.IsConnectionDiagnostic(e) {
+			return toolError(e.Error())
 		}
 		var reason *actionable.Error
 		if errors.As(e, &reason) || errors.Is(e, ci.ErrWire) || errors.Is(e, ci.ErrIntegrity) {
@@ -201,6 +201,26 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		return toolError("operation rejected or response could not be verified; no rollback is implied; reuse the same requestId for exact retry")
 	}
 	return result(out, false)
+}
+
+// Preserve the existing top-level identity fields and add profile diagnostics.
+func identityStatus(connection *v1.ToolConnection, status toolclient.ConnectionStatus) (json.RawMessage, error) {
+	raw, err := protojson.Marshal(connection)
+	if err != nil {
+		return nil, err
+	}
+	var fields map[string]json.RawMessage
+	if err = json.Unmarshal(raw, &fields); err != nil {
+		return nil, err
+	}
+	raw, err = json.Marshal(status)
+	if err != nil {
+		return nil, err
+	}
+	if err = json.Unmarshal(raw, &fields); err != nil {
+		return nil, err
+	}
+	return json.Marshal(fields)
 }
 
 type arguments struct {

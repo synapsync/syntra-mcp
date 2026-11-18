@@ -9,7 +9,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -26,7 +26,7 @@ func main() {
 	defer stop()
 	if e := run(ctx, os.Args[1:]); e != nil {
 		var reason *actionable.Error
-		if errors.As(e, &reason) {
+		if errors.As(e, &reason) || toolclient.IsConnectionDiagnostic(e) {
 			fmt.Fprintln(os.Stderr, e)
 		} else {
 			fmt.Fprintln(os.Stderr, "syntra:", e)
@@ -107,11 +107,11 @@ func run(parent context.Context, args []string) error {
 		}
 	}
 	if *dir == "" {
-		base, e := os.UserConfigDir()
-		if e != nil {
-			return errors.New("set --profile-dir to a private absolute directory")
+		resolved, err := toolclient.DefaultProfileDir()
+		if err != nil {
+			return err
 		}
-		*dir = filepath.Join(base, "syntra")
+		*dir = resolved
 	}
 	if command == "login" {
 		if *method != "browser" && *method != "otp" {
@@ -132,6 +132,12 @@ func run(parent context.Context, args []string) error {
 	}
 	store, e := toolclient.OpenStore(ctx, *dir)
 	if e != nil {
+		if command == "status" && errors.Is(e, os.ErrNotExist) {
+			printProfileStatus(ctx, *dir, nil)
+		}
+		if command != "login" && command != "forget" {
+			return toolclient.ProfileError(*dir, e)
+		}
 		return e
 	}
 	defer store.Close()
@@ -209,21 +215,16 @@ func run(parent context.Context, args []string) error {
 	}
 	p, e := store.Load()
 	if e != nil {
-		if errors.Is(e, os.ErrNotExist) {
-			return errors.New("no local connection; run human interactive login")
+		if command == "status" && errors.Is(e, os.ErrNotExist) {
+			printProfileStatus(ctx, *dir, nil)
 		}
-		return e
+		return toolclient.ProfileError(*dir, e)
 	}
 	if *api != "" && *api != p.Config.APIOrigin {
 		return errors.New("API override does not match retained profile origin")
 	}
-	switch command {
-	case "status":
-		fmt.Fprintf(os.Stdout, "Profile %s; account %s; API %s; capabilities %v", p.State, p.AccountID, p.Config.APIOrigin, p.Config.Capabilities)
-		if p.State == "active" {
-			fmt.Fprintf(os.Stdout, "; connection %s; expires %s", p.ConnectionID, p.ExpiresAt)
-		}
-		fmt.Fprintln(os.Stdout)
+	if command == "status" {
+		printProfileStatus(ctx, *dir, p)
 		return nil
 	}
 	if p.State != "active" {
@@ -237,12 +238,12 @@ func run(parent context.Context, args []string) error {
 	case "identity":
 		q, e := client.Identity(ctx, p)
 		if e != nil {
-			return e
+			return toolclient.ConnectionError(*dir, p, e)
 		}
 		fmt.Fprintf(os.Stdout, "Account %s; connection %s; expires %s.\n", q.OwnerUserId, q.Id, p.ExpiresAt)
 	case "disconnect":
 		if e = client.Disconnect(ctx, p); e != nil {
-			return e
+			return toolclient.ConnectionError(*dir, p, e)
 		}
 		if e = store.Remove(); e != nil {
 			return e
@@ -250,6 +251,26 @@ func run(parent context.Context, args []string) error {
 		fmt.Fprintln(os.Stdout, "Connection revoked; local profile removed.")
 	}
 	return nil
+}
+
+func printProfileStatus(ctx context.Context, dir string, p *toolclient.Profile) {
+	status := toolclient.DescribeProfile(ctx, dir, p)
+	fmt.Fprintln(os.Stdout, status.ProfileLine())
+	if p != nil {
+		fmt.Fprintf(os.Stdout, "Profile state: %s\nAccount: %s\nAPI origin: %s\nCapabilities: %s\n",
+			p.State, p.AccountID, status.APIOrigin, strings.Join(status.CapabilityNames, ", "))
+		if status.DaysLeft != nil {
+			unit := "days"
+			if *status.DaysLeft == 1 {
+				unit = "day"
+			}
+			fmt.Fprintf(os.Stdout, "Connection: %q (%s)\nExpires: %s (%d %s left)\n",
+				p.Config.Label, status.ShortConnectionID, p.ExpiresAt, *status.DaysLeft, unit)
+		}
+	}
+	if status.ProfileWarning != "" {
+		fmt.Fprintln(os.Stdout, status.ProfileWarning)
+	}
 }
 
 func flagWasSet(flags *flag.FlagSet, name string) bool {
@@ -329,7 +350,7 @@ func runBrowserLoginCommand(ctx context.Context, profileDir, apiOrigin, browserO
 			return clientErr
 		}
 		if _, clientErr = client.Identity(ctx, previous); clientErr != nil {
-			return clientErr
+			return toolclient.ConnectionError(profileDir, previous, clientErr)
 		}
 		fmt.Fprintf(os.Stdout, "Connected account %s; connection %s; expires %s.\n", previous.AccountID, previous.ConnectionID, previous.ExpiresAt)
 		return nil
@@ -415,8 +436,8 @@ func runBrowserLoginCommand(ctx context.Context, profileDir, apiOrigin, browserO
 		return errors.New("invalid browser login configuration or capability selection")
 	}
 	if previous != nil && pending == nil {
-		if config.APIOrigin != previous.Config.APIOrigin || (previous.Version == 2 && config.BrowserOrigin != previous.BrowserOrigin) || !toolclient.BrowserPermissionsSubset(config.Capabilities, previous.Config.Capabilities) || config.LifetimeSeconds > previous.Config.LifetimeSeconds {
-			return errors.New("reauthorization cannot change origin, expand permissions or extend the active lifetime")
+		if config.APIOrigin != previous.Config.APIOrigin || (previous.Version == 2 && config.BrowserOrigin != previous.BrowserOrigin) || config.LifetimeSeconds > previous.Config.LifetimeSeconds {
+			return errors.New("reauthorization cannot change origin or extend the active lifetime")
 		}
 	}
 	client, err := toolclient.NewClient(config.APIOrigin, nil)

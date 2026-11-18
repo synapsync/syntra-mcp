@@ -29,23 +29,16 @@ func NewApp(ctx context.Context, c *Client, s *Store) (*App, error) {
 	}
 	p, e := s.Load()
 	if e != nil {
-		return nil, e
+		return nil, ProfileError(s.dir, e)
 	}
 	if _, e = c.Identity(ctx, p); e != nil {
-		return nil, e
+		return nil, ConnectionError(s.dir, p, e)
 	}
 	return &App{c, s, p}, nil
 }
 
-// MissingCapability reports a missing permission on a verified connection.
-type MissingCapability struct {
-	Required v1.ToolCapability
-}
-
-func (e *MissingCapability) Error() string { return "connection capability unavailable" }
-
 func (a *App) authorize(ctx context.Context, cap v1.ToolCapability) error {
-	if _, e := a.client.Identity(ctx, a.profile); e != nil {
+	if _, e := a.Identity(ctx); e != nil {
 		return e
 	}
 	for _, c := range a.profile.Config.Capabilities {
@@ -53,7 +46,7 @@ func (a *App) authorize(ctx context.Context, cap v1.ToolCapability) error {
 			return nil
 		}
 	}
-	return &MissingCapability{Required: cap}
+	return &MissingCapability{Required: cap, granted: a.profile.Config.Capabilities, dir: a.store.dir}
 }
 func (a *App) content() syntrav1connect.AuthoredContentServiceClient {
 	return syntrav1connect.NewAuthoredContentServiceClient(a.client, a.client.origin, RPCOptions()...)
@@ -119,5 +112,11 @@ func strictRecord(raw []byte, keys []string, out any) error {
 
 // Identity returns only current verified metadata, never the profile credential.
 func (a *App) Identity(ctx context.Context) (*v1.ToolConnection, error) {
-	return a.client.Identity(ctx, a.profile)
+	identity, err := a.client.Identity(ctx, a.profile)
+	return identity, ConnectionError(a.store.dir, a.profile, err)
+}
+
+// Status describes the retained profile without returning its credential.
+func (a *App) Status(ctx context.Context) ConnectionStatus {
+	return DescribeProfile(ctx, a.store.dir, a.profile)
 }
