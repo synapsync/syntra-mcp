@@ -570,7 +570,7 @@ def main() -> int:
             parser.error("--release-version must be a stable X.Y.Z")
         if not args.repository or not re.fullmatch(r"[\w-]+/[\w.-]+", args.repository, re.ASCII):
             parser.error("--repository must be the public GitHub owner/repository")
-        for relative in (*release_docs, "docs/NPM-PACKAGE.md"):
+        for relative in (*release_docs, "README.md"):
             source = ROOT / relative
             if source.is_symlink() or not source.is_file() or not source.stat().st_size:
                 fail(f"public packages require a reviewed, nonempty {relative}")
@@ -651,7 +651,6 @@ def main() -> int:
         root_expected = {relative: (0o755 if relative == "bin/launcher.cjs" else 0o644) for relative in ("package.json", *ROOT_FILES)}
         if not private:
             stage_release_manifest(root_stage / "package.json", version, release_metadata, "Syntra CLI and local MCP server")
-            package_directory_manifest(root_stage, "README.md", ROOT / "docs/NPM-PACKAGE.md")
             for relative in release_docs:
                 package_directory_manifest(root_stage, relative, ROOT / relative)
                 root_expected[relative] = 0o644

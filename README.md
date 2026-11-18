@@ -76,6 +76,6 @@ npm run test:launcher
 npm run test:setup
 ```
 
-See [release operations](docs/NPM-RELEASE.md) for the build matrix and publishing
-workflow. The client is [MIT licensed](LICENSE). Compiled dependencies and
-bundled components have [third-party notices](THIRD-PARTY-NOTICES.md).
+See [release operations](https://github.com/synapsync/syntra-mcp/blob/main/docs/NPM-RELEASE.md) for the build matrix and publishing
+workflow. The client is [MIT licensed](https://github.com/synapsync/syntra-mcp/blob/main/LICENSE). Compiled dependencies and
+bundled components have [third-party notices](https://github.com/synapsync/syntra-mcp/blob/main/THIRD-PARTY-NOTICES.md).

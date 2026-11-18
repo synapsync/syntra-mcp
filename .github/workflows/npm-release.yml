@@ -6,9 +6,12 @@ on:
       release_version:
         description: Stable X.Y.Z for a public bootstrap candidate. Leave empty for a private preview.
         type: string
+      publish_release:
+        description: Allocate and publish a release from main. Leave off for candidate builds.
+        type: boolean
+        default: false
   push:
-    branches: ['ci/npm-preview/**']
-    tags: ['v*']
+    branches: [main, 'ci/npm-preview/**']
 
 permissions:
   contents: read
@@ -18,8 +21,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  reserve-version:
+    if: >-
+      github.repository == 'synapsync/syntra-mcp' &&
+      github.ref == 'refs/heads/main' &&
+      vars.NPM_PUBLISH_ENABLED == 'true' &&
+      (github.event_name == 'push' || (inputs.publish_release && inputs.release_version == ''))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.reserve.outputs.version }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reserve a patch version for this commit
+        id: reserve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/reserve-npm-release.py
+
   build:
-    if: github.event_name != 'push' || github.ref_type == 'tag' || github.event.repository.private
+    needs: reserve-version
+    if: >-
+      ${{ !cancelled() &&
+          (needs.reserve-version.result == 'success' || needs.reserve-version.result == 'skipped') &&
+          (github.event_name == 'workflow_dispatch' || github.event.repository.private || needs.reserve-version.outputs.version != '') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
@@ -54,12 +84,9 @@ jobs:
         id: pack
         env:
           REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
-          BOOTSTRAP_VERSION: ${{ inputs.release_version }}
+          RELEASE_VERSION: ${{ needs.reserve-version.outputs.version || inputs.release_version }}
         run: |
-          version="$BOOTSTRAP_VERSION"
-          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_EVENT_NAME" == push ]]; then
-            version="${GITHUB_REF_NAME#v}"
-          fi
+          version="$RELEASE_VERSION"
           if [[ "$REPOSITORY_PRIVATE" == true && -n "$version" ]] ||
              [[ "$REPOSITORY_PRIVATE" != true && -z "$version" ]]; then
             echo 'Use a private repository for previews and the public client repository for release packages.' >&2
@@ -115,8 +142,8 @@ jobs:
             --manifest "$out/manifest.json" --manifest-sha256 "$MANIFEST_SHA256"
 
   publish:
-    if: github.event_name == 'push' && github.ref_type == 'tag' && !github.event.repository.private && vars.NPM_PUBLISH_ENABLED == 'true'
-    needs: [build, smoke]
+    if: needs.reserve-version.outputs.version != ''
+    needs: [reserve-version, build, smoke]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: npm-production

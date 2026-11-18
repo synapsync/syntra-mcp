@@ -15,6 +15,19 @@ A fresh Linux x64 install from npm verified automatic native package
 selection and MCP startup. The [npm package page](https://www.npmjs.com/package/@synapsync/syntra-mcp)
 shows the current release.
 
+## Automatic releases
+
+A push to `main` in `synapsync/syntra-mcp` triggers the release workflow
+when `NPM_PUBLISH_ENABLED=true`. GitHub reserves the next patch version
+with a `vX.Y.Z` tag on the exact commit. The workflow tests the candidate
+on all five native targets, publishes through npm Trusted Publishing,
+and verifies a fresh install from the public registry. A rerun resumes
+the same commit and version. Publication skips packages with matching
+integrity and fails if a published version contains different bytes.
+
+The npm package ships the root `README.md` from its release commit.
+npm displays the README of the currently published version.
+
 ## Build a candidate
 
 Use Go 1.27.3, Python 3, and Node.js 22.12 or newer. Download the dependencies
@@ -37,24 +50,27 @@ The build captures each tarball digest and each packed file digest. Review
 those artifacts before publishing. Each package includes MIT and the
 third-party notices.
 
-## Bootstrap and subsequent releases
+## One-time publishing setup
 
-An npm maintainer with permission to publish under `@synapsync` can bootstrap
-the six package names with interactive 2FA, after approving the version and
-artifact contents. The existing tool expects the six tarballs, their manifest,
-and the verified manifest SHA-256.
+For each of the six existing npm packages, configure a
+[trusted publisher](https://docs.npmjs.com/trusted-publishers/) with these
+settings and complete npm's one-time confirmation:
 
-```sh
-python3 scripts/publish-npm-packages.py "$PWD/dist/npm" "$PWD/dist/npm-manifest.json" "$reviewed_manifest_sha256"
-```
+- Repository: `synapsync/syntra-mcp`
+- Workflow: `npm-release.yml`
+- Environment: `npm-production`
+- Action: allow direct `npm publish`
 
-It publishes the five native packages first, verifies registry integrity, then
-publishes the launcher. Test the exact version from the registry after
-publication.
+Restrict the GitHub environment to the `main` branch. Direct publication
+uses GitHub's short-lived OIDC identity without a stored npm token or
+an environment approval step. Enable the repository variable
+`NPM_PUBLISH_ENABLED=true` after setting up all six packages. Push to
+`main` to exercise the connection before npm's first-publication deadline.
 
-For subsequent versions, configure [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/)
-for each package. Use `synapsync/syntra-mcp`, workflow `npm-release.yml`, and
-the `npm-production` environment. Protect the environment and version tags.
-Once approved for use, set the `NPM_PUBLISH_ENABLED` repository variable to
-`true`. A pushed `vX.Y.Z` tag builds and tests before publishing. The final job
-installs the exact version from npm into a fresh consumer.
+## Recover a failed run
+
+Rerun the workflow while the commit is still the tip of `main`.
+It reuses the reserved version and verifies each existing package against
+the candidate. If the registry already has different bytes under that
+version, fix the cause and let a new commit allocate the next version.
+Leave the existing tags and published versions intact.
