@@ -442,6 +442,23 @@ func TestCompiledCLIHumanTTYAndProcessRecovery(t *testing.T) {
 			t.Fatal("matching profile reuse triggered a new login or issuance")
 		}
 	})
+	t.Run("status_without_profile_keeps_stdout_empty", func(t *testing.T) {
+		// The release build's CLI smoke guard requires a failing status to write only
+		// to stderr (exit 1, empty stdout, "No Syntra connection").
+		dir := filepath.Join(t.TempDir(), "absent-profile")
+		cmd := exec.Command(bin, "status", "--profile-dir", dir)
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout, cmd.Stderr = &stdout, &stderr
+		cmd.Env = newFixture(t).env()
+		err := cmd.Run()
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) || exit.ExitCode() != 1 {
+			t.Fatalf("status without a profile must exit 1: %v", err)
+		}
+		if stdout.Len() != 0 || !bytes.Contains(stderr.Bytes(), []byte("No Syntra connection")) || stderr.Len() > 2048 {
+			t.Fatalf("status without a profile must write only the diagnosis to stderr: stdout=%q stderr=%q", stdout.String(), stderr.String())
+		}
+	})
 	t.Run("default_profile_is_shared", func(t *testing.T) {
 		f := newFixture(t)
 		args := f.args()

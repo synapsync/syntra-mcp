@@ -133,7 +133,7 @@ func run(parent context.Context, args []string) error {
 	store, e := toolclient.OpenStore(ctx, *dir)
 	if e != nil {
 		if command == "status" && errors.Is(e, os.ErrNotExist) {
-			printProfileStatus(ctx, *dir, nil)
+			printProfileStatus(ctx, os.Stderr, *dir, nil)
 		}
 		if command != "login" && command != "forget" {
 			return toolclient.ProfileError(*dir, e)
@@ -216,7 +216,7 @@ func run(parent context.Context, args []string) error {
 	p, e := store.Load()
 	if e != nil {
 		if command == "status" && errors.Is(e, os.ErrNotExist) {
-			printProfileStatus(ctx, *dir, nil)
+			printProfileStatus(ctx, os.Stderr, *dir, nil)
 		}
 		return toolclient.ProfileError(*dir, e)
 	}
@@ -224,7 +224,7 @@ func run(parent context.Context, args []string) error {
 		return errors.New("API override does not match retained profile origin")
 	}
 	if command == "status" {
-		printProfileStatus(ctx, *dir, p)
+		printProfileStatus(ctx, os.Stdout, *dir, p)
 		return nil
 	}
 	if p.State != "active" {
@@ -253,23 +253,25 @@ func run(parent context.Context, args []string) error {
 	return nil
 }
 
-func printProfileStatus(ctx context.Context, dir string, p *toolclient.Profile) {
+// printProfileStatus writes the profile diagnosis to out: stdout for a retained
+// profile, stderr when there is none (a failing command keeps stdout empty).
+func printProfileStatus(ctx context.Context, out io.Writer, dir string, p *toolclient.Profile) {
 	status := toolclient.DescribeProfile(ctx, dir, p)
-	fmt.Fprintln(os.Stdout, status.ProfileLine())
+	fmt.Fprintln(out, status.ProfileLine())
 	if p != nil {
-		fmt.Fprintf(os.Stdout, "Profile state: %s\nAccount: %s\nAPI origin: %s\nCapabilities: %s\n",
+		fmt.Fprintf(out, "Profile state: %s\nAccount: %s\nAPI origin: %s\nCapabilities: %s\n",
 			p.State, p.AccountID, status.APIOrigin, strings.Join(status.CapabilityNames, ", "))
 		if status.DaysLeft != nil {
 			unit := "days"
 			if *status.DaysLeft == 1 {
 				unit = "day"
 			}
-			fmt.Fprintf(os.Stdout, "Connection: %q (%s)\nExpires: %s (%d %s left)\n",
+			fmt.Fprintf(out, "Connection: %q (%s)\nExpires: %s (%d %s left)\n",
 				p.Config.Label, status.ShortConnectionID, p.ExpiresAt, *status.DaysLeft, unit)
 		}
 	}
 	if status.ProfileWarning != "" {
-		fmt.Fprintln(os.Stdout, status.ProfileWarning)
+		fmt.Fprintln(out, status.ProfileWarning)
 	}
 }
 
