@@ -479,7 +479,9 @@ function parseInlineTable(ctx) {
 		}
 		if (hasOwn) TomlError.x("trying to redefine an already defined value", ctx, errPtr);
 		skipVoid(ctx, true, true);
+		const valueStart = ctx.p;
 		let value = extractValue(ctx, 125);
+		ctx.onInlineValue?.({ tableStart: startPtr, keys: key, start: valueStart, end: ctx.p });
 		if (t && typeof (t[k] = value) === "object") seen.add(value);
 		skipVoid(ctx);
 		if ((c = ctx.s.charCodeAt(ctx.p++)) === 125) return res;
@@ -580,6 +582,7 @@ function validateTablePeek(ctx, peek, ptr) {
 function parse(toml, options = {}) {
 	let ctx = {
 		s: toml,
+		onInlineValue: options.onInlineValue,
 		p: 0,
 		d: options.maxDepth ?? 1e3,
 		bi: options.integersAsBigInt ?? false,
@@ -592,14 +595,20 @@ function parse(toml, options = {}) {
 	let skipping = false;
 	let tbl = res;
 	let m = meta;
+	// Syntra extension: report top-level statement spans for surgical edits.
+	let tableKeys = [];
 	if (toml.charCodeAt(0) === 65279) ctx.p++;
 	skipVoid(ctx);
 	while (ctx.p < toml.length) {
+		const start = ctx.p;
+		let keys;
+		let valueStart;
 		if (toml.charCodeAt(ctx.p) === 91) {
 			let isTableArray = toml.charCodeAt(++ctx.p) === 91;
 			tmp = ctx.p += +isTableArray;
 			skipping = false;
 			let k = parseKey(ctx, 93);
+			keys = tableKeys = k;
 			if (isTableArray) {
 				if (toml.charCodeAt(ctx.p) !== 93) TomlError.x("expected end of table array declaration", ctx);
 				ctx.p++;
@@ -614,12 +623,16 @@ function parse(toml, options = {}) {
 			}
 		} else {
 			tmp = ctx.p;
-			let p = peekTable(ctx, parseKey(ctx), tbl, m, 0);
+			const key = parseKey(ctx);
+			keys = tableKeys.concat(key);
+			let p = peekTable(ctx, key, tbl, m, 0);
 			if (!p && !skipping) validateTablePeek(ctx, p, tmp);
 			skipVoid(ctx, true, true);
+			valueStart = ctx.p;
 			let v = extractValue(ctx, void 0);
 			if (p && !skipping) p[1][p[0]] = v;
 		}
+		options.onStatement?.({ keys, start, end: ctx.p, valueStart });
 		skipVoid(ctx, true);
 		if (ctx.p < toml.length && (tmp = toml.charCodeAt(ctx.p)) !== 10 && (tmp !== 13 || toml.charCodeAt(ctx.p + 1) !== 10)) TomlError.x("each key-value declaration must be followed by an end-of-line", ctx);
 		skipVoid(ctx);

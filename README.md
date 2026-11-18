@@ -32,9 +32,10 @@ syntra status
 syntra workspaces
 ```
 
-Approve the permissions you need in the browser. The CLI and agent hosts using
-the same local profile share that login. To run without a global install, use
-`npx -y @synapsync/syntra-mcp login`.
+One login serves every agent session of the same OS user using the default
+Syntra profile. The CLI and MCP read the same private profile at each call.
+Approve the permissions you need in the browser. To run without a global install,
+use `npx -y @synapsync/syntra-mcp login`.
 
 ## Connect your agent
 
@@ -46,28 +47,40 @@ syntra setup --agent claude-code
 syntra setup --agent opencode
 ```
 
-Add `--dry-run` to preview the registration and skill installation. Start a
-fresh host session after applying setup, then ask it to list your Syntra
-workspaces. For other stdio hosts or a custom profile, use the
+Add `--dry-run` to preview the registration and skill installation. For a
+recognized stale Syntra entry, review the before/after preview and confirm the
+replacement, or use `--replace` to apply it without prompting. Setup retains
+a private config backup and preserves an existing different skill on replacement.
+Start a fresh host session after changing its registration, then ask it to list
+your Syntra workspaces. For other stdio hosts or a custom profile, use the
 [manual configuration templates](https://syntra.synapsynclabs.com/docs/agent-setup/host-configurations.html).
 
 ## Permissions and renewal
 
-| Capability | Use |
+| Permission | Login flag | Use |
+| --- | --- | --- |
+| read | Always requested | Discover and read authorized workspaces, people, tickets and messages. |
+| prepare | `--prepare` | Create tickets and prepare or link private drafts. |
+| publish | `--publish` with `--prepare` | Send an exact retained draft in a separate call. |
+| mark-read | `--mark-read` | Permit explicit read receipts in clients that support them. Listing messages does not mark them read. |
+
+A first browser login without permission flags requests read, prepare and publish.
+In the browser, you can deselect the optional permissions. If you supply
+permission flags, they select which optional permissions to request. An existing
+profile is reused by plain login. During reauthorization, include each optional
+permission you want to retain when supplying flags. The browser must approve the
+new request.
+
+A connection requests 30 days by default. On first login, you can request up to
+90 days with `syntra login --lifetime-seconds 7776000`.
+
+| Symptom | Command |
 | --- | --- |
-| `READ` | Discover workspaces, projects, teams and members, and read authorized tickets and messages. |
-| `PREPARE` | Create private drafts and link them to a member. |
-| `PUBLISH` | Send an exact retained draft in a separate call. Requires `PREPARE`. |
-
-A new connection requests 30 days by default. You can request up to 90 days
-with `syntra login --lifetime-seconds 7776000`. When a compatible connection
-expires, run `syntra login --reauthorize` with the same profile.
-
-If the terminal works and the agent lacks a permission, check the agent's
-selected profile with `syntra status`. If the registration specifies
-`--profile-dir`, use that same directory in the CLI. See
-[troubleshooting](https://syntra.synapsynclabs.com/docs/troubleshooting.html)
-for permission changes, profile mismatches and startup errors.
+| No Syntra connection | `syntra login` |
+| Agent lacks prepare or publish | `syntra login --reauthorize --prepare --publish` for both, or omit `--publish` for preparation only. Keep any other permission flags you still need. |
+| Connection expired | `syntra login --reauthorize` |
+| CLI works but agent keeps asking to log in | Compare `syntra status` with MCP `identity`. Use `syntra setup --agent codex --replace` to move Codex to the shared default, or use the same deliberate `--profile-dir` in both places. |
+| Agent still runs an older pinned version | `syntra update`, then follow its `syntra setup --agent … --replace` command. |
 
 ## Preparing a reply
 
@@ -111,4 +124,8 @@ updates a global npm installation after confirmation; `--yes` permits an
 unattended update. Set `SYNTRA_UPDATE_OFFLINE=1` to disable network checks.
 For npx use `npx -y @synapsync/syntra-mcp@latest ...`; for a checkout or local
 install use `npm install -g @synapsync/syntra-mcp@latest` for a global CLI.
-Only stable X.Y.Z versions are supported by the updater.
+Only stable X.Y.Z versions are supported by the updater. Setup pins the exact
+package version so the host cannot pick up a new release on startup. After a
+global update, the launcher lists any recognized older pins and prints the
+command to replace each one. Host config changes use a separate confirmation
+or an explicit `--replace`.

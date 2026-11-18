@@ -91,17 +91,12 @@ function launch(args = process.argv.slice(2)) {
     return;
   }
   if (args[0] === 'setup') {
-    let setup;
-    try {
-      setup = require('./setup.cjs');
-      process.stdout.write(setup.runSetup(args.slice(1)));
-    } catch (error) {
-      const message = setup && error instanceof setup.SetupError
-        ? error.message
-        : 'Setup preview could not be completed safely.';
+    const setup = require('./setup.cjs');
+    setup.setupCLI(args.slice(1)).catch(error => {
+      const message = error instanceof setup.SetupError ? error.message : 'Setup could not be completed safely.';
       process.stderr.write(`syntra: ${message}\n`);
       process.exitCode = 1;
-    }
+    });
     return;
   }
 

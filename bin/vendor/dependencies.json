@@ -23,9 +23,10 @@
       "source": "https://registry.npmjs.org/smol-toml/-/smol-toml-1.9.1.tgz",
       "integrity": "sha512-j7WyPdf0CJoutMzMoPLF/bVXHtKZIT9Rb4eGeEbWw8X2t5oirjPgpL+OpaENZrILYaXqYwnVH+qgUwVbl+pUJQ==",
       "license": "BSD-3-Clause",
+      "localPatch": "Expose parsed TOML statement and inline value spans for targeted host config replacement.",
       "files": {
         "smol-toml/LICENSE": "fa5659948374d4f555594f47f6da073b40dc503e921aeeece30df4362b3051a5",
-        "smol-toml/index.cjs": "f9029370259e9a43a2f3e64fa1d39e72f3598188380ace83a0abb8261fa33555"
+        "smol-toml/index.cjs": "cc8c3f0169184a26c5d1b7971b247e7d98d33516c86f80716ea9eb3dbca13670"
       }
     }
   ]

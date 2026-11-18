@@ -24,6 +24,20 @@ function npm(args, platform = process.platform) {
   return spawnSync(command, argv, { shell: false, encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024, windowsHide: true });
 }
 
+function reportPinnedHosts(latest, env, out) {
+  const { AGENT_NAMES, registrationPin } = require('./setup.cjs');
+  for (const agent of AGENT_NAMES) {
+    try {
+      const pin = registrationPin(agent, env);
+      if (pin && STABLE.test(pin) && compare(pin, latest) < 0) {
+        out(`Syntra for ${agent} is pinned to ${pin}. Run: syntra setup --agent ${agent} --replace`);
+      }
+    } catch {
+      out(`Could not inspect the ${agent} registration. Preview it with: syntra setup --agent ${agent} --dry-run`);
+    }
+  }
+}
+
 function installation(packageDir, globalRoot) {
   const real = fs.realpathSync(packageDir);
   if (real.split(/[\\/]+/).some(part => part.toLowerCase() === '_npx')) return 'npx';
@@ -60,7 +74,10 @@ async function update(args, deps = {}) {
   out(`Installed version: ${installed}`); out(`Latest published version: ${latest}`);
   out(available ? 'Update available.' : 'No update available.');
   if (args.includes('--check')) return available ? 10 : 0;
-  if (!available) return 0;
+  if (!available) {
+    reportPinnedHosts(installed, env, out);
+    return 0;
+  }
   const root = call(['root', '-g']);
   let kind;
   try { kind = installation(packageDir, root.status === 0 && typeof root.stdout === 'string' ? root.stdout.trim() : ''); } catch { kind = 'local'; }
@@ -81,6 +98,8 @@ async function update(args, deps = {}) {
   let after;
   try { after = readVersion(); } catch { /* report below */ }
   if (after !== latest) { err(`Installed version could not be verified after update. Manual command: ${MANUAL}`); return 1; }
-  out(`Updated to ${latest}.`); return 0;
+  out(`Updated to ${latest}.`);
+  reportPinnedHosts(latest, env, out);
+  return 0;
 }
 module.exports = { update, compare, installation, npm };

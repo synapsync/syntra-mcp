@@ -338,3 +338,52 @@ test('launcher delegates both help forms to the native executable', { skip: proc
     if (args.length === 1) assert.match(result.stdout, /update[\s\S]*--version/);
   }
 });
+
+test('successful global update reports only older Syntra host pins and leaves configs intact', t => {
+  if (process.platform === 'win32') return t.skip('POSIX fake npm fixture');
+  const f = updateFixture(t);
+  const tools = path.join(f.dir, 'tools');
+  const home = path.join(f.dir, 'home');
+  const xdg = path.join(f.dir, 'xdg');
+  fs.mkdirSync(tools);
+  fs.mkdirSync(path.join(home, '.codex'), { recursive: true });
+  fs.mkdirSync(path.join(xdg, 'opencode'), { recursive: true });
+  fs.cpSync(path.join(root, 'bin'), path.join(f.pkg, 'bin'), { recursive: true });
+  const manifest = path.join(f.pkg, 'package.json');
+  fs.writeFileSync(manifest, '{"name":"@synapsync/syntra-mcp","private":false,"version":"1.0.0"}\n');
+  const configs = new Map([
+    [path.join(home, '.codex', 'config.toml'),
+      '[mcp_servers.syntra]\ncommand = "npx"\nargs = ["-y", "@synapsync/syntra-mcp@1.0.0", "mcp"]\n'],
+    [path.join(home, '.claude.json'),
+      '{"mcpServers":{"syntra":{"command":"unrelated","args":["@synapsync/syntra-mcp@1.0.0","mcp"]}}}'],
+    [path.join(xdg, 'opencode', 'opencode.jsonc'),
+      '{"mcp":{"servers":{"syntra":{"type":"local","command":["npx","-y","@synapsync/syntra-mcp@1.0.1","mcp"]}}}}'],
+  ]);
+  for (const [file, source] of configs) fs.writeFileSync(file, source);
+
+  fs.writeFileSync(path.join(tools, 'npm'), `#!/bin/sh
+case "$1" in
+  view) printf '%s\\n' '1.0.1' ;;
+  root) printf '%s\\n' "$FAKE_GLOBAL_ROOT" ;;
+  install)
+    [ "$*" = 'install -g @synapsync/syntra-mcp@1.0.1' ] || exit 2
+    printf '%s\\n' '{"name":"@synapsync/syntra-mcp","private":false,"version":"1.0.1"}' > "$FAKE_MANIFEST" ;;
+  *) exit 2 ;;
+esac
+`, { mode: 0o755 });
+  const env = { HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: xdg, PATH: tools,
+    FAKE_GLOBAL_ROOT: f.root, FAKE_MANIFEST: manifest };
+  const invoke = (...args) => spawnSync(process.execPath, [path.join(f.pkg, 'bin', 'launcher.cjs'), 'update', ...args], {
+    env, encoding: 'utf8', timeout: 10000,
+  });
+  const checked = invoke('--check');
+  assert.equal(checked.status, 10, checked.stderr);
+  assert.doesNotMatch(checked.stdout, /setup --agent/);
+  const updated = invoke('--yes');
+  assert.equal(updated.status, 0, updated.stderr);
+  assert.match(updated.stdout, /Updated to 1\.0\.1\./);
+  assert.match(updated.stdout, /pinned to 1\.0\.0\. Run: syntra setup --agent codex --replace/);
+  assert.doesNotMatch(updated.stdout, /setup --agent (claude-code|opencode)/);
+  assert.match(invoke().stdout, /syntra setup --agent codex --replace/);
+  for (const [file, source] of configs) assert.equal(fs.readFileSync(file, 'utf8'), source);
+});
