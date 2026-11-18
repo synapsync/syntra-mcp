@@ -458,6 +458,35 @@ func TestCompiledCLIHumanTTYAndProcessRecovery(t *testing.T) {
 			t.Fatal("default profile not reusable")
 		}
 		assertRedacted(t, out, profile)
+		if !bytes.Contains(out, []byte("Profile directory: "+fmt.Sprintf("%q", f.dir)+" (default shared)")) ||
+			!bytes.Contains(out, []byte("Capabilities: read")) || !bytes.Contains(out, []byte("day left")) ||
+			bytes.Contains(out, []byte("Another profile")) {
+			t.Fatalf("incorrect default status: %s", out)
+		}
+		t.Logf("Default profile status:\n%s", out)
+
+		custom := filepath.Join(filepath.Dir(f.dir), "fixture alternate")
+		other := *profile
+		other.ConnectionID = "55555555-5555-4555-8555-555555555555"
+		store, e := toolclient.OpenStore(context.Background(), custom)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if e = store.Save(&other); e != nil {
+			store.Close()
+			t.Fatal(e)
+		}
+		store.Close()
+		cmd = exec.Command(bin, "status", "--profile-dir", custom)
+		cmd.Env = f.env()
+		out, e = cmd.CombinedOutput()
+		if e != nil || !bytes.Contains(out, []byte("55555555")) ||
+			!bytes.Contains(out, []byte("Another profile exists at "+fmt.Sprintf("%q", f.dir))) {
+			t.Fatalf("incorrect custom status: %v %s", e, out)
+		}
+		assertRedacted(t, out, profile)
+		t.Logf("Custom profile status:\n%s", out)
+
 	})
 	for _, status := range []int{400, 403} {
 		t.Run(fmt.Sprintf("invalid_or_expired_OTP_%d", status), func(t *testing.T) {

@@ -2,6 +2,7 @@ package toolclient
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -33,7 +34,19 @@ type storeFS interface {
 // Store holds an exclusive process lock until Close, including during login.
 // Keep it open across load, network mutation and durable replacement.
 type Store struct {
-	fs storeFS
+	fs  storeFS
+	dir string
+}
+
+// OpenStore opens the private profile directory with platform-native path checks
+// and holds an exclusive lock until Close.
+func OpenStore(ctx context.Context, dir string) (*Store, error) {
+	store, err := openPlatformStore(ctx, dir)
+	if err != nil {
+		return nil, err
+	}
+	store.dir = dir
+	return store, nil
 }
 
 func (s *Store) Close() error {

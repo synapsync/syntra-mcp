@@ -594,26 +594,33 @@ func saveExistingActiveProfile(t *testing.T, h *browserHarness, dir, owner strin
 	return raw
 }
 
-func TestBrowserReauthorizationRejectsScopeExpansionBeforeBegin(t *testing.T) {
+func TestBrowserReauthorizationExpandsScopeOnlyWithConsent(t *testing.T) {
 	h := newBrowserHarness(t, fixtures.TestHarnessOptions{AcceptFirstValidRequestID: true, VerificationURI: testBrowserOrigin + "/auth/device"}, nil)
 	transport := useBrowserTransport(t, h)
 	dir := filepath.Join(t.TempDir(), "profile")
 	before := saveExistingActiveProfile(t, h, dir, "33333333-3333-4333-8333-333333333333", []v1.ToolCapability{v1.ToolCapability_TOOL_CAPABILITY_READ}, h.config.LifetimeSeconds)
-	_, err := h.client.RunBrowserLogin(context.Background(), dir, h.config, BrowserLoginOptions{Reauthorize: true, Output: ioDiscard{}})
-	if err == nil || !strings.Contains(err.Error(), "scope or lifetime differs") {
-		t.Fatal("broader reauthorization was not rejected before Begin", err)
+	var output bytes.Buffer
+	got, err := h.client.RunBrowserLogin(context.Background(), dir, h.config, BrowserLoginOptions{
+		Reauthorize: true, Output: &output,
+		OpenURL: func(string) error {
+			if !bytes.Equal(before, mustReadFile(t, filepath.Join(dir, "profile.json"))) {
+				t.Fatal("active profile changed before browser consent")
+			}
+			h.approve(t, h.config.Capabilities, h.config.LifetimeSeconds)
+			return nil
+		},
+		Sleep: func(_ context.Context, delay time.Duration) error { return h.advance(delay) },
+	})
+	if err != nil || !equalCaps(got.Config.Capabilities, h.config.Capabilities) || transport.beginCalls.Load() != 1 {
+		t.Fatal("approved permission expansion was not activated", err)
 	}
-	if transport.beginCalls.Load() != 0 {
-		t.Fatal("broader reauthorization sent Begin before rejecting scope expansion")
-	}
-	if !bytes.Equal(before, mustReadFile(t, filepath.Join(dir, "profile.json"))) {
-		t.Fatal("rejected broader reauthorization changed the active profile")
+	if !strings.Contains(output.String(), "Requested permissions: read, prepare") {
+		t.Fatal("missing requested permission preview")
 	}
 	if _, err = os.Stat(filepath.Join(dir, browserAttemptFilename)); !errors.Is(err, os.ErrNotExist) {
-		t.Fatal("rejected broad scope left an orphan pending grant", err)
+		t.Fatal("completed consent left a pending attempt", err)
 	}
 }
-
 func TestBrowserReauthorizationPreservesProfileOnIdentitySubstitution(t *testing.T) {
 	mutations := map[string]func(*v1.ToolConnection){
 		"owner": func(connection *v1.ToolConnection) { connection.OwnerUserId = "55555555-5555-4555-8555-555555555555" },

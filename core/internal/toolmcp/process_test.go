@@ -621,6 +621,82 @@ func expect(s *v1.AuthoredContentSnapshot) *v1.ContentDraftExpectation {
 	return &v1.ContentDraftExpectation{TicketId: s.Receipt.TicketId, DraftId: s.GetPrivateDraft().DraftId, ExpectedTicketRevision: s.TicketRevision, ExpectedDraftRevision: s.GetPrivateDraft().Revision, ExpectedContentDigest: s.Receipt.ContentDigest}
 }
 
+func TestMCPConnectionDiagnosticCLIParity(t *testing.T) {
+	f := fixture(t)
+	p := spawn(t, f)
+	p.init(t)
+
+	assertParity := func(tool string, toolArgs map[string]any, cliArgs []string, in []byte, want string) {
+		t.Helper()
+		got := string(toolResult(t, p.call(t, tool, toolArgs), true))
+		cmd := exec.Command(f.binary, append(cliArgs, "--profile-dir", f.dir)...)
+		cmd.Env = testsupport.FixtureCLIEnv()
+		cmd.Stdin = bytes.NewReader(in)
+		out, err := cmd.CombinedOutput()
+		if got != want || err == nil || string(out) != want+"\n" {
+			t.Fatalf("expected %q, CLI %v %q, MCP %q", want, err, out, got)
+		}
+		t.Log(got)
+	}
+	prepare := func(want string) {
+		t.Helper()
+		r := newRequest()
+		data, err := protojson.Marshal(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertParity("prepare", rpcArgs(t, r, ""), []string{"prepare", "--file", "-"}, data, want)
+	}
+	identity := toolResult(t, p.call(t, "identity", map[string]any{}), false)
+	var status struct {
+		ProfileDir           string
+		DefaultSharedProfile bool
+		CapabilityNames      []string
+		DaysLeft             int
+		ShortConnectionID    string
+		ProfileWarning       string
+		APIOrigin            string
+	}
+	if err := json.Unmarshal(identity, &status); err != nil || status.ProfileDir != f.dir || status.DefaultSharedProfile ||
+		strings.Join(status.CapabilityNames, ",") != "read,prepare,publish" || status.DaysLeft != 1 ||
+		status.ShortConnectionID != connectionID[:8] || status.APIOrigin != f.apiURL || status.ProfileWarning == "" {
+		t.Fatalf("MCP profile diagnostics missing: %v %s", err, identity)
+	}
+	suffix := " --profile-dir '" + f.dir + "' (approve in the browser)."
+	f.api.mu.Lock()
+	f.api.mutationError = actionable.DeniedCapability(v1.ToolCapability_TOOL_CAPABILITY_PREPARE)
+	f.api.mu.Unlock()
+	prepare("Missing capability PREPARE: the server denied this permission for the connection. Run: syntra login --reauthorize --prepare --publish" + suffix)
+
+	f.api.mu.Lock()
+	f.api.p.Config.Capabilities = []v1.ToolCapability{v1.ToolCapability_TOOL_CAPABILITY_READ}
+	f.api.mu.Unlock()
+	store, err := toolclient.OpenStore(context.Background(), f.dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	local, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	local.Config.Capabilities = []v1.ToolCapability{v1.ToolCapability_TOOL_CAPABILITY_READ}
+	if err = store.Save(local); err != nil {
+		t.Fatal(err)
+	}
+	store.Close()
+	prepare("Missing capability PREPARE: this connection allows READ only. Run: syntra login --reauthorize --prepare" + suffix)
+	store, err = toolclient.OpenStore(context.Background(), f.dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = store.Remove(); err != nil {
+		t.Fatal(err)
+	}
+	store.Close()
+	assertParity("workspaces", map[string]any{}, []string{"workspaces"}, nil,
+		"No Syntra connection. Run: syntra login --profile-dir '"+f.dir+"' (choose permissions in the browser; use --prepare for drafts, --prepare --publish to send, or --mark-read for read receipts).")
+}
+
 func TestMCPActionableErrorCLIParity(t *testing.T) {
 	f := fixture(t)
 	p := spawn(t, f)
@@ -796,7 +872,7 @@ func TestMCPActualProcessCLIParity(t *testing.T) {
 	before := f.api.mutations
 	f.api.mu.Unlock()
 	raw = toolResult(t, p.call(t, "retry", map[string]any{"requestId": pub.RequestId}), true)
-	if !bytes.Contains(raw, []byte("lacks PUBLISH permission")) || !bytes.Contains(raw, []byte("syntra status")) {
+	if !bytes.Contains(raw, []byte("Missing capability PUBLISH")) || !bytes.Contains(raw, []byte("syntra login --reauthorize --prepare --publish")) {
 		t.Fatalf("missing recovery guidance for read-only connection: %s", raw)
 	}
 	f.api.mu.Lock()

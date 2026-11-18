@@ -8,9 +8,9 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// OpenStore opens the private profile directory with a descriptor-relative
+// openPlatformStore opens the private profile directory with a descriptor-relative
 // no-follow walk and holds an exclusive flock until Close.
-func OpenStore(ctx context.Context, path string) (*Store, error) {
+func openPlatformStore(ctx context.Context, path string) (*Store, error) {
 	return openStore(ctx, path, syncDirectoryDescriptor, unix.Mkdirat)
 }
 

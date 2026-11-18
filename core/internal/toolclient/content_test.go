@@ -884,7 +884,7 @@ func TestSnapshotLegacyContextAndPrivateOwnerSubstitution(t *testing.T) {
 func TestDirectoryAggregateByteBoundAndCursorLoop(t *testing.T) {
 	ctx := context.Background()
 	calls := 0
-	_, e := pages(ctx, func(context.Context, string) ([]*v1.Project, string, error) {
+	_, e := pages(ctx, &App{store: &Store{}, profile: &Profile{}}, func(context.Context, string) ([]*v1.Project, string, error) {
 		calls++
 		rows := []*v1.Project{}
 		for i := 0; i < 8; i++ {
@@ -896,7 +896,7 @@ func TestDirectoryAggregateByteBoundAndCursorLoop(t *testing.T) {
 		t.Fatal("aggregate output unbounded", e, calls)
 	}
 	calls = 0
-	_, e = pages(ctx, func(context.Context, string) ([]*v1.Project, string, error) {
+	_, e = pages(ctx, &App{store: &Store{}, profile: &Profile{}}, func(context.Context, string) ([]*v1.Project, string, error) {
 		calls++
 		return []*v1.Project{{Id: fmt.Sprintf("%08x-5555-4555-8555-555555555555", calls)}}, "same", nil
 	}, func(p *v1.Project) string { return p.Id })
@@ -1080,7 +1080,7 @@ func TestCursorErrorRestartBoundaries(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			calls := 0
 			expired := false
-			rows, e := pages(context.Background(), func(_ context.Context, token string) ([]*v1.Project, string, error) {
+			rows, e := pages(context.Background(), &App{store: &Store{}, profile: &Profile{}}, func(_ context.Context, token string) ([]*v1.Project, string, error) {
 				calls++
 				if tc.first || token != "" && (!expired || tc.persistent) {
 					expired = true

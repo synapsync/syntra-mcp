@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -147,20 +146,20 @@ func runContent(parent context.Context, args []string) error {
 		}
 	}
 	if *dir == "" {
-		root, e := os.UserConfigDir()
+		resolved, e := toolclient.DefaultProfileDir()
 		if e != nil {
 			return e
 		}
-		*dir = filepath.Join(root, "syntra")
+		*dir = resolved
 	}
 	store, e := toolclient.OpenStore(ctx, *dir)
 	if e != nil {
-		return e
+		return toolclient.ProfileError(*dir, e)
 	}
 	defer store.Close()
 	p, e := store.Load()
 	if e != nil {
-		return e
+		return toolclient.ProfileError(*dir, e)
 	}
 	if *api != "" && *api != p.Config.APIOrigin {
 		return errors.New("API override does not match retained profile origin")

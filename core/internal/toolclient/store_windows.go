@@ -241,11 +241,11 @@ func (s *windowsStoreFS) remove(name string) error {
 	return nil
 }
 
-// OpenStore accepts only a canonical local drive path on a fixed volume with
+// openPlatformStore accepts only a canonical local drive path on a fixed volume with
 // persistent ACLs. Each component is opened relative to its already validated
 // parent with reparse processing disabled. Pinned directory handles omit
 // FILE_SHARE_DELETE, preventing concurrent renames of checked ancestors.
-func OpenStore(ctx context.Context, path string) (*Store, error) {
+func openPlatformStore(ctx context.Context, path string) (*Store, error) {
 	if ctx.Err() != nil {
 		return nil, errors.New("profile lock deadline or cancellation")
 	}
@@ -317,6 +317,9 @@ func OpenStore(ctx context.Context, path string) (*Store, error) {
 		}
 		if err != nil {
 			cleanup()
+			if winStatus(err, windows.STATUS_OBJECT_NAME_NOT_FOUND) || winStatus(err, windows.STATUS_OBJECT_PATH_NOT_FOUND) {
+				return nil, os.ErrNotExist
+			}
 			return nil, ErrProfile
 		}
 		if checkDirectoryAttributes(child) != nil {

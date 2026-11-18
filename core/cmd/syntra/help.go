@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
 	"syntra.local/mcp/internal/toolclient"
 )
 
@@ -53,6 +54,22 @@ func printHelp(name string) {
 	}
 	e := helpEntries[name]
 	fmt.Fprintf(os.Stdout, "%s\n\n%s\n\nRequired flags are shown without brackets; bracketed flags are optional.\nCommon options: --profile-dir PATH, --api URL, --timeout DURATION (mcp uses --call-timeout).\n\nExample: %s\nPrints: %s\n", usage(name), e.purpose, e.example, e.output)
+	if name == "login" {
+		fmt.Fprintln(os.Stdout, `
+One login serves every agent session of the same OS user using the default
+Syntra profile. Use syntra status to see its location. For a custom profile,
+pass the same --profile-dir to login and to the agent's MCP registration.
+
+Browser consent requires read and lets you deselect optional permissions.
+A first browser login without permission flags requests read, prepare and publish.
+Supply permission flags to request only the listed optional permissions.
+OTP login without permission flags grants read only.
+  --prepare    Create tickets and prepare or link private drafts.
+  --publish    Publish explicitly. Requires --prepare.
+  --mark-read  Allow explicit read receipts. This does not mark items reviewed.
+Use --reauthorize to request new permissions for the installed connection.
+Include any optional permissions you want to keep and approve in the browser.`)
+	}
 }
 func unknownCommand(s string) error {
 	if !toolclient.IsSafeDiagnosticToken(s) {

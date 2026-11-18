@@ -130,8 +130,8 @@ func safeStat(fd int, dir bool) error {
 	return nil
 }
 
-// OpenStore uses descriptor-relative no-follow operations, including every
-// ancestor. It creates only the final directory; callers supply its parent.
+// openStore walks ancestors without following links. It can create the final
+// directory and the immediate parent of the default shared profile.
 func openStore(ctx context.Context, path string, syncParent func(int) error, mkdir func(int, string, uint32) error) (*Store, error) {
 	if ctx.Err() != nil {
 		return nil, errors.New("profile lock deadline or cancellation")
@@ -139,6 +139,7 @@ func openStore(ctx context.Context, path string, syncParent func(int) error, mkd
 	if !filepath.IsAbs(path) || filepath.Clean(path) != path || path == "/" {
 		return nil, ErrProfile
 	}
+	createDefaultParent := isDefaultProfileDir(path)
 	path = normalizeStoragePath(path)
 	if syncParent == nil {
 		syncParent = syncDirectoryDescriptor
@@ -153,12 +154,17 @@ func openStore(ctx context.Context, path string, syncParent func(int) error, mkd
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 	for i, part := range parts {
 		next, openErr := unix.Openat(fd, part, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
-		if errors.Is(openErr, unix.ENOENT) && i == len(parts)-1 {
+		if errors.Is(openErr, unix.ENOENT) && (i == len(parts)-1 || (createDefaultParent && i == len(parts)-2)) {
 			if openErr = mkdir(fd, part, 0700); openErr != nil && !errors.Is(openErr, unix.EEXIST) {
 				_ = unix.Close(fd)
 				return nil, ErrProfile
 			}
 			next, openErr = unix.Openat(fd, part, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+			if openErr == nil && i == len(parts)-2 && syncParent(fd) != nil {
+				_ = unix.Close(next)
+				_ = unix.Close(fd)
+				return nil, ErrProfile
+			}
 		}
 
 		if openErr == nil && i == len(parts)-1 {
@@ -172,6 +178,9 @@ func openStore(ctx context.Context, path string, syncParent func(int) error, mkd
 		}
 		_ = unix.Close(fd)
 		if openErr != nil {
+			if errors.Is(openErr, unix.ENOENT) {
+				return nil, os.ErrNotExist
+			}
 			return nil, ErrProfile
 		}
 		fd = next

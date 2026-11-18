@@ -238,6 +238,9 @@ func (a *App) executeNew(ctx context.Context, method string, req proto.Message, 
 	}
 	result, err := a.Retry(ctx, id)
 	if err != nil {
+		if IsConnectionDiagnostic(err) {
+			return nil, err
+		}
 		var reason *actionable.Error
 		if errors.As(err, &reason) {
 			return nil, fmt.Errorf("%w (retained request %s)", err, id)
@@ -311,19 +314,19 @@ func (a *App) Retry(ctx context.Context, id string) (*v1.AuthoredContentSnapshot
 	case *v1.PrepareContentRequest:
 		res, e := a.content().PrepareContent(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 		if e != nil {
-			return nil, safeAuthoredRPCError(e)
+			return nil, a.authoredRPCError(e)
 		}
 		s = res.Msg.Snapshot
 	case *v1.LinkContentRequest:
 		res, e := a.content().LinkContent(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 		if e != nil {
-			return nil, safeAuthoredRPCError(e)
+			return nil, a.authoredRPCError(e)
 		}
 		s = res.Msg.Snapshot
 	case *v1.PublishContentRequest:
 		res, e := a.content().PublishContent(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 		if e != nil {
-			return nil, safeAuthoredRPCError(e)
+			return nil, a.authoredRPCError(e)
 		}
 		s = res.Msg.Snapshot
 	}
@@ -356,7 +359,7 @@ func (a *App) Snapshot(ctx context.Context, r *v1.GetContentSnapshotRequest, anc
 	}
 	res, e := a.content().GetContentSnapshot(ctx, bearer(connect.NewRequest(r), a.profile.Secret))
 	if e != nil {
-		return nil, safeAuthoredRPCError(e)
+		return nil, a.authoredRPCError(e)
 	}
 	if l := res.Msg.GetLegacy(); l != nil {
 		if local != nil || l.Ticket == nil || l.Ticket.Id != r.TicketId || l.Ticket.WorkspaceId != r.WorkspaceId {
@@ -390,6 +393,14 @@ func (a *App) Snapshot(ctx context.Context, r *v1.GetContentSnapshotRequest, anc
 		mode = "retained-client-expectation"
 	}
 	return &VerifiedSnapshot{Verification: mode, Snapshot: s}, nil
+}
+
+func (a *App) authoredRPCError(err error) error {
+	mapped := ConnectionError(a.store.dir, a.profile, err)
+	if IsConnectionDiagnostic(mapped) {
+		return mapped
+	}
+	return safeAuthoredRPCError(err)
 }
 
 func safeAuthoredRPCError(err error) error {

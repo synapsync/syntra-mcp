@@ -172,12 +172,6 @@ func BrowserConfigMatchesProfile(profile *Profile, config BrowserConfig) bool {
 	return profile.Version == browserProfileVersion && profile.Method == browserLoginMethod && ValidateOrigin(config.BrowserOrigin) == nil && profile.BrowserOrigin == config.BrowserOrigin
 }
 
-// BrowserPermissionsSubset reports whether a requested browser scope is
-// contained in an existing profile's active scope.
-func BrowserPermissionsSubset(requested, active []v1.ToolCapability) bool {
-	return capabilitySubset(requested, active)
-}
-
 // ActiveProfile adapts verified issuance metadata to the explicit browser v2
 // profile without inventing legacy provider credentials.
 func (a *PendingBrowserAttempt) ActiveProfile(connection *v1.ToolConnection) (*Profile, error) {

@@ -47,7 +47,7 @@ type Resolution struct {
 
 // pages restarts ONCE on an expired cursor; partial output never proves unique.
 // Every page is server-authorized. Repeated cursors/IDs and bounded overflow fail.
-func pages[T any](ctx context.Context, fetch func(context.Context, string) ([]T, string, error), id func(T) string) ([]T, error) {
+func pages[T any](ctx context.Context, app *App, fetch func(context.Context, string) ([]T, string, error), id func(T) string) ([]T, error) {
 	for restart := 0; restart < 2; restart++ {
 		var all []T
 		seen := map[string]bool{}
@@ -64,6 +64,10 @@ func pages[T any](ctx context.Context, fetch func(context.Context, string) ([]T,
 				if token != "" && restart == 0 && (connect.CodeOf(e) == connect.CodeFailedPrecondition || connect.CodeOf(e) == connect.CodeInvalidArgument) {
 					retry = true
 					break
+				}
+				mapped := ConnectionError(app.store.dir, app.profile, e)
+				if IsConnectionDiagnostic(mapped) {
+					return nil, mapped
 				}
 				return nil, errors.New("directory incomplete; refresh or use explicit clarification")
 			}
@@ -105,7 +109,7 @@ func (a *App) Workspaces(ctx context.Context) ([]*v1.AccessibleWorkspace, error)
 	if e := a.authorize(ctx, v1.ToolCapability_TOOL_CAPABILITY_READ); e != nil {
 		return nil, e
 	}
-	return pages(ctx, func(ctx context.Context, t string) ([]*v1.AccessibleWorkspace, string, error) {
+	return pages(ctx, a, func(ctx context.Context, t string) ([]*v1.AccessibleWorkspace, string, error) {
 		r, e := a.client.Tools().ListAccessibleWorkspaces(ctx, bearer(connect.NewRequest(&v1.ListAccessibleWorkspacesRequest{PageSize: 100, PageToken: t}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
@@ -126,7 +130,7 @@ func (a *App) Projects(ctx context.Context, w string) ([]*v1.Project, error) {
 		return nil, e
 	}
 	c := syntrav1connect.NewProjectServiceClient(a.client, a.client.origin, RPCOptions()...)
-	return pages(ctx, func(ctx context.Context, t string) ([]*v1.Project, string, error) {
+	return pages(ctx, a, func(ctx context.Context, t string) ([]*v1.Project, string, error) {
 		r, e := c.ListProjects(ctx, bearer(connect.NewRequest(&v1.ListProjectsRequest{WorkspaceId: w, PageSize: 100, PageToken: t}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
@@ -149,7 +153,7 @@ func (a *App) ProjectTeams(ctx context.Context, w, p string) ([]*v1.ProjectTeam,
 		return nil, e
 	}
 	c := syntrav1connect.NewProjectTeamServiceClient(a.client, a.client.origin, RPCOptions()...)
-	return pages(ctx, func(ctx context.Context, t string) ([]*v1.ProjectTeam, string, error) {
+	return pages(ctx, a, func(ctx context.Context, t string) ([]*v1.ProjectTeam, string, error) {
 		r, e := c.ListProjectTeams(ctx, bearer(connect.NewRequest(&v1.ListProjectTeamsRequest{WorkspaceId: w, ProjectId: p, PageSize: 100, PageToken: t}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
@@ -178,7 +182,7 @@ func (a *App) Members(ctx context.Context, w string) ([]*v1.WorkspaceMember, err
 		return nil, e
 	}
 	c := syntrav1connect.NewWorkspaceServiceClient(a.client, a.client.origin, RPCOptions()...)
-	return pages(ctx, func(ctx context.Context, t string) ([]*v1.WorkspaceMember, string, error) {
+	return pages(ctx, a, func(ctx context.Context, t string) ([]*v1.WorkspaceMember, string, error) {
 		r, e := c.ListMembers(ctx, bearer(connect.NewRequest(&v1.ListMembersRequest{WorkspaceId: w, PageSize: 100, PageToken: t}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
@@ -198,6 +202,9 @@ func choose(kind, q string, candidates []Candidate, err error) (string, error) {
 		if c.ID == q || strings.EqualFold(c.Name, q) {
 			matches = append(matches, c)
 		}
+	}
+	if IsConnectionDiagnostic(err) {
+		return "", err
 	}
 	if err != nil {
 		return "", &Clarification{kind, q, false, candidates}
@@ -317,7 +324,7 @@ func (a *App) Tickets(ctx context.Context, w string, view v1.TicketVisibility) (
 		return nil, e
 	}
 	c := syntrav1connect.NewTicketServiceClient(a.client, a.client.origin, RPCOptions()...)
-	return pages(ctx, func(ctx context.Context, t string) ([]*v1.Ticket, string, error) {
+	return pages(ctx, a, func(ctx context.Context, t string) ([]*v1.Ticket, string, error) {
 		r, e := c.ListTickets(ctx, bearer(connect.NewRequest(&v1.ListTicketsRequest{WorkspaceId: w, Visibility: view, PageSize: 100, PageToken: t}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
@@ -346,7 +353,7 @@ func (a *App) readTicket(ctx context.Context, w, t string) (*v1.Ticket, error) {
 	c := syntrav1connect.NewTicketServiceClient(a.client, a.client.origin, RPCOptions()...)
 	r, e := c.GetTicket(ctx, bearer(connect.NewRequest(&v1.GetTicketRequest{WorkspaceId: w, TicketId: t}), a.profile.Secret))
 	if e != nil {
-		return nil, SafeRPCError(e)
+		return nil, a.authoredRPCError(e)
 	}
 	if r.Msg.Ticket == nil || r.Msg.Ticket.Id != t || r.Msg.Ticket.WorkspaceId != w {
 		return nil, ErrProfile
@@ -364,7 +371,7 @@ func (a *App) Messages(ctx context.Context, w, t string, view v1.MessageView) (*
 		return nil, e
 	}
 	client := syntrav1connect.NewMessageServiceClient(a.client, a.client.origin, RPCOptions()...)
-	rows, e := pages[proto.Message](ctx, func(ctx context.Context, token string) ([]proto.Message, string, error) {
+	rows, e := pages[proto.Message](ctx, a, func(ctx context.Context, token string) ([]proto.Message, string, error) {
 		r, e := client.ListMessages(ctx, bearer(connect.NewRequest(&v1.ListMessagesRequest{WorkspaceId: w, TicketId: t, View: view, PageSize: 100, PageToken: token}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
