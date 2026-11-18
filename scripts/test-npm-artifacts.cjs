@@ -34,7 +34,7 @@ const EXPECTED_TOOLS = Object.freeze([
   'identity', 'workspaces', 'projects', 'teams', 'members', 'resolve',
   'tickets', 'ticket', 'messages', 'snapshot', 'prepare', 'link', 'publish', 'retry',
 ]);
-const EXPECTED_EMPTY_PROFILE_ERROR = 'syntra: no local connection; run human interactive login\n';
+const EXPECTED_EMPTY_PROFILE_ERROR = /No Syntra connection\. Run: syntra login/;
 
 function fail(message) {
   throw new Error(message);
@@ -137,7 +137,7 @@ function checkEmptyStatus(result, label) {
   assert.equal(result.signal, null, `${label} was terminated by signal ${result.signal}`);
   assert.equal(result.status, 1, `${label} did not propagate the CLI's expected exit code 1; stderr=${result.stderr}`);
   assert.equal(result.stdout, '', `${label} wrote unexpected stdout: ${result.stdout}`);
-  assert.equal(result.stderr, EXPECTED_EMPTY_PROFILE_ERROR, `${label} did not preserve the CLI's expected stderr`);
+  assert.match(result.stderr, EXPECTED_EMPTY_PROFILE_ERROR, `${label} did not preserve the CLI's expected stderr`);
 }
 
 function parseFrames(stdout) {
@@ -280,7 +280,7 @@ function checkMCP(result) {
   assert.deepEqual(tools.map(tool => tool.name).sort(), [...EXPECTED_TOOLS].sort(), 'MCP allowlist differs from the fourteen-tool contract');
   assert.equal(frames[2].result?.isError, true, 'identity call without a profile must return a safe tool error');
   const text = (frames[2].result?.content || []).map(item => item.text || '').join('\n');
-  assert.match(text, /local connection unavailable or unauthorized/);
+  assert.match(text, /No Syntra connection\. Run: syntra login/);
 }
 
 async function main() {

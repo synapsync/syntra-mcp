@@ -232,13 +232,17 @@ async function main() {
     for (const result of [run(command, [...launcherArgs, 'status', '--profile-dir', profile], {cwd:root, env}),
       runNpm(['exec', '--offline', '--yes=false', '--silent', `--package=@synapsync/syntra-mcp@${candidate.version}`, '--', 'syntra', 'status', '--profile-dir', profile], {cwd:root, env})]) {
       assert.equal(result.signal, null); assert.equal(result.status, 1); assert.equal(result.stdout, '');
-      assert.equal(result.stderr, 'syntra: no local connection; run human interactive login\n');
+      // A failing status writes its whole diagnosis to stderr: the profile in use and
+      // the exact login command, with the permission flags (stdout stays empty).
+      assert.match(result.stderr, /^Profile directory: ".*isolated profile with spaces" \(custom\)\n/);
+      assert.match(result.stderr, /No Syntra connection\. Run: syntra login --profile-dir /);
+      assert.match(result.stderr, /--prepare/);
     }
     const result = await runMCP(command, [...launcherArgs, 'mcp', '--profile-dir', profile], {cwd:root, env});
     checkMCP(result);
     const loginHint = result.frames[2].result.content.map(item => item.text || '').join(' ');
     assert.match(loginHint, /syntra login/);
-    assert.match(loginHint, /same flag and directory/);
+    assert.match(loginHint, /syntra login --profile-dir /);
     const resolve = result.frames[1].result.tools.find(tool => tool.name === 'resolve');
     assert.ok(resolve.inputSchema.properties.team, 'MCP resolve must expose the project team selector');
     assert.deepEqual(fs.readdirSync(profile).sort(), ['.lock']);
