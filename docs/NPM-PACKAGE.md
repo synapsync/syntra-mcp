@@ -7,7 +7,7 @@ Requires Node.js 22.12 or newer. npm installs the matching Go executable for
 Linux x64/arm64, macOS Intel/Apple Silicon, or Windows x64.
 
 ```sh
-npm install --global @synapsync/syntra
+npm install --global @synapsync/syntra-mcp
 syntra login
 syntra status
 ```

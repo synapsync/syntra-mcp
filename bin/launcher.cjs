@@ -41,7 +41,7 @@ function resolveBinary(platform = process.platform, architecture = process.arch,
   const target = targetFor(platform, architecture);
   const missingBinary = () => new Error(
     `The Syntra binary for ${platform}/${architecture} is missing ` +
-    `(${target.packageName}). Reinstall @synapsync/syntra with optional dependencies enabled ` +
+    `(${target.packageName}). Reinstall @synapsync/syntra-mcp with optional dependencies enabled ` +
     `(npm install --include=optional) and make sure the matching platform package is available.`,
   );
   let installedManifest;
@@ -58,7 +58,7 @@ function resolveBinary(platform = process.platform, architecture = process.arch,
       installedManifest.version !== expectedVersion) {
     throw new Error(
       `The installed ${target.packageName} package does not match launcher version ${packageManifest.version}. ` +
-      `Reinstall @synapsync/syntra with its exact optional dependencies.`,
+      `Reinstall @synapsync/syntra-mcp with its exact optional dependencies.`,
     );
   }
   const executablePath = path.join(path.dirname(manifestPath), target.executable);

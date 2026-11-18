@@ -50,7 +50,7 @@ function launcherEnvironment(modules) {
 
 test('root and five platform manifests are private, version-matched and hook-free', () => {
   const rootPackage = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(rootPackage.name, '@synapsync/syntra');
+  assert.equal(rootPackage.name, '@synapsync/syntra-mcp');
   assert.equal(rootPackage.version, packageVersion);
   assert.equal(rootPackage.private, true);
   assert.equal(rootPackage.engines.node, '>=22.12');

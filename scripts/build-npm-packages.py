@@ -187,8 +187,8 @@ def validate_manifests() -> tuple[dict[str, Any], dict[Path, bytes]]:
     root_path = ROOT / "package.json"
     root_manifest, root_bytes = read_manifest(root_path)
     version = root_manifest.get("version")
-    if root_manifest.get("name") != "@synapsync/syntra" or root_manifest.get("private") is not True:
-        fail("root manifest must be the private @synapsync/syntra package")
+    if root_manifest.get("name") != "@synapsync/syntra-mcp" or root_manifest.get("private") is not True:
+        fail("root manifest must be the private @synapsync/syntra-mcp package")
     if not isinstance(version, str) or not version:
         fail("root package version must be a non-empty string")
     if root_manifest.get("engines", {}).get("node") != ">=22.12":

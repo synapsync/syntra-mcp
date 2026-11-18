@@ -24,12 +24,13 @@ def capture(directory, private):
         if pkg.get('private') is not private: raise ValueError('unexpected package visibility: ' + f.name)
         if pkg['name'] in manifests: raise ValueError('duplicate package name')
         manifests[pkg['name']] = (f, pkg, names)
-    rootname = '@synapsync/syntra'
+    rootname = '@synapsync/syntra-mcp'
     root, pkg, _ = manifests[rootname]
     version = pkg['version']
-    expected_names = {rootname, *(rootname + '-' + t for t in TARGETS)}
+    native_prefix = '@synapsync/syntra-'
+    expected_names = {rootname, *(native_prefix + t for t in TARGETS)}
     if set(manifests) != expected_names: raise ValueError('unexpected package inventory')
-    expected_deps = {rootname + '-' + t: version for t in TARGETS}
+    expected_deps = {native_prefix + t: version for t in TARGETS}
     if pkg.get('optionalDependencies') != expected_deps: raise ValueError('native dependency versions differ')
     artifacts, targets, inventory = {}, {}, {}
     for name, (f, p, names) in sorted(manifests.items()):
@@ -37,7 +38,7 @@ def capture(directory, private):
         artifacts[f.name] = sha(f.read_bytes())
         inventory[f.name] = names
         if name != rootname:
-            target = name[len(rootname)+1:]
+            target = name[len(native_prefix):]
             binary = 'bin/syntra.exe' if target.startswith('win32-') else 'bin/syntra'
             target_key = target.replace('-', '/')
             platform, arch = target_key.split('/')

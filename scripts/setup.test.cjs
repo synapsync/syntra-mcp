@@ -11,7 +11,7 @@ const setup = require('../bin/setup.cjs');
 const root = path.resolve(__dirname, '..');
 const launcherPath = path.join(root, 'bin', 'launcher.cjs');
 const packageManifest = require('../package.json');
-const pinnedPackage = `@synapsync/syntra@${packageManifest.version}`;
+const pinnedPackage = `@synapsync/syntra-mcp@${packageManifest.version}`;
 const secretMarker = 'unrelated-user-setting-must-not-be-printed';
 
 function sandbox(t) {
@@ -509,7 +509,7 @@ test('Codex TOML appends only the Syntra table and preserves all existing bytes'
 
   assert.equal(candidate.slice(0, config.length), config);
   assert.match(candidate, /\[mcp_servers\.syntra\]/);
-  assert.match(candidate, /args = \["-y", "@synapsync\/syntra@0\.0\.0-handoff", "mcp"\]/);
+  assert.ok(candidate.includes(`args = ["-y", "${pinnedPackage}", "mcp"]`));
   assert.equal(fs.readFileSync(configPath, 'utf8'), config);
   const output = setup.renderPlan(plan);
   assert.match(output, /Proposed Syntra-only config change/);

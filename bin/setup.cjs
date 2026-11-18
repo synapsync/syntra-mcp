@@ -78,11 +78,11 @@ function selectedDirectory(env, variable, fallback, pathModule, label) {
 
 function shellCommand(platform) {
   const version = packageManifest.version;
-  if (packageManifest.name !== '@synapsync/syntra' || typeof packageManifest.private !== 'boolean' ||
+  if (packageManifest.name !== '@synapsync/syntra-mcp' || typeof packageManifest.private !== 'boolean' ||
       typeof version !== 'string' || !/^[0-9A-Za-z][0-9A-Za-z.+-]*$/.test(version)) {
     fail('The Syntra package manifest has invalid setup metadata.');
   }
-  const pinnedPackage = `@synapsync/syntra@${version}`;
+  const pinnedPackage = `${packageManifest.name}@${version}`;
   if (platform === 'win32') {
     // npx is a Windows .cmd entry point. cmd /d /c is the documented MCP wrapper;
     // every argument is a fixed token and no user input is interpolated.

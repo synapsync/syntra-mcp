@@ -1,5 +1,5 @@
 {
-  "name": "@synapsync/syntra",
+  "name": "@synapsync/syntra-mcp",
   "version": "0.0.0-handoff",
   "private": true,
   "description": "Syntra CLI and local Model Context Protocol server",

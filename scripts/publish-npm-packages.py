@@ -13,7 +13,8 @@ import time
 from pathlib import Path
 
 
-ROOT_PACKAGE = "@synapsync/syntra"
+ROOT_PACKAGE = "@synapsync/syntra-mcp"
+NATIVE_PACKAGE_PREFIX = "@synapsync/syntra-"
 PLATFORMS = ("darwin-arm64", "darwin-x64", "linux-arm64", "linux-x64", "win32-x64")
 REGISTRY = "--registry=https://registry.npmjs.org/"
 STABLE_VERSION = r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
@@ -28,7 +29,7 @@ def get_release(directory, manifest, expected_digest):
     if candidate.get("private") is not False or not re.fullmatch(STABLE_VERSION, version):
         raise ValueError("publishing requires a public stable candidate")
 
-    native = {f"{ROOT_PACKAGE}-{platform}": version for platform in PLATFORMS}
+    native = {f"{NATIVE_PACKAGE_PREFIX}{platform}": version for platform in PLATFORMS}
     names = [*native, ROOT_PACKAGE]
     files = [f"{name[1:].replace('/', '-')}-{version}.tgz" for name in names]
     if set(files) != set(candidate["artifacts"]) or set(files) != {file.name for file in directory.iterdir()}:

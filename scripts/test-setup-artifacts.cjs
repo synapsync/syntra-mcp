@@ -42,7 +42,7 @@ function loadCandidate(args) {
   return { directory, candidate, digest, fromRegistry };
 }
 function checkSetup(command, root, baseEnv, scratch, version) {
-  const bundledSkill = path.join(root, 'node_modules', '@synapsync', 'syntra', 'skills', 'syntra');
+  const bundledSkill = path.join(root, 'node_modules', '@synapsync', 'syntra-mcp', 'skills', 'syntra');
   assert.ok(fs.statSync(path.join(bundledSkill, 'SKILL.md')).isFile(), 'bundled skill missing');
   function tree(directory, modes = false) {
     if (!fs.existsSync(directory)) return {};
@@ -114,7 +114,7 @@ function checkSetup(command, root, baseEnv, scratch, version) {
       assert.deepEqual(tree(defaults.skill), tree(bundledSkill), 'Claude default skill differs from package bytes');
       const defaultConfig = JSON.parse(fs.readFileSync(defaults.file, 'utf8'));
       assert.deepEqual([defaultConfig.mcpServers?.syntra?.command, ...(defaultConfig.mcpServers?.syntra?.args || [])],
-        ['npx', '-y', `@synapsync/syntra@${version}`, 'mcp'], 'Claude default registration differs');
+        ['npx', '-y', `@synapsync/syntra-mcp@${version}`, 'mcp'], 'Claude default registration differs');
     }
     const f = fixture(host, 'success');
     const original = tree(f.home, true);
@@ -127,9 +127,9 @@ function checkSetup(command, root, baseEnv, scratch, version) {
     const config = fs.readFileSync(f.file, 'utf8');
     assert.ok(config.includes(host === 'codex' ? 'model = \"sentinel-model\"' : '\"sentinel\": {\"value\": 42}'), `${host} altered unrelated bytes`);
     if (host !== 'claude-code') assert.ok(config.includes('# preserved comment') || config.includes('// preserved comment'), `${host} discarded comment`);
-    const pin = `@synapsync/syntra@${version}`;
+    const pin = `@synapsync/syntra-mcp@${version}`;
     assert.equal(config.split(pin).length - 1, 1, `${host} must contain exactly one version pin`);
-    assert.ok(!config.includes('@synapsync/syntra@latest'), `${host} used mutable latest`);
+    assert.ok(!config.includes('@synapsync/syntra-mcp@latest'), `${host} used mutable latest`);
     if (host === 'codex') {
       assert.equal((config.match(/^\s*\[mcp_servers\.syntra\]\s*$/gm) || []).length, 1, 'Codex registration count');
       const section = config.split(/^\s*\[mcp_servers\.syntra\]\s*$/m)[1].split(/^\s*\[/m)[0];
@@ -202,22 +202,22 @@ async function main() {
     assert.equal(npmVersion.status, 0, 'npm version check failed');
     const root = path.join(scratch, 'consumer'), tarballs = path.join(root, 'tarballs');
     fs.mkdirSync(tarballs, { recursive:true, mode:0o700 });
-    const dependencies = { '@synapsync/syntra': candidate.version };
+    const dependencies = { '@synapsync/syntra-mcp': candidate.version };
     if (!fromRegistry) {
       for (const name of [candidate.rootTarball, target.artifact]) fs.copyFileSync(path.join(directory, name), path.join(tarballs, name), fs.constants.COPYFILE_EXCL);
-      dependencies['@synapsync/syntra'] = `file:tarballs/${candidate.rootTarball}`;
+      dependencies['@synapsync/syntra-mcp'] = `file:tarballs/${candidate.rootTarball}`;
       dependencies[target.packageName] = `file:tarballs/${target.artifact}`;
     }
     fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name:'syntra-candidate-consumer', version:'1.0.0', private:true, dependencies }), { mode:0o600 });
     const install = runNpm(['install', '--ignore-scripts', '--include=optional', '--no-audit', '--no-fund'], { cwd:root, env, timeout:60000 });
     assert.equal(install.signal, null); assert.equal(install.status, 0, `install failed: ${install.stderr}`);
-    const installedRoot = path.join(root, 'node_modules', '@synapsync', 'syntra');
+    const installedRoot = path.join(root, 'node_modules', '@synapsync', 'syntra-mcp');
     const installedTarget = path.join(root, 'node_modules', ...target.packageName.split('/'));
     const rootManifest = JSON.parse(fs.readFileSync(path.join(installedRoot, 'package.json')));
     const platformManifest = JSON.parse(fs.readFileSync(path.join(installedTarget, 'package.json')));
-    assert.deepEqual(fs.readdirSync(path.dirname(installedRoot)).sort(), ['syntra', path.basename(installedTarget)].sort());
+    assert.deepEqual(fs.readdirSync(path.dirname(installedRoot)).sort(), ['syntra-mcp', path.basename(installedTarget)].sort());
     const expectedPrivate = candidate.private ?? true;
-    assert.equal(rootManifest.name, '@synapsync/syntra'); assert.equal(rootManifest.version, candidate.version); assert.equal(rootManifest.private, expectedPrivate);
+    assert.equal(rootManifest.name, '@synapsync/syntra-mcp'); assert.equal(rootManifest.version, candidate.version); assert.equal(rootManifest.private, expectedPrivate);
     assert.deepEqual(rootManifest.optionalDependencies, Object.fromEntries(Object.values(candidate.targets).map(t => [t.packageName, candidate.version])));
     assert.equal(platformManifest.name, target.packageName); assert.equal(platformManifest.version, candidate.version); assert.equal(platformManifest.private, expectedPrivate);
     assert.equal(sha256(path.join(installedTarget, ...target.binary.split('/'))), target.binarySHA256);
@@ -230,7 +230,7 @@ async function main() {
     // Syntra creates the profile with the platform's private permissions.
     const profile = path.join(scratch, 'isolated profile with spaces');
     for (const result of [run(command, [...launcherArgs, 'status', '--profile-dir', profile], {cwd:root, env}),
-      runNpm(['exec', '--offline', '--yes=false', '--silent', `--package=@synapsync/syntra@${candidate.version}`, '--', 'syntra', 'status', '--profile-dir', profile], {cwd:root, env})]) {
+      runNpm(['exec', '--offline', '--yes=false', '--silent', `--package=@synapsync/syntra-mcp@${candidate.version}`, '--', 'syntra', 'status', '--profile-dir', profile], {cwd:root, env})]) {
       assert.equal(result.signal, null); assert.equal(result.status, 1); assert.equal(result.stdout, '');
       assert.equal(result.stderr, 'syntra: no local connection; run human interactive login\n');
     }
