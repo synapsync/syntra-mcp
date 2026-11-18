@@ -28,6 +28,7 @@ import (
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	"syntra.local/mcp/gen/syntra/v1/syntrav1connect"
 	ci "syntra.local/mcp/internal/contentintegrity"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 	"syntra.local/mcp/internal/testsupport"
 	"syntra.local/mcp/internal/toolclient"
 )
@@ -67,19 +68,22 @@ type apiFixture struct {
 	syntrav1connect.UnimplementedAuthoredContentServiceHandler
 	syntrav1connect.UnimplementedProjectServiceHandler
 	syntrav1connect.UnimplementedWorkspaceServiceHandler
-	mu         sync.Mutex
-	p          *toolclient.Profile
-	attempts   map[string]proto.Message
-	snapshots  map[string]*v1.AuthoredContentSnapshot
-	mutations  int
-	identities int
-	duplicate  bool
-	big        int
-	hold       bool
-	held       chan struct{}
-	forbidden  bool
-	workspaces []*v1.AccessibleWorkspace
-	publishes  int
+	syntrav1connect.UnimplementedTicketServiceHandler
+	ticketClosed  bool
+	mutationError error
+	mu            sync.Mutex
+	p             *toolclient.Profile
+	attempts      map[string]proto.Message
+	snapshots     map[string]*v1.AuthoredContentSnapshot
+	mutations     int
+	identities    int
+	duplicate     bool
+	big           int
+	hold          bool
+	held          chan struct{}
+	forbidden     bool
+	workspaces    []*v1.AccessibleWorkspace
+	publishes     int
 }
 
 func (f *apiFixture) GetIdentity(_ context.Context, r *connect.Request[v1.GetIdentityRequest]) (*connect.Response[v1.GetIdentityResponse], error) {
@@ -152,10 +156,24 @@ func (f *apiFixture) ListProjects(ctx context.Context, r *connect.Request[v1.Lis
 func (f *apiFixture) ListMembers(context.Context, *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error) {
 	return connect.NewResponse(&v1.ListMembersResponse{Members: []*v1.WorkspaceMember{{UserId: recipientID, DisplayName: "Pedro"}}}), nil
 }
+func (f *apiFixture) GetTicket(_ context.Context, r *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	state := v1.TicketState_TICKET_STATE_OPEN
+	if f.ticketClosed {
+		state = v1.TicketState_TICKET_STATE_CLOSED
+	}
+	ticket := &v1.Ticket{Id: r.Msg.TicketId, WorkspaceId: r.Msg.WorkspaceId, Title: "Visible title", State: state, Revision: revision(1)}
+	return connect.NewResponse(&v1.GetTicketResponse{Ticket: ticket}), nil
+}
+
 func (f *apiFixture) apply(id string, req proto.Message, c *v1.AuthoredContent, p *v1.ClientReportedProvenance, publish bool) (*v1.AuthoredContentSnapshot, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.mutations++
+	if f.mutationError != nil {
+		return nil, f.mutationError
+	}
 	if old := f.attempts[id]; old != nil && !proto.Equal(old, req) {
 		return nil, connect.NewError(connect.CodeAlreadyExists, errors.New("private-request-mismatch"))
 	}
@@ -411,6 +429,7 @@ func fixture(t *testing.T) *setup {
 	mux.Handle(syntrav1connect.NewAuthoredContentServiceHandler(f))
 	mux.Handle(syntrav1connect.NewProjectServiceHandler(f))
 	mux.Handle(syntrav1connect.NewWorkspaceServiceHandler(f))
+	mux.Handle(syntrav1connect.NewTicketServiceHandler(f))
 	server := httptest.NewTLSServer(mux)
 	t.Cleanup(server.Close)
 	cfg := toolclient.Config{APIOrigin: server.URL, ProviderOrigin: "https://provider.invalid", PublishableKey: "sb_publishable_fixture_public", Label: "Shared fixture", Capabilities: []v1.ToolCapability{1, 2, 3}, LifetimeSeconds: 300}
@@ -600,6 +619,73 @@ func rpcArgs(t *testing.T, r proto.Message, base string) map[string]any {
 }
 func expect(s *v1.AuthoredContentSnapshot) *v1.ContentDraftExpectation {
 	return &v1.ContentDraftExpectation{TicketId: s.Receipt.TicketId, DraftId: s.GetPrivateDraft().DraftId, ExpectedTicketRevision: s.TicketRevision, ExpectedDraftRevision: s.GetPrivateDraft().Revision, ExpectedContentDigest: s.Receipt.ContentDigest}
+}
+
+func TestMCPActionableErrorCLIParity(t *testing.T) {
+	f := fixture(t)
+	p := spawn(t, f)
+	p.init(t)
+
+	checkCLI := func(r *v1.PrepareContentRequest, want string) {
+		t.Helper()
+		body, err := protojson.Marshal(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cmd := exec.Command(f.binary, "prepare", "--profile-dir", f.dir, "--file", "-")
+		cmd.Env = testsupport.FixtureCLIEnv()
+		cmd.Stdin = bytes.NewReader(body)
+		out, err := cmd.CombinedOutput()
+		if err == nil || string(out) != want+"\n" {
+			t.Fatalf("CLI output differs: %v %q, wanted %q", err, out, want)
+		}
+	}
+	t.Run("local_preflight", func(t *testing.T) {
+		f.api.mu.Lock()
+		f.api.ticketClosed = true
+		f.api.mu.Unlock()
+		r := newRequest()
+		r.Content.ExistingTicketId = str(ticketID)
+		r.ExpectedTicketRevision = str(revision(1))
+		got := string(toolResult(t, p.call(t, "prepare", rpcArgs(t, r, "")), true))
+		want := actionable.New(actionable.TicketClosed).Error()
+		if got != want {
+			t.Fatalf("MCP output differs: %q, wanted %q", got, want)
+		}
+		checkCLI(r, want)
+		f.api.mu.Lock()
+		defer f.api.mu.Unlock()
+		if f.api.mutations != 0 {
+			t.Fatalf("preflight sent %d mutations", f.api.mutations)
+		}
+	})
+	t.Run("server_rejection", func(t *testing.T) {
+		remote := actionable.New(actionable.StaleTicketRevision)
+		f.api.mu.Lock()
+		f.api.ticketClosed = false
+		f.api.mutationError = remote.Connect()
+		f.api.mu.Unlock()
+		r := newRequest()
+		r.Content.ExistingTicketId = str(ticketID)
+		r.Content.Title = "Visible title"
+		r.ExpectedTicketRevision = str(revision(1))
+		got := string(toolResult(t, p.call(t, "prepare", rpcArgs(t, r, "")), true))
+		want := remote.Error() + " (retained request " + r.RequestId + ")"
+		if got != want {
+			t.Fatalf("MCP output differs: %q, wanted %q", got, want)
+		}
+		checkCLI(r, want)
+		retry := string(toolResult(t, p.call(t, "retry", map[string]any{"requestId": r.RequestId}), true))
+		if retry != remote.Error() {
+			t.Fatalf("MCP retry error differs: %q", retry)
+		}
+		cmd := exec.Command(f.binary, "retry", "--profile-dir", f.dir, "--request", r.RequestId)
+		cmd.Env = testsupport.FixtureCLIEnv()
+		out, err := cmd.CombinedOutput()
+		if err == nil || string(out) != retry+"\n" {
+			t.Fatalf("CLI retry output differs: %v %q", err, out)
+		}
+	})
 }
 
 func TestMCPActualProcessCLIParity(t *testing.T) {

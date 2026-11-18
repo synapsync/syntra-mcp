@@ -337,6 +337,12 @@ func (a *App) Ticket(ctx context.Context, w, t string) (*v1.Ticket, error) {
 	if e := a.authorize(ctx, v1.ToolCapability_TOOL_CAPABILITY_READ); e != nil {
 		return nil, e
 	}
+	return a.readTicket(ctx, w, t)
+}
+
+// readTicket is also used after local reply validation. The server independently
+// authorizes the read, so preflight needs only this one additional RPC.
+func (a *App) readTicket(ctx context.Context, w, t string) (*v1.Ticket, error) {
 	c := syntrav1connect.NewTicketServiceClient(a.client, a.client.origin, RPCOptions()...)
 	r, e := c.GetTicket(ctx, bearer(connect.NewRequest(&v1.GetTicketRequest{WorkspaceId: w, TicketId: t}), a.profile.Secret))
 	if e != nil {

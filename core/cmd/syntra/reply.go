@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 	v1 "syntra.local/mcp/gen/syntra/v1"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 	"syntra.local/mcp/internal/toolclient"
 )
 
@@ -21,6 +22,9 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 	if e != nil {
 		return e
 	}
+	if e = toolclient.CheckReplyState(t); e != nil {
+		return e
+	}
 	if t.CreatorUserId == "" || t.CreatorUserId == opts.Account {
 		return errors.New("cannot infer a different recipient from ticket creator; use the prepare template and select a recipient")
 	}
@@ -28,15 +32,18 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 	if e != nil {
 		return e
 	}
-	name := ""
+	var creator *v1.WorkspaceMember
 	for _, m := range members {
 		if m.UserId == t.CreatorUserId {
-			name = m.DisplayName
+			creator = m
 			break
 		}
 	}
-	if name == "" {
-		return errors.New("ticket creator is not an active named member; use the prepare template and resolve a recipient")
+	if creator == nil {
+		return actionable.New(actionable.RecipientNotEligible)
+	}
+	if creator.DisplayName == "" {
+		return errors.New("the ticket creator has no display name; use the prepare template and provide the recipient name")
 	}
 	id, e := toolclient.NewRequestID()
 	if e != nil {
@@ -46,11 +53,11 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 	if e != nil {
 		return e
 	}
-	content := &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: opts.Account, WorkspaceId: opts.Workspace, ExistingTicketId: &t.Id, Title: t.Title, OriginalDestinationIntent: name, Destination: &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: t.CreatorUserId}}, Summary: opts.Summary, ContextMarkdown: opts.ContextMarkdown}
+	content := &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: opts.Account, WorkspaceId: opts.Workspace, ExistingTicketId: &t.Id, Title: t.Title, OriginalDestinationIntent: creator.DisplayName, Destination: &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: t.CreatorUserId}}, Summary: opts.Summary, ContextMarkdown: opts.ContextMarkdown}
 	if t.ProjectId != "" {
 		content.ProjectId = &t.ProjectId
 	}
-	snap, e := app.Prepare(ctx, &v1.PrepareContentRequest{Content: content, RequestId: id, ExpectedTicketRevision: &t.Revision}, "")
+	snap, e := app.PrepareReply(ctx, &v1.PrepareContentRequest{Content: content, RequestId: id, ExpectedTicketRevision: &t.Revision}, t)
 	if e != nil {
 		return e
 	}

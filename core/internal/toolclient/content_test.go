@@ -51,23 +51,25 @@ type contentFixture struct {
 	syntrav1connect.UnimplementedWorkspaceServiceHandler
 	syntrav1connect.UnimplementedMessageServiceHandler
 	syntrav1connect.UnimplementedTicketServiceHandler
-	mu         sync.Mutex
-	p          *Profile
-	attempts   map[string]proto.Message
-	snapshots  map[string]*v1.AuthoredContentSnapshot
-	calls      int
-	pages      int
-	duplicate  bool
-	noTeams    bool
-	expire     bool
-	incomplete bool
-	deny       bool
-	closed     bool
-	tamper     string
-	hold       bool
-	committed  chan struct{}
-	snapshot   *v1.AuthoredContentSnapshot
-	legacy     *v1.LegacyContentSnapshot
+	mu          sync.Mutex
+	p           *Profile
+	attempts    map[string]proto.Message
+	snapshots   map[string]*v1.AuthoredContentSnapshot
+	calls       int
+	pages       int
+	duplicate   bool
+	noTeams     bool
+	expire      bool
+	incomplete  bool
+	deny        bool
+	closed      bool
+	ticketReads int
+	ticketState v1.TicketState
+	tamper      string
+	hold        bool
+	committed   chan struct{}
+	snapshot    *v1.AuthoredContentSnapshot
+	legacy      *v1.LegacyContentSnapshot
 }
 
 func (f *contentFixture) GetIdentity(context.Context, *connect.Request[v1.GetIdentityRequest]) (*connect.Response[v1.GetIdentityResponse], error) {
@@ -922,7 +924,14 @@ func (f *contentFixture) ListTickets(_ context.Context, r *connect.Request[v1.Li
 	return connect.NewResponse(&v1.ListTicketsResponse{Tickets: []*v1.Ticket{{Id: ticketID, WorkspaceId: workspaceID}}}), nil
 }
 func (f *contentFixture) GetTicket(_ context.Context, r *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error) {
-	return connect.NewResponse(&v1.GetTicketResponse{Ticket: &v1.Ticket{Id: r.Msg.TicketId, WorkspaceId: r.Msg.WorkspaceId, CreatorUserId: accountB, Title: "Fixture title", Revision: rev(88)}}), nil
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.ticketReads++
+	state := f.ticketState
+	if state == v1.TicketState_TICKET_STATE_UNSPECIFIED {
+		state = v1.TicketState_TICKET_STATE_OPEN
+	}
+	return connect.NewResponse(&v1.GetTicketResponse{Ticket: &v1.Ticket{Id: r.Msg.TicketId, WorkspaceId: r.Msg.WorkspaceId, CreatorUserId: accountB, Title: "Fixture title", ProjectId: projectID, State: state, Revision: rev(88)}}), nil
 }
 func TestCompleteMessagesAndExplicitTicketViews(t *testing.T) {
 	a, _, _, _ := setupContent(t)
@@ -953,6 +962,8 @@ func TestReturnedTicketCASModeRules(t *testing.T) {
 			q := request()
 			if kind == "link-reply-preserves" {
 				q.Content.ExistingTicketId = ptr(ticketID)
+				q.Content.ProjectId = ptr(projectID)
+				q.Content.Title = "Fixture title"
 				q.ExpectedTicketRevision = ptr(rev(88))
 			}
 			s, e := a.Prepare(ctx, q, "")
@@ -1130,11 +1141,12 @@ func TestCompiledCLIReplyRevision(t *testing.T) {
 	binary := testsupport.BuildCLI(t, "../../cmd/syntra", ca)
 	r := request()
 	r.Content.ProjectId = ptr(projectID)
+	r.Content.Title = "Fixture title"
 	r.Content.ExistingTicketId = ptr(ticketID)
 	r.Content.Destination = &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: accountB}}
 	input := t.TempDir() + "/reply.json"
 	a.store.Close()
-	for _, revision := range []string{"12", rev(1)} {
+	for _, revision := range []string{"12", rev(88)} {
 		r.ExpectedTicketRevision = ptr(revision)
 		raw, err := protojson.Marshal(r)
 		if err != nil {
@@ -1200,10 +1212,10 @@ func TestCompiledReplyPublishesOnlyOnExplicitCommand(t *testing.T) {
 		t.Fatalf("missing next command: %s", out)
 	}
 	f.mu.Lock()
-	before := f.calls
+	before, reads := f.calls, f.ticketReads
 	f.mu.Unlock()
-	if before != 1 {
-		t.Fatalf("reply sent unexpected mutations: %d", before)
+	if before != 1 || reads != 1 {
+		t.Fatalf("reply sent %d mutations and %d ticket reads", before, reads)
 	}
 	cmd := exec.Command("bash", "-c", strings.TrimSpace(parts[1]))
 	cmd.Env = append(testsupport.FixtureCLIEnv(), "PATH="+filepath.Dir(binary)+":"+os.Getenv("PATH"))

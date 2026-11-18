@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/term"
 	v1 "syntra.local/mcp/gen/syntra/v1"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 	"syntra.local/mcp/internal/toolclient"
 )
 
@@ -24,7 +25,12 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if e := run(ctx, os.Args[1:]); e != nil {
-		fmt.Fprintln(os.Stderr, "syntra:", e)
+		var reason *actionable.Error
+		if errors.As(e, &reason) {
+			fmt.Fprintln(os.Stderr, e)
+		} else {
+			fmt.Fprintln(os.Stderr, "syntra:", e)
+		}
 		os.Exit(1)
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	v1 "syntra.local/mcp/gen/syntra/v1"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 )
 
 var ErrWire = errors.New("invalid authored content request")
@@ -203,7 +204,7 @@ func ValidateReplacement(prior, next *v1.AuthoredContent) error {
 	copy.Summary = next.Summary
 	copy.ContextMarkdown = next.ContextMarkdown
 	if !proto.Equal(copy, next) {
-		return ErrWire
+		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.DraftRoutingChange))
 	}
 	return nil
 }
@@ -224,7 +225,7 @@ func ValidateLink(r *v1.LinkContentRequest, prior *v1.AuthoredContent, owner str
 		return ErrWire
 	}
 	if _, ok := prior.Destination.Target.(*v1.ContentDestination_UnlinkedLabel); !ok {
-		return ErrWire
+		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.DraftAlreadyLinked))
 	}
 	if _, ok := r.LinkedContent.Destination.Target.(*v1.ContentDestination_LinkedMemberId); !ok {
 		return ErrWire
@@ -232,22 +233,38 @@ func ValidateLink(r *v1.LinkContentRequest, prior *v1.AuthoredContent, owner str
 	copy := proto.Clone(prior).(*v1.AuthoredContent)
 	copy.Destination = proto.Clone(r.LinkedContent.Destination).(*v1.ContentDestination)
 	if !proto.Equal(copy, r.LinkedContent) {
-		return ErrWire
+		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.LinkContentChange))
 	}
 	return nil
 }
-func ValidatePublish(r *v1.PublishContentRequest, prior *v1.AuthoredContent, owner string) error {
+func ValidatePublishRequest(r *v1.PublishContentRequest, owner string) error {
 	if r == nil || !noUnknown(r) || !expectation(r.Current) || !validID(r.WorkspaceId) || !validID(r.ExpectedAuthorUserId) || !validID(r.RequestId) || !provenance(r.ClientReported) {
 		return ErrWire
 	}
 	if r.ExpectedAuthorUserId != owner {
 		return ErrIntegrity
 	}
+	return nil
+}
+
+// ValidatePublishBinding verifies the exact preimage without checking delivery
+// readiness. The service can report a missing link after locking the own draft.
+func ValidatePublishBinding(r *v1.PublishContentRequest, prior *v1.AuthoredContent, owner string) error {
+	if e := ValidatePublishRequest(r, owner); e != nil {
+		return e
+	}
 	if e := verifyContent(prior, r.Current.ExpectedContentDigest, owner); e != nil {
 		return e
 	}
 	if prior.WorkspaceId != r.WorkspaceId || (prior.ExistingTicketId != nil && *prior.ExistingTicketId != r.Current.TicketId) {
 		return ErrWire
+	}
+	return nil
+}
+
+func ValidatePublish(r *v1.PublishContentRequest, prior *v1.AuthoredContent, owner string) error {
+	if e := ValidatePublishBinding(r, prior, owner); e != nil {
+		return e
 	}
 	if _, ok := prior.Destination.Target.(*v1.ContentDestination_LinkedMemberId); !ok {
 		return ErrWire
