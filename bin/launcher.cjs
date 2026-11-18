@@ -80,6 +80,16 @@ function signalExitCode(signal) {
 }
 
 function launch(args = process.argv.slice(2)) {
+  if (args.length === 1 && (args[0] === '--version' || args[0] === 'version')) {
+    process.stdout.write(`${packageManifest.version}\n`);
+    return;
+  }
+  if (args[0] === 'update') {
+    require('./update.cjs').update(args.slice(1)).then(code => { process.exitCode = code; }, () => {
+      process.stderr.write('syntra: update failed.\n'); process.exitCode = 1;
+    });
+    return;
+  }
   if (args[0] === 'setup') {
     let setup;
     try {

@@ -13,6 +13,7 @@
     "README.md",
     "bin/launcher.cjs",
     "bin/setup.cjs",
+    "bin/update.cjs",
     "bin/vendor/**",
     "skills/syntra/**"
   ],

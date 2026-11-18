@@ -87,3 +87,15 @@ npm run test:setup
 See [release operations](https://github.com/synapsync/syntra-mcp/blob/main/docs/NPM-RELEASE.md) for the build matrix and publishing
 workflow. The client is [MIT licensed](https://github.com/synapsync/syntra-mcp/blob/main/LICENSE). Compiled dependencies and
 bundled components have [third-party notices](https://github.com/synapsync/syntra-mcp/blob/main/THIRD-PARTY-NOTICES.md).
+
+## Updates and versions
+
+`syntra --version` and `syntra version` print the installed package version.
+Run `syntra update --check` to compare it with the latest stable version from
+npm's configured registry. The check exits 0 if current (or newer than the
+registry), 10 if an update is available, and 1 on error. `syntra update`
+updates a global npm installation after confirmation; `--yes` permits an
+unattended update. Set `SYNTRA_UPDATE_OFFLINE=1` to disable network checks.
+For npx use `npx -y @synapsync/syntra-mcp@latest ...`; for a checkout or local
+install use `npm install -g @synapsync/syntra-mcp@latest` for a global CLI.
+Only stable X.Y.Z versions are supported by the updater.

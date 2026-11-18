@@ -67,6 +67,7 @@ ROOT_FILES = (
     "README.md",
     "bin/launcher.cjs",
     "bin/setup.cjs",
+    "bin/update.cjs",
     "bin/vendor/dependencies.json",
     *VENDOR_FILE_HASHES.keys(),
     "skills/syntra/SKILL.md",
@@ -197,7 +198,7 @@ def validate_manifests() -> tuple[dict[str, Any], dict[Path, bytes]]:
         fail("root manifest bin must point only to bin/launcher.cjs")
     root_files = root_manifest.get("files")
     if not isinstance(root_files, list) or set(root_files) != {
-        "README.md", "bin/launcher.cjs", "bin/setup.cjs", "bin/vendor/**", "skills/syntra/**"
+        "README.md", "bin/launcher.cjs", "bin/setup.cjs", "bin/update.cjs", "bin/vendor/**", "skills/syntra/**"
     }:
         fail("root manifest files must include only README, the launcher/setup adapters, vendored parsers, and skill")
     optional = {target["package"]: version for target in TARGETS}
@@ -352,7 +353,7 @@ def build_env(go_cache: Path, module_cache: Path, target: dict[str, str], temp_r
     return env
 
 
-def run_build(go: str, binary: Path, target: dict[str, str], env: dict[str, str]) -> tuple[str, str]:
+def run_build(go: str, binary: Path, target: dict[str, str], env: dict[str, str], version: str) -> tuple[str, str]:
     binary.parent.mkdir(parents=True, exist_ok=True)
     command = [
         go,
@@ -360,6 +361,7 @@ def run_build(go: str, binary: Path, target: dict[str, str], env: dict[str, str]
         "-mod=readonly",
         "-trimpath",
         "-buildvcs=false",
+        "-ldflags", f"-X main.version={version}",
         "-o",
         str(binary),
         "./cmd/syntra",
@@ -671,7 +673,7 @@ def main() -> int:
             binary = package_stage / target["executable"]
             target_env = build_env(go_cache, module_cache, target, temp_root)
             print(f"Building {target['package']} for {target['goos']}/{target['goarch']} (offline)", file=sys.stderr)
-            metadata, binary_sha = run_build(go, binary, target, target_env)
+            metadata, binary_sha = run_build(go, binary, target, target_env, version)
             artifact = pack_one(npm, npm_env, package_stage, target["package"], version, stage_out, files, private)
             artifact["target"] = f"{target['goos']}/{target['goarch']}"
             artifact["binarySha256"] = binary_sha

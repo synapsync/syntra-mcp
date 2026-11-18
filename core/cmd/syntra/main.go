@@ -18,6 +18,8 @@ import (
 	"syntra.local/mcp/internal/toolclient"
 )
 
+var version = "0.0.0-handoff"
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -32,6 +34,10 @@ func run(parent context.Context, args []string) error {
 		return errors.New("usage: syntra login|status|identity|disconnect|forget [options]")
 	}
 	command := args[0]
+	if (command == "version" || command == "--version") && len(args) == 1 {
+		fmt.Println(version)
+		return nil
+	}
 	if command == "mcp" {
 		return runMCP(parent, args[1:])
 	}

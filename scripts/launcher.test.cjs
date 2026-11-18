@@ -219,3 +219,109 @@ test('launcher forwards SIGTERM and exits by the same signal on POSIX', { skip: 
   assert.equal(result.code, null);
   assert.equal(result.signal, 'SIGTERM');
 });
+
+test('launcher exposes package version without native binary', () => {
+  for (const arg of ['--version', 'version']) {
+    const result = spawnSync(process.execPath, [launcherPath, arg], { encoding: 'utf8' });
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, `${packageVersion}\n`);
+  }
+});
+
+const { update } = require('../bin/update.cjs');
+function updateFixture(t, options = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'syntra-update-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const root = path.join(dir, 'lib', 'node_modules');
+  const pkg = path.join(root, '@synapsync', 'syntra-mcp');
+  fs.mkdirSync(pkg, { recursive: true });
+  let version = options.installed || '1.0.0';
+  const calls = [], output = [], errors = [];
+  const deps = {
+    packageDir: pkg, env: options.env || {}, tty: options.tty || false,
+    out: line => output.push(line), err: line => errors.push(line),
+    readVersion: () => version,
+    prompt: async () => options.answer || 'no',
+    npm: args => {
+      calls.push(args);
+      if (args[0] === 'view') return { status: 0, stdout: options.latest ?? '1.0.1' };
+      if (args[0] === 'root') return { status: 0, stdout: root };
+      if (!options.failure && !options.mismatch) version = options.latest ?? '1.0.1';
+      return { status: options.failure ? 1 : 0 };
+    },
+  };
+  return { deps, calls, output, errors, dir, root, pkg };
+}
+
+test('update check reports versions and distinct status', async t => {
+  for (const [latest, code] of [['1.0.0', 0], ['1.0.1', 10], ['0.9.0', 0]]) {
+    const f = updateFixture(t, { latest });
+    assert.equal(await update(['--check'], f.deps), code);
+    assert.match(f.output.join('\n'), /Installed version: 1\.0\.0\nLatest published version:/);
+    assert.equal(f.calls.length, 1);
+  }
+});
+
+test('update confirms or refuses non-interactive execution unless --yes', async t => {
+  const declined = updateFixture(t, { tty: true });
+  assert.equal(await update([], declined.deps), 1);
+  assert.equal(declined.calls.length, 2);
+  const accepted = updateFixture(t, { tty: true, answer: 'yes' });
+  assert.equal(await update([], accepted.deps), 0);
+  assert.deepEqual(accepted.calls.at(-1), ['install', '-g', '@synapsync/syntra-mcp@1.0.1']);
+  const noTTY = updateFixture(t);
+  assert.equal(await update([], noTTY.deps), 1);
+  assert.match(noTTY.errors.join(' '), /TTY/);
+  const yes = updateFixture(t);
+  assert.equal(await update(['--yes'], yes.deps), 0);
+  assert.match(yes.output.join(' '), /Updated to 1\.0\.1/);
+});
+
+test('update handles npm failure, post-install mismatch, offline and unsafe versions', async t => {
+  for (const options of [{ failure: true }, { mismatch: true }]) {
+    const f = updateFixture(t, options);
+    assert.equal(await update(['--yes'], f.deps), 1);
+    assert.match(f.errors.join(' '), /Manual command:/);
+    assert.doesNotMatch(f.output.join(' '), /Updated to/);
+  }
+  const offline = updateFixture(t, { env: { SYNTRA_UPDATE_OFFLINE: '1' } });
+  assert.equal(await update(['--check'], offline.deps), 1);
+  assert.equal(offline.calls.length, 0);
+  for (const latest of ['1.0.1;bad', '01.0.0', '1.0.1-beta', '1.0.1\nmalicious']) {
+    const f = updateFixture(t, { latest });
+    assert.equal(await update(['--yes'], f.deps), 1);
+    assert.equal(f.calls.length, 1);
+  }
+  const invalidInstalled = updateFixture(t, { installed: '1.0.0-beta' });
+  assert.equal(await update(['--check'], invalidInstalled.deps), 1);
+  assert.equal(invalidInstalled.calls.length, 0);
+});
+
+test('update detects npx and local installations and never installs', async t => {
+  for (const [location, expected] of [['_npx/abc/node_modules/@synapsync/syntra-mcp', 'npx -y'], ['checkout', 'npm install -g']]) {
+    const f = updateFixture(t);
+    f.deps.packageDir = path.join(f.dir, location);
+    fs.mkdirSync(f.deps.packageDir, { recursive: true });
+    assert.equal(await update(['--yes'], f.deps), 1);
+    assert.match(f.errors.join(' '), new RegExp(expected));
+    assert.equal(f.calls.length, 2);
+  }
+});
+
+test('launcher invokes PATH npm with fixed arguments and reports check exit status', t => {
+  if (process.platform === 'win32') return t.skip('POSIX fake npm fixture');
+  const f = updateFixture(t);
+  const bin = path.join(f.dir, 'tools');
+  fs.mkdirSync(bin);
+  fs.mkdirSync(path.join(f.pkg, 'bin'));
+  fs.copyFileSync(launcherPath, path.join(f.pkg, 'bin', 'launcher.cjs'));
+  fs.copyFileSync(path.join(root, 'bin', 'update.cjs'), path.join(f.pkg, 'bin', 'update.cjs'));
+  fs.writeFileSync(path.join(f.pkg, 'package.json'), JSON.stringify({ name: '@synapsync/syntra-mcp', version: '1.0.0' }));
+  fs.writeFileSync(path.join(bin, 'npm'), '#!/bin/sh\nprintf "%s\\n" "$@" > "$FAKE_NPM_ARGS"\nprintf "1.2.3\\n"\n', { mode: 0o755 });
+  const argsFile = path.join(f.dir, 'args');
+  const result = spawnSync(process.execPath, [path.join(f.pkg, 'bin', 'launcher.cjs'), 'update', '--check'], {
+    encoding: 'utf8', env: { ...process.env, PATH: bin, FAKE_NPM_ARGS: argsFile, SYNTRA_UPDATE_OFFLINE: '' },
+  });
+  assert.equal(result.status, 10);
+  assert.deepEqual(fs.readFileSync(argsFile, 'utf8').trim().split('\n'), ['view', '@synapsync/syntra-mcp', 'version']);
+});
