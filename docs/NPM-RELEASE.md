@@ -21,7 +21,10 @@ A push to `main` in `synapsync/syntra-mcp` triggers the release workflow
 when `NPM_PUBLISH_ENABLED=true`. GitHub reserves the next patch version
 with a `vX.Y.Z` tag on the exact commit. The workflow tests the candidate
 on all five native targets, publishes through npm Trusted Publishing,
-and verifies a fresh install from the public registry. A rerun resumes
+and verifies a fresh install from the public registry. npm visibility can
+lag a successful upload while automated validation runs. The workflow waits
+for every native package to be visible with the expected integrity before
+publishing the launcher. A rerun resumes
 the same commit and version. Publication skips packages with matching
 integrity and fails if a published version contains different bytes.
 

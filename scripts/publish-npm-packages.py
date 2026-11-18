@@ -90,7 +90,15 @@ def publish(version, release):
         if tuple(map(int, version.split("."))) < tuple(map(int, latest.split("."))):
             raise ValueError(f"refusing to release {version} after {latest}")
 
-    for name, path, integrity in release:
+    # A successful publish can remain invisible while npm validates it.
+    # Submit the platform packages, then wait for all of them before the launcher.
+    publish_group(version, release[:-1], published)
+    publish_group(version, release[-1:], published)
+
+
+def publish_group(version, group, published):
+    pending = {}
+    for name, path, integrity in group:
         spec = f"{name}@{version}"
         if published[name]:
             print(f"Already verified {spec}", flush=True)
@@ -100,17 +108,23 @@ def publish(version, release):
             ["npm", "publish", str(path), "--access=public", "--ignore-scripts", "--tag", tag, REGISTRY],
             check=True,
         )
-        for delay in (0, 1, 2, 4):
-            time.sleep(delay)
+        pending[spec] = integrity
+
+    deadline = time.monotonic() + 600
+    while pending:
+        for spec, integrity in list(pending.items()):
             current = registry_value(spec, "dist.integrity")
             if current is None:
                 continue
             if current != integrity:
                 raise ValueError(f"{spec} registry integrity differs after publishing")
-            break
-        else:
-            raise ValueError(f"{spec} is not yet visible after publishing")
-        print(f"Verified {spec}", flush=True)
+            del pending[spec]
+            print(f"Verified {spec}", flush=True)
+        if pending:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ValueError(f"npm is still processing: {', '.join(pending)}")
+            time.sleep(min(15, remaining))
 
 
 def main():
