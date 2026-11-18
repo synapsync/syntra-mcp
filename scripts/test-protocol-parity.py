@@ -72,8 +72,14 @@ class ProtocolParityTests(unittest.TestCase):
             or entry["destination"] == CONTENT_VECTOR_REL
         ]
         transitions = json.loads((ROOT / TRANSITIONS_REL).read_text(encoding="utf-8"))
-        paths.extend(entry["path"] for transition in transitions["transitions"]
-                     for entry in transition["files"] if entry["path"] not in paths)
+        active = set(paths)
+        for transition in transitions["transitions"]:
+            for entry in transition["files"]:
+                if entry["toSha256"] is None:
+                    active.discard(entry["path"])
+                else:
+                    active.add(entry["path"])
+        paths = sorted(active)
         paths.extend([FINGERPRINT_REL, MANIFEST_REL, TRANSITIONS_REL])
 
         for relative in paths:
@@ -98,6 +104,10 @@ class ProtocolParityTests(unittest.TestCase):
         self.assertEqual(original["exportSha256"], entry["fromSha256"])
         self.assertNotEqual(entry["fromSha256"], entry["toSha256"])
         target = self.project / entry["path"]
+        # The historical edge remains valid even if the path was later retired.
+        if not target.exists():
+            self.assert_passes()
+            return
         target.write_bytes(target.read_bytes() + b"\n")
         result = self.run_check()
         self.assertNotEqual(result.returncode, 0)
@@ -105,8 +115,11 @@ class ProtocolParityTests(unittest.TestCase):
 
     def test_missing_and_extra_proto_and_generated_files_fail(self):
         cases = [
-            ("reference/proto/syntra/v1/identity.proto", "reference/proto/syntra/v1/extra.proto"),
-            ("core/gen/syntra/v1/identity.pb.go", "core/gen/syntra/v1/extra.pb.go"),
+            (next((self.project / root).rglob(pattern)).relative_to(self.project).as_posix(), extra)
+            for root, pattern, extra in [
+                ("reference/proto", "*.proto", "reference/proto/extra.proto"),
+                ("core/gen", "*.go", "core/gen/extra.go"),
+            ]
         ]
         for missing_relative, extra_relative in cases:
             with self.subTest(missing=missing_relative):

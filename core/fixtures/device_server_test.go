@@ -331,7 +331,7 @@ func TestDeviceClientRejectsStaleConsentAndNonhuman(t *testing.T) {
 }
 
 func TestDeviceFingerprintMatchesUnchangedBackendVector(t *testing.T) {
-	raw, err := os.ReadFile("../../reference/device-fingerprint-v1.json")
+	raw, err := os.ReadFile("device-fingerprint-v1.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -374,7 +374,7 @@ func TestDeviceFingerprintMatchesUnchangedBackendVector(t *testing.T) {
 }
 
 func TestDeviceFixtureNormalizationRejectsInvalidIntent(t *testing.T) {
-	raw, err := os.ReadFile("../../reference/device-fingerprint-v1.json")
+	raw, err := os.ReadFile("device-fingerprint-v1.json")
 	if err != nil {
 		t.Fatal(err)
 	}

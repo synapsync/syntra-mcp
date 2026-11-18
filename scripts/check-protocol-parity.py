@@ -13,9 +13,9 @@ import uuid
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE_ID = "syntra-mcp-wire-v1"
 MANIFEST_REL = "reference/source-manifest.json"
-MANIFEST_SHA256 = "f27fe1da427ed6f79cd142029e56706648330e6fbe07b18dbd8074c719eebacf"
+MANIFEST_SHA256 = "42169db996564e129193eeed24174f5dbe5bca5d6a4afd9671635e1e420f1d6c"
 TRANSITIONS_REL = "reference/contract-transitions.json"
-TRANSITIONS_SHA256 = "b8b85c640169220f366ae6edeabb4e6dba95d3de78a82f675f387ed0a735952d"
+TRANSITIONS_SHA256 = "2dbcb5bd1aeda389d4b8995b296739185025ea880b5525349114230161c72537"
 FINGERPRINT_REL = "reference/device-fingerprint-v1.json"
 FINGERPRINT_SHA256 = "d47c6d43307122886e60300607ffb5f4109199837c00a300143df6378f0b104e"
 CONTENT_VECTOR_REL = "core/fixtures/content-integrity-v1.json"
@@ -113,6 +113,10 @@ def expected_digests():
             digests[relative] = digest
 
     apply_transitions(digests)
+    if "currentFiles" in manifest:
+        current = {entry["destination"]: entry["exportSha256"] for entry in manifest["currentFiles"]}
+        if len(current) != len(manifest["currentFiles"]) or current != digests:
+            raise ParityError(f"{MANIFEST_REL}: current inventory does not match the transitions")
     proto_paths = {path for path in digests if path.startswith("reference/proto/")}
     generated_paths = {path for path in digests if path.startswith("core/gen/")}
     if not proto_paths or not generated_paths or CONTENT_VECTOR_REL not in digests:
@@ -144,6 +148,11 @@ def apply_transitions(digests):
                 relative, old, new = entry["path"], entry["fromSha256"], entry["toSha256"]
                 if relative not in digests and (old is not None or not relative.startswith(("reference/proto/", "core/gen/"))):
                     raise ParityError(f"{TRANSITIONS_REL}: {relative} is not a valid new wire path")
+                if new is None:
+                    if relative == CONTENT_VECTOR_REL or relative not in digests or digests[relative] != old:
+                        raise ParityError(f"{TRANSITIONS_REL}: invalid removal for {relative}")
+                    del digests[relative]
+                    continue
                 if not re.fullmatch(r"[0-9a-f]{64}", new):
                     raise ParityError(f"{TRANSITIONS_REL}: invalid digest for {relative}")
                 if digests.get(relative) != old:

@@ -666,7 +666,10 @@ func TestRecordNoOverwriteAndUnsafeObjects(t *testing.T) {
 				if runtime.GOOS == "windows" {
 					t.Skip("Windows enforces DACLs, covered by the Windows storage tests")
 				}
-				err = os.WriteFile(name, []byte("x"), 0644)
+				err = os.WriteFile(name, []byte("x"), 0600)
+				if err == nil {
+					err = os.Chmod(name, 0644)
+				}
 			case "fifo":
 				if runtime.GOOS == "windows" {
 					t.Skip("Windows filesystem paths cannot name a POSIX FIFO")

@@ -39,6 +39,9 @@ const (
 const (
 	// UserServiceGetMeProcedure is the fully-qualified name of the UserService's GetMe RPC.
 	UserServiceGetMeProcedure = "/syntra.v1.UserService/GetMe"
+	// UserServiceUpdateMyProfileProcedure is the fully-qualified name of the UserService's
+	// UpdateMyProfile RPC.
+	UserServiceUpdateMyProfileProcedure = "/syntra.v1.UserService/UpdateMyProfile"
 	// WorkspaceServiceGetWorkspaceProcedure is the fully-qualified name of the WorkspaceService's
 	// GetWorkspace RPC.
 	WorkspaceServiceGetWorkspaceProcedure = "/syntra.v1.WorkspaceService/GetWorkspace"
@@ -57,12 +60,18 @@ const (
 	// InvitationServiceAcceptInvitationProcedure is the fully-qualified name of the InvitationService's
 	// AcceptInvitation RPC.
 	InvitationServiceAcceptInvitationProcedure = "/syntra.v1.InvitationService/AcceptInvitation"
+	// InvitationServiceRetryInvitationDeliveryProcedure is the fully-qualified name of the
+	// InvitationService's RetryInvitationDelivery RPC.
+	InvitationServiceRetryInvitationDeliveryProcedure = "/syntra.v1.InvitationService/RetryInvitationDelivery"
 )
 
 // UserServiceClient is a client for the syntra.v1.UserService service.
 type UserServiceClient interface {
 	// GetMe never creates a profile. Disabled application users are denied.
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	// UpdateMyProfile saves the caller's own required profile. It never writes
+	// another account, never invents names and never changes the stable UUID.
+	UpdateMyProfile(context.Context, *connect.Request[v1.UpdateMyProfileRequest]) (*connect.Response[v1.UpdateMyProfileResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the syntra.v1.UserService service. By default, it
@@ -82,12 +91,19 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(userServiceMethods.ByName("GetMe")),
 			connect.WithClientOptions(opts...),
 		),
+		updateMyProfile: connect.NewClient[v1.UpdateMyProfileRequest, v1.UpdateMyProfileResponse](
+			httpClient,
+			baseURL+UserServiceUpdateMyProfileProcedure,
+			connect.WithSchema(userServiceMethods.ByName("UpdateMyProfile")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // userServiceClient implements UserServiceClient.
 type userServiceClient struct {
-	getMe *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
+	getMe           *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
+	updateMyProfile *connect.Client[v1.UpdateMyProfileRequest, v1.UpdateMyProfileResponse]
 }
 
 // GetMe calls syntra.v1.UserService.GetMe.
@@ -95,10 +111,18 @@ func (c *userServiceClient) GetMe(ctx context.Context, req *connect.Request[v1.G
 	return c.getMe.CallUnary(ctx, req)
 }
 
+// UpdateMyProfile calls syntra.v1.UserService.UpdateMyProfile.
+func (c *userServiceClient) UpdateMyProfile(ctx context.Context, req *connect.Request[v1.UpdateMyProfileRequest]) (*connect.Response[v1.UpdateMyProfileResponse], error) {
+	return c.updateMyProfile.CallUnary(ctx, req)
+}
+
 // UserServiceHandler is an implementation of the syntra.v1.UserService service.
 type UserServiceHandler interface {
 	// GetMe never creates a profile. Disabled application users are denied.
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	// UpdateMyProfile saves the caller's own required profile. It never writes
+	// another account, never invents names and never changes the stable UUID.
+	UpdateMyProfile(context.Context, *connect.Request[v1.UpdateMyProfileRequest]) (*connect.Response[v1.UpdateMyProfileResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -114,10 +138,18 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(userServiceMethods.ByName("GetMe")),
 		connect.WithHandlerOptions(opts...),
 	)
+	userServiceUpdateMyProfileHandler := connect.NewUnaryHandler(
+		UserServiceUpdateMyProfileProcedure,
+		svc.UpdateMyProfile,
+		connect.WithSchema(userServiceMethods.ByName("UpdateMyProfile")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/syntra.v1.UserService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case UserServiceGetMeProcedure:
 			userServiceGetMeHandler.ServeHTTP(w, r)
+		case UserServiceUpdateMyProfileProcedure:
+			userServiceUpdateMyProfileHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -129,6 +161,10 @@ type UnimplementedUserServiceHandler struct{}
 
 func (UnimplementedUserServiceHandler) GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.UserService.GetMe is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) UpdateMyProfile(context.Context, *connect.Request[v1.UpdateMyProfileRequest]) (*connect.Response[v1.UpdateMyProfileResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.UserService.UpdateMyProfile is not implemented"))
 }
 
 // WorkspaceServiceClient is a client for the syntra.v1.WorkspaceService service.
@@ -241,6 +277,8 @@ type InvitationServiceClient interface {
 	RevokeInvitation(context.Context, *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error)
 	// AcceptInvitation verifies current confirmed provider email transactionally.
 	AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error)
+	// RetryInvitationDelivery retries the same immutable job, never a new recipient.
+	RetryInvitationDelivery(context.Context, *connect.Request[v1.RetryInvitationDeliveryRequest]) (*connect.Response[v1.RetryInvitationDeliveryResponse], error)
 }
 
 // NewInvitationServiceClient constructs a client for the syntra.v1.InvitationService service. By
@@ -278,15 +316,22 @@ func NewInvitationServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(invitationServiceMethods.ByName("AcceptInvitation")),
 			connect.WithClientOptions(opts...),
 		),
+		retryInvitationDelivery: connect.NewClient[v1.RetryInvitationDeliveryRequest, v1.RetryInvitationDeliveryResponse](
+			httpClient,
+			baseURL+InvitationServiceRetryInvitationDeliveryProcedure,
+			connect.WithSchema(invitationServiceMethods.ByName("RetryInvitationDelivery")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // invitationServiceClient implements InvitationServiceClient.
 type invitationServiceClient struct {
-	createInvitation *connect.Client[v1.CreateInvitationRequest, v1.CreateInvitationResponse]
-	listInvitations  *connect.Client[v1.ListInvitationsRequest, v1.ListInvitationsResponse]
-	revokeInvitation *connect.Client[v1.RevokeInvitationRequest, v1.RevokeInvitationResponse]
-	acceptInvitation *connect.Client[v1.AcceptInvitationRequest, v1.AcceptInvitationResponse]
+	createInvitation        *connect.Client[v1.CreateInvitationRequest, v1.CreateInvitationResponse]
+	listInvitations         *connect.Client[v1.ListInvitationsRequest, v1.ListInvitationsResponse]
+	revokeInvitation        *connect.Client[v1.RevokeInvitationRequest, v1.RevokeInvitationResponse]
+	acceptInvitation        *connect.Client[v1.AcceptInvitationRequest, v1.AcceptInvitationResponse]
+	retryInvitationDelivery *connect.Client[v1.RetryInvitationDeliveryRequest, v1.RetryInvitationDeliveryResponse]
 }
 
 // CreateInvitation calls syntra.v1.InvitationService.CreateInvitation.
@@ -309,6 +354,11 @@ func (c *invitationServiceClient) AcceptInvitation(ctx context.Context, req *con
 	return c.acceptInvitation.CallUnary(ctx, req)
 }
 
+// RetryInvitationDelivery calls syntra.v1.InvitationService.RetryInvitationDelivery.
+func (c *invitationServiceClient) RetryInvitationDelivery(ctx context.Context, req *connect.Request[v1.RetryInvitationDeliveryRequest]) (*connect.Response[v1.RetryInvitationDeliveryResponse], error) {
+	return c.retryInvitationDelivery.CallUnary(ctx, req)
+}
+
 // InvitationServiceHandler is an implementation of the syntra.v1.InvitationService service.
 type InvitationServiceHandler interface {
 	// CreateInvitation allows an active admin to invite MEMBER only.
@@ -319,6 +369,8 @@ type InvitationServiceHandler interface {
 	RevokeInvitation(context.Context, *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error)
 	// AcceptInvitation verifies current confirmed provider email transactionally.
 	AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error)
+	// RetryInvitationDelivery retries the same immutable job, never a new recipient.
+	RetryInvitationDelivery(context.Context, *connect.Request[v1.RetryInvitationDeliveryRequest]) (*connect.Response[v1.RetryInvitationDeliveryResponse], error)
 }
 
 // NewInvitationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -352,6 +404,12 @@ func NewInvitationServiceHandler(svc InvitationServiceHandler, opts ...connect.H
 		connect.WithSchema(invitationServiceMethods.ByName("AcceptInvitation")),
 		connect.WithHandlerOptions(opts...),
 	)
+	invitationServiceRetryInvitationDeliveryHandler := connect.NewUnaryHandler(
+		InvitationServiceRetryInvitationDeliveryProcedure,
+		svc.RetryInvitationDelivery,
+		connect.WithSchema(invitationServiceMethods.ByName("RetryInvitationDelivery")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/syntra.v1.InvitationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case InvitationServiceCreateInvitationProcedure:
@@ -362,6 +420,8 @@ func NewInvitationServiceHandler(svc InvitationServiceHandler, opts ...connect.H
 			invitationServiceRevokeInvitationHandler.ServeHTTP(w, r)
 		case InvitationServiceAcceptInvitationProcedure:
 			invitationServiceAcceptInvitationHandler.ServeHTTP(w, r)
+		case InvitationServiceRetryInvitationDeliveryProcedure:
+			invitationServiceRetryInvitationDeliveryHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -385,4 +445,8 @@ func (UnimplementedInvitationServiceHandler) RevokeInvitation(context.Context, *
 
 func (UnimplementedInvitationServiceHandler) AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.InvitationService.AcceptInvitation is not implemented"))
+}
+
+func (UnimplementedInvitationServiceHandler) RetryInvitationDelivery(context.Context, *connect.Request[v1.RetryInvitationDeliveryRequest]) (*connect.Response[v1.RetryInvitationDeliveryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.InvitationService.RetryInvitationDelivery is not implemented"))
 }
