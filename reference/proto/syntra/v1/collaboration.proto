@@ -16,6 +16,7 @@ service ProjectService {
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
   rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
 }
 
 // ProjectTeamService uses current workspace authorization on every request and retry.
@@ -294,6 +295,8 @@ message ListProjectsResponse {
   repeated Project projects = 1;
   // Empty at end; same opaque cursor policy as the request.
   string next_page_token = 2;
+  // Older backends omit this flag. Empty-project deletion requires server support.
+  bool supports_project_deletion = 3;
 }
 
 message GetProjectRequest {
@@ -334,6 +337,16 @@ message UpdateProjectRequest {
 message UpdateProjectResponse {
   Project project = 1;
 }
+
+// Admin-only. Projects with any tickets or team assignments cannot be deleted.
+message DeleteProjectRequest {
+  string workspace_id = 1;
+  string project_id = 2;
+  string expected_revision = 3;
+  string request_id = 4;
+}
+
+message DeleteProjectResponse {}
 
 message ListProjectTeamsRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.

@@ -57,6 +57,9 @@ const (
 	// ProjectServiceUpdateProjectProcedure is the fully-qualified name of the ProjectService's
 	// UpdateProject RPC.
 	ProjectServiceUpdateProjectProcedure = "/syntra.v1.ProjectService/UpdateProject"
+	// ProjectServiceDeleteProjectProcedure is the fully-qualified name of the ProjectService's
+	// DeleteProject RPC.
+	ProjectServiceDeleteProjectProcedure = "/syntra.v1.ProjectService/DeleteProject"
 	// ProjectTeamServiceListProjectTeamsProcedure is the fully-qualified name of the
 	// ProjectTeamService's ListProjectTeams RPC.
 	ProjectTeamServiceListProjectTeamsProcedure = "/syntra.v1.ProjectTeamService/ListProjectTeams"
@@ -123,6 +126,7 @@ type ProjectServiceClient interface {
 	GetProject(context.Context, *connect.Request[v1.GetProjectRequest]) (*connect.Response[v1.GetProjectResponse], error)
 	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error)
 	UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error)
+	DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error)
 }
 
 // NewProjectServiceClient constructs a client for the syntra.v1.ProjectService service. By default,
@@ -160,6 +164,12 @@ func NewProjectServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(projectServiceMethods.ByName("UpdateProject")),
 			connect.WithClientOptions(opts...),
 		),
+		deleteProject: connect.NewClient[v1.DeleteProjectRequest, v1.DeleteProjectResponse](
+			httpClient,
+			baseURL+ProjectServiceDeleteProjectProcedure,
+			connect.WithSchema(projectServiceMethods.ByName("DeleteProject")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -169,6 +179,7 @@ type projectServiceClient struct {
 	getProject    *connect.Client[v1.GetProjectRequest, v1.GetProjectResponse]
 	createProject *connect.Client[v1.CreateProjectRequest, v1.CreateProjectResponse]
 	updateProject *connect.Client[v1.UpdateProjectRequest, v1.UpdateProjectResponse]
+	deleteProject *connect.Client[v1.DeleteProjectRequest, v1.DeleteProjectResponse]
 }
 
 // ListProjects calls syntra.v1.ProjectService.ListProjects.
@@ -191,12 +202,18 @@ func (c *projectServiceClient) UpdateProject(ctx context.Context, req *connect.R
 	return c.updateProject.CallUnary(ctx, req)
 }
 
+// DeleteProject calls syntra.v1.ProjectService.DeleteProject.
+func (c *projectServiceClient) DeleteProject(ctx context.Context, req *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error) {
+	return c.deleteProject.CallUnary(ctx, req)
+}
+
 // ProjectServiceHandler is an implementation of the syntra.v1.ProjectService service.
 type ProjectServiceHandler interface {
 	ListProjects(context.Context, *connect.Request[v1.ListProjectsRequest]) (*connect.Response[v1.ListProjectsResponse], error)
 	GetProject(context.Context, *connect.Request[v1.GetProjectRequest]) (*connect.Response[v1.GetProjectResponse], error)
 	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error)
 	UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error)
+	DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error)
 }
 
 // NewProjectServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -230,6 +247,12 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 		connect.WithSchema(projectServiceMethods.ByName("UpdateProject")),
 		connect.WithHandlerOptions(opts...),
 	)
+	projectServiceDeleteProjectHandler := connect.NewUnaryHandler(
+		ProjectServiceDeleteProjectProcedure,
+		svc.DeleteProject,
+		connect.WithSchema(projectServiceMethods.ByName("DeleteProject")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/syntra.v1.ProjectService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ProjectServiceListProjectsProcedure:
@@ -240,6 +263,8 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 			projectServiceCreateProjectHandler.ServeHTTP(w, r)
 		case ProjectServiceUpdateProjectProcedure:
 			projectServiceUpdateProjectHandler.ServeHTTP(w, r)
+		case ProjectServiceDeleteProjectProcedure:
+			projectServiceDeleteProjectHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -263,6 +288,10 @@ func (UnimplementedProjectServiceHandler) CreateProject(context.Context, *connec
 
 func (UnimplementedProjectServiceHandler) UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ProjectService.UpdateProject is not implemented"))
+}
+
+func (UnimplementedProjectServiceHandler) DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ProjectService.DeleteProject is not implemented"))
 }
 
 // ProjectTeamServiceClient is a client for the syntra.v1.ProjectTeamService service.

@@ -10,6 +10,9 @@ option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
 service UserService {
   // GetMe never creates a profile. Disabled application users are denied.
   rpc GetMe(GetMeRequest) returns (GetMeResponse);
+  // UpdateMyProfile saves the caller's own required profile. It never writes
+  // another account, never invents names and never changes the stable UUID.
+  rpc UpdateMyProfile(UpdateMyProfileRequest) returns (UpdateMyProfileResponse);
 }
 
 // WorkspaceService authorizes against current active database membership.
@@ -20,7 +23,7 @@ service WorkspaceService {
   rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
 }
 
-// InvitationService controls admission; it does not send email or execute work.
+// InvitationService controls admission; it schedules explicitly requested mail; it never executes work.
 service InvitationService {
   // CreateInvitation allows an active admin to invite MEMBER only.
   rpc CreateInvitation(CreateInvitationRequest) returns (CreateInvitationResponse);
@@ -30,6 +33,8 @@ service InvitationService {
   rpc RevokeInvitation(RevokeInvitationRequest) returns (RevokeInvitationResponse);
   // AcceptInvitation verifies current confirmed provider email transactionally.
   rpc AcceptInvitation(AcceptInvitationRequest) returns (AcceptInvitationResponse);
+  // RetryInvitationDelivery retries the same immutable job, never a new recipient.
+  rpc RetryInvitationDelivery(RetryInvitationDeliveryRequest) returns (RetryInvitationDeliveryResponse);
 }
 
 // WorkspaceRole has no implicit default; request zero/unknown roles are invalid.
@@ -60,6 +65,16 @@ message UserProfile {
   string id = 1;
   // display_name is UTF-8, at most 120 Unicode scalar values and 480 bytes.
   string display_name = 2;
+  // username is the installation-wide unique handle. It is not a login method.
+  string username = 3;
+  // first_name is UTF-8, 1..60 Unicode scalar values. Empty before completion.
+  string first_name = 4;
+  // last_name is UTF-8, 1..60 Unicode scalar values. Empty before completion.
+  string last_name = 5;
+  // profile_complete is computed by the server from the persisted fields.
+  bool profile_complete = 6;
+  // profile_revision increases by one on every accepted profile change.
+  int64 profile_revision = 7;
 }
 
 // Workspace is a currently accessible active workspace, without private fields.
@@ -84,6 +99,8 @@ message WorkspaceMember {
   string display_name = 2;
   WorkspaceRole role = 3;
   google.protobuf.Timestamp joined_at = 4;
+  // Workspace directory and member state return the profile username when set.
+  string username = 5;
 }
 
 // Invitation is admin-only metadata; raw tokens/digests never appear here.
@@ -101,6 +118,7 @@ message Invitation {
   // revoked_at and accepted_at are absent until their respective transition.
   google.protobuf.Timestamp revoked_at = 9;
   google.protobuf.Timestamp accepted_at = 10;
+  InvitationDelivery delivery = 11;
 }
 
 // GetMeRequest pages accessible active workspaces by (created_at, id) ascending.
@@ -112,6 +130,27 @@ message GetMeRequest {
 }
 
 // GetMeResponse is safe for a valid identity with no active memberships.
+// UpdateMyProfileRequest carries the caller's own personal data. The target
+// account is derived from trusted authentication, never from request fields.
+message UpdateMyProfileRequest {
+  // username is normalized lowercase ASCII, 3..30 characters, starts with a letter.
+  string username = 1;
+  // first_name and last_name are trimmed Unicode personal names.
+  string first_name = 2;
+  string last_name = 3;
+  // expected_revision is the caller's last observed profile revision. A stale
+  // value is rejected instead of overwriting a newer change from another tab.
+  int64 expected_revision = 4;
+  // request_id is a canonical UUID. An exact retry with the same request id and
+  // the same content returns the canonical profile without a second change.
+  string request_id = 5;
+}
+
+// UpdateMyProfileResponse is the canonical persisted state of the caller's profile.
+message UpdateMyProfileResponse {
+  UserProfile profile = 1;
+}
+
 message GetMeResponse {
   SelfIdentity identity = 1;
   // profile is absent before admission; reads never create it.
@@ -148,11 +187,14 @@ message CreateInvitationRequest {
   WorkspaceRole role = 3;
   // request_id is canonical UUID, scoped to actor/workspace/canonical payload.
   string request_id = 4;
+  // Default false preserves manual-link semantics. True requires configured mail.
+  bool send_email = 5;
 }
 
 message CreateInvitationResponse {
   Invitation invitation = 1;
-  // token is returned only on the first committed response, never on a retry.
+  // Manual-link only: returned on the first committed response, never on a retry.
+  // Explicit email intent returns an empty token, including the first response.
   // It is 43 canonical unpadded base64url characters encoding 32 random bytes.
   string token = 2;
 }
@@ -187,4 +229,61 @@ message AcceptInvitationRequest {
 message AcceptInvitationResponse {
   UserProfile profile = 1;
   WorkspaceMembership membership = 2;
+}
+
+// Delivery never proves inbox receipt. MANUAL means no mail was scheduled.
+enum InvitationDeliveryState {
+  INVITATION_DELIVERY_STATE_UNSPECIFIED = 0;
+  INVITATION_DELIVERY_STATE_MANUAL = 1;
+  INVITATION_DELIVERY_STATE_QUEUED = 2;
+  INVITATION_DELIVERY_STATE_ATTEMPTING = 3;
+  INVITATION_DELIVERY_STATE_RETRY_WAIT = 4;
+  INVITATION_DELIVERY_STATE_PROVIDER_ACCEPTED = 5;
+  INVITATION_DELIVERY_STATE_FAILED = 6;
+  INVITATION_DELIVERY_STATE_UNCERTAIN = 7;
+  INVITATION_DELIVERY_STATE_CANCELLED = 8;
+}
+
+// Safe operational categories; no raw provider diagnostics are exposed.
+enum InvitationDeliveryFailure {
+  INVITATION_DELIVERY_FAILURE_UNSPECIFIED = 0;
+  INVITATION_DELIVERY_FAILURE_CONFIGURATION = 1;
+  INVITATION_DELIVERY_FAILURE_PROVIDER_REJECTED = 2;
+  INVITATION_DELIVERY_FAILURE_RATE_LIMIT = 3;
+  INVITATION_DELIVERY_FAILURE_AMBIGUOUS = 4;
+  INVITATION_DELIVERY_FAILURE_RETRY_EXHAUSTED = 5;
+  INVITATION_DELIVERY_FAILURE_INVITATION_INACTIVE = 6;
+  INVITATION_DELIVERY_FAILURE_AUTHORITY_REVOKED = 7;
+}
+
+message InvitationDelivery {
+  InvitationDeliveryState state = 1;
+  InvitationDeliveryFailure failure = 2;
+  int32 attempts = 3;
+  google.protobuf.Timestamp next_attempt_at = 4;
+  google.protobuf.Timestamp provider_accepted_at = 5;
+  // True permits an explicit same-job retry; caps/deadline still apply.
+  bool can_retry = 6;
+  // An attempt may have been accepted, including a cancelled in-flight request.
+  bool acceptance_uncertain = 7;
+}
+
+message RetryInvitationDeliveryRequest {
+  string workspace_id = 1;
+  string invitation_id = 2;
+  string request_id = 3;
+}
+
+enum InvitationDeliveryRetryOutcome {
+  INVITATION_DELIVERY_RETRY_OUTCOME_UNSPECIFIED = 0;
+  INVITATION_DELIVERY_RETRY_OUTCOME_SCHEDULED = 1;
+  INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_PENDING = 2;
+  INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_ACCEPTED = 3;
+  INVITATION_DELIVERY_RETRY_OUTCOME_NOT_RETRYABLE = 4;
+}
+
+message RetryInvitationDeliveryResponse {
+  Invitation invitation = 1;
+  // Deduplicated request returns its original canonical outcome and current metadata.
+  InvitationDeliveryRetryOutcome outcome = 2;
 }

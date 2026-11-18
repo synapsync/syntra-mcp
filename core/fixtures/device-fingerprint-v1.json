@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "domainHex": "73796e7472612e746f6f6c2d6c6f67696e0001",
+  "requestId": "11111111-1111-4111-8111-111111111111",
+  "secretDigestHex": "93c4d287949a963ed3e2ac5ffd0d7fb13e6e0fb13f6e2470145fefe10b777d09",
+  "proofDigestHex": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+  "label": "Work laptop",
+  "capabilities": [
+    1,
+    2,
+    3
+  ],
+  "expiresInSeconds": 2592000,
+  "fingerprintHex": "75fa5cdbb425a1908475274cc146111ff6d852af5076a365a0b81cea0cc6ef59"
+}

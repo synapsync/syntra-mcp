@@ -34,6 +34,7 @@ func TestReplyTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("template: %s", data)
 	var raw map[string]any
 	if err = json.Unmarshal(data, &raw); err != nil {
 		t.Fatal(err)
