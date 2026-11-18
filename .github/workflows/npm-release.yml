@@ -104,6 +104,9 @@ jobs:
             --go-cache "$(go env GOCACHE)" --module-cache "$(go env GOMODCACHE)" \
             --output-dir "$out/tarballs" > "$out/build.json"
           python3 scripts/capture-npm-candidate.py "$out/tarballs" "$out/manifest.json" "${capture_args[@]}"
+          if [[ -n "$version" ]]; then
+            tar -xOzf "$out/tarballs/synapsync-syntra-mcp-$version.tgz" package/README.md | cmp README.md -
+          fi
           digest="$(sha256sum "$out/manifest.json" | cut -d ' ' -f 1)"
           echo "manifest_sha256=$digest" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
