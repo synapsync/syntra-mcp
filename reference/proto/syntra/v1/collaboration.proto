@@ -1,0 +1,685 @@
+syntax = "proto3";
+
+package syntra.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// Sprint 3 wire freeze only: validation/authorization/transactions are required by
+// docs/API-CONTRACT.md, not implemented by these declarations. All 25 RPCs are
+// protected. No publication permission authorizes command execution.
+
+// ProjectService uses current workspace authorization on every request and retry.
+service ProjectService {
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+}
+
+// ProjectTeamService uses current workspace authorization on every request and retry.
+// A project inherits active members of its assigned workspace teams, subject to
+// explicit exclusions for each project and team.
+service ProjectTeamService {
+  rpc ListProjectTeams(ListProjectTeamsRequest) returns (ListProjectTeamsResponse);
+  rpc SetProjectTeam(SetProjectTeamRequest) returns (SetProjectTeamResponse);
+  rpc RemoveProjectTeam(RemoveProjectTeamRequest) returns (RemoveProjectTeamResponse);
+}
+
+// TicketService uses current workspace authorization on every request and retry.
+service TicketService {
+  rpc ListTickets(ListTicketsRequest) returns (ListTicketsResponse);
+  rpc GetTicket(GetTicketRequest) returns (GetTicketResponse);
+  rpc CreateTicket(CreateTicketRequest) returns (CreateTicketResponse);
+  rpc UpdateTicket(UpdateTicketRequest) returns (UpdateTicketResponse);
+  rpc AssignTicket(AssignTicketRequest) returns (AssignTicketResponse);
+  rpc ProposeResolution(ProposeResolutionRequest) returns (ProposeResolutionResponse);
+  rpc CloseTicket(CloseTicketRequest) returns (CloseTicketResponse);
+  rpc ReopenTicket(ReopenTicketRequest) returns (ReopenTicketResponse);
+}
+
+// MessageService uses current workspace authorization on every request and retry.
+service MessageService {
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
+  rpc SaveDraft(SaveDraftRequest) returns (SaveDraftResponse);
+  rpc PublishMessage(PublishMessageRequest) returns (PublishMessageResponse);
+  rpc DiscardDraft(DiscardDraftRequest) returns (DiscardDraftResponse);
+  rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
+  rpc MarkReviewed(MarkReviewedRequest) returns (MarkReviewedResponse);
+}
+
+// InboxService uses current workspace authorization on every request and retry.
+service InboxService {
+  rpc ListInboxItems(ListInboxItemsRequest) returns (ListInboxItemsResponse);
+}
+
+// ActivityService uses current workspace authorization on every request and retry.
+service ActivityService {
+  rpc ListTicketEvents(ListTicketEventsRequest) returns (ListTicketEventsResponse);
+}
+
+// DashboardService uses current workspace authorization on every request and retry.
+service DashboardService {
+  rpc GetOverview(GetOverviewRequest) returns (GetOverviewResponse);
+}
+
+enum TicketState {
+  TICKET_STATE_UNSPECIFIED = 0;
+  TICKET_STATE_DRAFT = 1;
+  TICKET_STATE_OPEN = 2;
+  TICKET_STATE_RESOLUTION_PROPOSED = 3;
+  TICKET_STATE_CLOSED = 4;
+}
+
+enum TicketVisibility {
+  TICKET_VISIBILITY_UNSPECIFIED = 0;
+  TICKET_VISIBILITY_PUBLISHED = 1;
+  TICKET_VISIBILITY_OWN_DRAFTS = 2;
+}
+
+enum MessageView {
+  MESSAGE_VIEW_UNSPECIFIED = 0;
+  MESSAGE_VIEW_PUBLISHED = 1;
+  MESSAGE_VIEW_OWN_DRAFTS = 2;
+}
+
+// InboxView separates private preparation, chronological waiting and review.
+enum InboxView {
+  INBOX_VIEW_UNSPECIFIED = 0;
+  INBOX_VIEW_OWN_DRAFTS = 1;
+  INBOX_VIEW_AWAITING_REPLY = 2;
+  INBOX_VIEW_PENDING_REVIEW = 3;
+}
+
+enum ClosureKind {
+  CLOSURE_KIND_UNSPECIFIED = 0;
+  CLOSURE_KIND_VALIDATED = 1;
+  CLOSURE_KIND_WITHOUT_VALIDATION = 2;
+}
+
+enum TicketEventKind {
+  TICKET_EVENT_KIND_UNSPECIFIED = 0;
+  TICKET_EVENT_KIND_TICKET_PUBLISHED = 1;
+  TICKET_EVENT_KIND_TICKET_UPDATED = 2;
+  TICKET_EVENT_KIND_TICKET_ASSIGNED = 3;
+  TICKET_EVENT_KIND_MESSAGE_PUBLISHED = 4;
+  TICKET_EVENT_KIND_MESSAGE_READ = 5;
+  TICKET_EVENT_KIND_MESSAGE_REVIEWED = 6;
+  TICKET_EVENT_KIND_RESOLUTION_PROPOSED = 7;
+  TICKET_EVENT_KIND_TICKET_CLOSED = 8;
+  TICKET_EVENT_KIND_TICKET_REOPENED = 9;
+}
+
+// Workspace catalog metadata; writes require current ADMIN. Names are 1..120 scalars/480 bytes, descriptions 0..2000 scalars/8000 bytes.
+message Project {
+  string id = 1;
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 2;
+  string name = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  // Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
+  string revision = 7;
+  // Computed authorized counts exclude every private draft; not revision inputs.
+  uint64 team_count = 8;
+  uint64 published_ticket_count = 9;
+  uint64 open_ticket_count = 10;
+  uint64 resolution_proposed_ticket_count = 11;
+  uint64 closed_ticket_count = 12;
+}
+
+// A workspace team assigned to a project, with the people of that team who work on this project.
+message ProjectTeam {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string project_id = 2;
+  string team_id = 3;
+  string team_name = 4;
+  bool team_archived = 5;
+  // The project roster for this team, in stable display-name order.
+  repeated ProjectTeamMember members = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  // Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
+  string revision = 9;
+  // Persisted exclusions, including people who left the team. Returned to administrators only.
+  repeated string excluded_user_ids = 10;
+}
+
+// One effective roster entry. The server sets active for every returned member.
+message ProjectTeamMember {
+  string user_id = 1;
+  string display_name = 2;
+  bool active = 3;
+}
+
+// Private to creator while DRAFT, workspace-visible after atomic first publication. The opaque revision is internal concurrency data, never a public version label.
+message Ticket {
+  string id = 1;
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 2;
+  string project_id = 3;
+  // The former catalog entry (module, then area) was removed: a ticket belongs to its project.
+  reserved 4;
+  reserved "area_id";
+  string creator_user_id = 5;
+  string assignee_user_id = 6;
+  string title = 7;
+  reserved 8;
+  reserved "priority";
+  TicketState state = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  google.protobuf.Timestamp published_at = 12;
+  // Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
+  string revision = 13;
+  optional string resolution_proposed_by_user_id = 14;
+  google.protobuf.Timestamp resolution_proposed_at = 15;
+  ClosureKind closure_kind = 16;
+  optional string closed_by_user_id = 17;
+  google.protobuf.Timestamp closed_at = 18;
+  string closure_reason = 19;
+  // Display-only preview, filled by ListTickets only (empty everywhere else): the first 240 Unicode scalar values of the
+  // summary of the latest published message (published visibility) or of the caller's own current draft (own-drafts
+  // visibility). It carries no more authority than the message itself and is never a substitute for reading the message.
+  string summary_preview = 20;
+}
+
+// Author-private editable content, including against shared tickets. Draft existence/content is hidden from everyone else, including admins.
+message MessageDraft {
+  string id = 1;
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 2;
+  string ticket_id = 3;
+  // Server-derived application user UUID. Never accepted from a client request.
+  string author_user_id = 4;
+  // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
+  string recipient_user_id = 5;
+  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  string summary = 6;
+  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  string context_markdown = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  // Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
+  string revision = 10;
+  bool initial = 11;
+}
+
+// Immutable exact published content and server-derived author. Receipt is separate per message/recipient; no global reviewed flag.
+message PublishedMessage {
+  string id = 1;
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 2;
+  string ticket_id = 3;
+  // Server-derived application user UUID. Never accepted from a client request.
+  string author_user_id = 4;
+  // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
+  string recipient_user_id = 5;
+  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  string summary = 6;
+  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  string context_markdown = 7;
+  google.protobuf.Timestamp published_at = 8;
+  RecipientReceipt receipt = 9;
+}
+
+// Only the authenticated exact recipient may set these independent facts. Review requires an existing read, never auto-reads.
+message RecipientReceipt {
+  string message_id = 1;
+  // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
+  string recipient_user_id = 2;
+  google.protobuf.Timestamp read_at = 3;
+  google.protobuf.Timestamp reviewed_at = 4;
+}
+
+// Immutable server-attributed shared history; no private drafts or their changes. Absent/nonapplicable fields remain defaults.
+message TicketEvent {
+  string id = 1;
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 2;
+  string ticket_id = 3;
+  string actor_user_id = 4;
+  TicketEventKind kind = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+  optional string message_id = 7;
+  optional string previous_assignee_user_id = 8;
+  optional string assignee_user_id = 9;
+  TicketState previous_state = 10;
+  TicketState state = 11;
+  ClosureKind closure_kind = 12;
+  // Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
+  string reason = 13;
+}
+
+// Exactly one message OR own draft, selected by the required inbox view.
+// Waiting is chronological per directed user pair, never a semantic reply verdict.
+message InboxItem {
+  PublishedMessage message = 1;
+  Ticket ticket = 2;
+  MessageDraft draft = 3;
+}
+
+// Current authorized workspace aggregates; only own draft count is private. No simulated metrics or unbounded project arrays.
+message Overview {
+  uint64 published_ticket_count = 1;
+  uint64 open_ticket_count = 2;
+  uint64 resolution_proposed_ticket_count = 3;
+  uint64 closed_ticket_count = 4;
+  uint64 assigned_active_ticket_count = 5;
+  uint64 pending_review_message_count = 6;
+  uint64 unread_message_count = 7;
+  uint64 own_draft_ticket_count = 8;
+  google.protobuf.Timestamp as_of = 9;
+  // Current visible workspace projects, from the same overview snapshot.
+  uint64 project_count = 10;
+  // Exact count of caller InboxView AWAITING_REPLY items.
+  uint64 awaiting_reply_message_count = 11;
+  // Exact count of caller InboxView OWN_DRAFTS, including later reply drafts.
+  uint64 own_draft_message_count = 12;
+}
+
+message ListProjectsRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  // Zero defaults to 25; explicit 1..100 only.
+  int32 page_size = 2;
+  // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
+  string page_token = 3;
+}
+
+message ListProjectsResponse {
+  repeated Project projects = 1;
+  // Empty at end; same opaque cursor policy as the request.
+  string next_page_token = 2;
+}
+
+message GetProjectRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string project_id = 2;
+}
+
+message GetProjectResponse {
+  Project project = 1;
+}
+
+message CreateProjectRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string name = 2;
+  string description = 3;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 4;
+}
+
+message CreateProjectResponse {
+  Project project = 1;
+}
+
+message UpdateProjectRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string project_id = 2;
+  string name = 3;
+  string description = 4;
+  // Required exact current resource revision; stale values fail Aborted without overwriting.
+  string expected_revision = 5;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 6;
+}
+
+message UpdateProjectResponse {
+  Project project = 1;
+}
+
+message ListProjectTeamsRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string project_id = 2;
+  // Zero defaults to 25; explicit 1..100 only.
+  int32 page_size = 3;
+  // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
+  string page_token = 4;
+}
+
+message ListProjectTeamsResponse {
+  repeated ProjectTeam project_teams = 1;
+  // Empty at end; same opaque cursor policy as the request.
+  string next_page_token = 2;
+}
+
+// Assigns a team to a project or replaces its exclusions (current ADMIN only).
+// excluded_user_ids is the full exclusion list: distinct, at most 1000, and each
+// user must be an active team member or an existing exclusion for this assignment.
+// No exclusions means the project inherits all active members. expected_revision is empty when the team is not yet
+// assigned and required (exact current revision) when replacing; stale values fail Aborted without overwriting.
+message SetProjectTeamRequest {
+  string workspace_id = 1;
+  string project_id = 2;
+  string team_id = 3;
+  reserved 4;
+  reserved "user_ids";
+  string expected_revision = 5;
+  // Canonical UUID; retry key binds method/actor/workspace and exact payload for resource lifetime.
+  string request_id = 6;
+  repeated string excluded_user_ids = 7;
+  // Must be true. Rejects clients that still send the former snapshot, even if empty.
+  bool inherit_team_members = 8;
+}
+
+message SetProjectTeamResponse {
+  ProjectTeam project_team = 1;
+}
+
+// Removes the team from the project (current ADMIN only). Tickets and messages are untouched.
+message RemoveProjectTeamRequest {
+  string workspace_id = 1;
+  string project_id = 2;
+  string team_id = 3;
+  string expected_revision = 4;
+  string request_id = 5;
+}
+
+message RemoveProjectTeamResponse {}
+
+// Explicit visibility required; PUBLISHED never includes drafts. OWN_DRAFTS is creator-only. Empty query means no title search; state zero means any in that view.
+message ListTicketsRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  optional string project_id = 2;
+  reserved 3;
+  reserved "area_id";
+  TicketState state = 4;
+  optional string assignee_user_id = 5;
+  // Exact literal case-sensitive substring of title, 0..120 scalars/480 bytes. No wildcards, ranking or Markdown search.
+  string query = 6;
+  TicketVisibility visibility = 7;
+  // Zero defaults to 25; explicit 1..100 only.
+  int32 page_size = 8;
+  // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
+  string page_token = 9;
+}
+
+message ListTicketsResponse {
+  repeated Ticket tickets = 1;
+  // Empty at end; same opaque cursor policy as the request.
+  string next_page_token = 2;
+}
+
+message GetTicketRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+}
+
+message GetTicketResponse {
+  Ticket ticket = 1;
+}
+
+// Creates a private ticket and its single initial draft atomically. Required recipient is explicit; the recipient is never inferred from a project team.
+message CreateTicketRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string project_id = 2;
+  reserved 3;
+  reserved "area_id";
+  string title = 4;
+  reserved 5;
+  reserved "priority";
+  // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
+  string recipient_user_id = 6;
+  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  string summary = 7;
+  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  string context_markdown = 8;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 9;
+}
+
+// Author-private even on retry. After publication/discard, creation retry fails FailedPrecondition rather than returning consumed private content.
+message CreateTicketResponse {
+  Ticket ticket = 1;
+  MessageDraft initial_draft = 2;
+}
+
+// Full replacement of title only. The project is immutable; DRAFT creator-only, shared nonclosed creator/admin.
+message UpdateTicketRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  string title = 3;
+  reserved 4;
+  reserved "priority";
+  // Required exact current resource revision; stale values fail Aborted without overwriting.
+  string expected_revision = 5;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 6;
+}
+
+message UpdateTicketResponse {
+  Ticket ticket = 1;
+}
+
+// Explicit assignment of a published nonclosed ticket by creator/admin. Does not rewrite any message recipient.
+message AssignTicketRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  string assignee_user_id = 3;
+  // Required exact current resource revision; stale values fail Aborted without overwriting.
+  string expected_revision = 4;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 5;
+}
+
+message AssignTicketResponse {
+  Ticket ticket = 1;
+}
+
+// OPEN to RESOLUTION_PROPOSED by current assignee/admin. Does not mark any message read/reviewed.
+message ProposeResolutionRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  // Required exact current resource revision; stale values fail Aborted without overwriting.
+  string expected_revision = 3;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 4;
+}
+
+message ProposeResolutionResponse {
+  Ticket ticket = 1;
+}
+
+// Creator/admin only. VALIDATED requires RESOLUTION_PROPOSED; WITHOUT_VALIDATION requires a reason. Always requires current ticket revision.
+message CloseTicketRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  ClosureKind kind = 3;
+  // Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
+  string reason = 4;
+  // Required exact current resource revision; stale values fail Aborted without overwriting.
+  string expected_revision = 5;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 6;
+}
+
+message CloseTicketResponse {
+  Ticket ticket = 1;
+}
+
+// CLOSED to OPEN by creator/admin, with nonblank reason; clears current proposal/closure projection, preserves events.
+message ReopenTicketRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  // Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
+  string reason = 3;
+  // Required exact current resource revision; stale values fail Aborted without overwriting.
+  string expected_revision = 4;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 5;
+}
+
+message ReopenTicketResponse {
+  Ticket ticket = 1;
+}
+
+// Explicit view required. PUBLISHED returns only messages; OWN_DRAFTS only caller drafts. No mixed visibility pages.
+message ListMessagesRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  MessageView view = 3;
+  // Zero defaults to 25; explicit 1..100 only.
+  int32 page_size = 4;
+  // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
+  string page_token = 5;
+}
+
+message ListMessagesResponse {
+  repeated PublishedMessage messages = 1;
+  repeated MessageDraft drafts = 2;
+  // Empty at end; same opaque cursor policy as the request.
+  string next_page_token = 3;
+}
+
+// Absent draft_id and expected_draft_revision creates a new draft on a shared nonclosed ticket; both present updates own draft. Tokens bind exact content.
+message SaveDraftRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  optional string draft_id = 3;
+  // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
+  string recipient_user_id = 4;
+  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  string summary = 5;
+  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  string context_markdown = 6;
+  // Exact draft revision; absent only on draft creation.
+  optional string expected_draft_revision = 7;
+  // Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
+  string expected_ticket_revision = 8;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 9;
+}
+
+message SaveDraftResponse {
+  MessageDraft draft = 1;
+  // Current ticket token; changing the initial recipient advances it atomically.
+  Ticket ticket = 2;
+}
+
+// Publishes the persisted exact draft using both opaque revisions. First publication shares ticket+message atomically and assigns its exact recipient.
+message PublishMessageRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  string draft_id = 3;
+  // Exact draft revision; absent only on draft creation.
+  string expected_draft_revision = 4;
+  // Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
+  string expected_ticket_revision = 5;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 6;
+}
+
+// Published content is immutable; later publication preserves nonclosed lifecycle state and advances ticket revision.
+message PublishMessageResponse {
+  Ticket ticket = 1;
+  PublishedMessage message = 2;
+}
+
+// Author-only. Discarding the initial draft also discards its still-private ticket atomically. Never deletes published content.
+message DiscardDraftRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  string draft_id = 3;
+  // Exact draft revision; absent only on draft creation.
+  string expected_draft_revision = 4;
+  // Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
+  string expected_ticket_revision = 5;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 6;
+}
+
+message DiscardDraftResponse {
+  string draft_id = 1;
+  bool ticket_discarded = 2;
+}
+
+// Only exact authenticated message recipient; immutable message ID is the concurrency identity. A repeated read keeps its original timestamp.
+message MarkReadRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  string message_id = 3;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 4;
+}
+
+message MarkReadResponse {
+  RecipientReceipt receipt = 1;
+}
+
+// Only exact authenticated message recipient with existing read; cannot affect another message, ticket lifecycle or recipient.
+message MarkReviewedRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  string message_id = 3;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 4;
+}
+
+message MarkReviewedResponse {
+  RecipientReceipt receipt = 1;
+}
+
+message ListInboxItemsRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  // Zero defaults to 25; explicit 1..100 only.
+  int32 page_size = 2;
+  // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
+  string page_token = 3;
+  // Required explicit view; cursor binds it and the implicit actor.
+  InboxView view = 4;
+}
+
+message ListInboxItemsResponse {
+  repeated InboxItem items = 1;
+  // Empty at end; same opaque cursor policy as the request.
+  string next_page_token = 2;
+}
+
+// Published history only; owner of a private draft gets an empty page. Other actors receive NotFound.
+message ListTicketEventsRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string ticket_id = 2;
+  // Zero defaults to 25; explicit 1..100 only.
+  int32 page_size = 3;
+  // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
+  string page_token = 4;
+}
+
+message ListTicketEventsResponse {
+  repeated TicketEvent events = 1;
+  // Empty at end; same opaque cursor policy as the request.
+  string next_page_token = 2;
+}
+
+message GetOverviewRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+}
+
+message GetOverviewResponse {
+  Overview overview = 1;
+}

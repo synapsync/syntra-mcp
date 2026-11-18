@@ -1,0 +1,190 @@
+syntax = "proto3";
+
+package syntra.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// UserService returns only the authenticated caller's identity and memberships.
+service UserService {
+  // GetMe never creates a profile. Disabled application users are denied.
+  rpc GetMe(GetMeRequest) returns (GetMeResponse);
+}
+
+// WorkspaceService authorizes against current active database membership.
+service WorkspaceService {
+  // GetWorkspace hides absent and inaccessible workspaces with NotFound.
+  rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceResponse);
+  // ListMembers returns the active directory without private identity fields.
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+}
+
+// InvitationService controls admission; it does not send email or execute work.
+service InvitationService {
+  // CreateInvitation allows an active admin to invite MEMBER only.
+  rpc CreateInvitation(CreateInvitationRequest) returns (CreateInvitationResponse);
+  // ListInvitations returns metadata only to active admins.
+  rpc ListInvitations(ListInvitationsRequest) returns (ListInvitationsResponse);
+  // RevokeInvitation is idempotent on revoked invitations, not accepted ones.
+  rpc RevokeInvitation(RevokeInvitationRequest) returns (RevokeInvitationResponse);
+  // AcceptInvitation verifies current confirmed provider email transactionally.
+  rpc AcceptInvitation(AcceptInvitationRequest) returns (AcceptInvitationResponse);
+}
+
+// WorkspaceRole has no implicit default; request zero/unknown roles are invalid.
+enum WorkspaceRole {
+  WORKSPACE_ROLE_UNSPECIFIED = 0;
+  WORKSPACE_ROLE_ADMIN = 1;
+  WORKSPACE_ROLE_MEMBER = 2;
+}
+
+// InvitationState is the effective state; expired pending records are EXPIRED.
+enum InvitationState {
+  INVITATION_STATE_UNSPECIFIED = 0;
+  INVITATION_STATE_PENDING = 1;
+  INVITATION_STATE_ACCEPTED = 2;
+  INVITATION_STATE_REVOKED = 3;
+  INVITATION_STATE_EXPIRED = 4;
+}
+
+// SelfIdentity is verified identity, own-only, never a fabricated product user.
+message SelfIdentity {
+  // provider_subject is a canonical lowercase UUID from the verified JWT.
+  string provider_subject = 1;
+}
+
+// UserProfile exists only after explicit persisted admission; ID remains stable.
+message UserProfile {
+  // id is a canonical lowercase application UUID, not the provider subject.
+  string id = 1;
+  // display_name is UTF-8, at most 120 Unicode scalar values and 480 bytes.
+  string display_name = 2;
+}
+
+// Workspace is a currently accessible active workspace, without private fields.
+message Workspace {
+  string id = 1;
+  // name is UTF-8, 1..120 Unicode scalar values and at most 480 bytes.
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+// WorkspaceMembership combines accessible workspace and caller's current role.
+message WorkspaceMembership {
+  Workspace workspace = 1;
+  WorkspaceRole role = 2;
+  google.protobuf.Timestamp joined_at = 3;
+}
+
+// WorkspaceMember is a public-within-workspace active directory projection.
+// No provider subject, email, invitation secret or token digest is exposed.
+message WorkspaceMember {
+  string user_id = 1;
+  string display_name = 2;
+  WorkspaceRole role = 3;
+  google.protobuf.Timestamp joined_at = 4;
+}
+
+// Invitation is admin-only metadata; raw tokens/digests never appear here.
+message Invitation {
+  string id = 1;
+  string workspace_id = 2;
+  // email is ASCII-trimmed/lowercased, valid ASCII email syntax, <=254 bytes.
+  string email = 3;
+  WorkspaceRole role = 4;
+  InvitationState state = 5;
+  // Empty only for an explicit operator-bootstrap invitation, never a fake UUID.
+  string created_by_user_id = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp expires_at = 8;
+  // revoked_at and accepted_at are absent until their respective transition.
+  google.protobuf.Timestamp revoked_at = 9;
+  google.protobuf.Timestamp accepted_at = 10;
+}
+
+// GetMeRequest pages accessible active workspaces by (created_at, id) ascending.
+message GetMeRequest {
+  // page_size: zero means 25; valid explicit values are 1..100.
+  int32 page_size = 1;
+  // page_token is opaque ASCII <=2048 bytes, scoped to caller/method/limit.
+  string page_token = 2;
+}
+
+// GetMeResponse is safe for a valid identity with no active memberships.
+message GetMeResponse {
+  SelfIdentity identity = 1;
+  // profile is absent before admission; reads never create it.
+  UserProfile profile = 2;
+  repeated WorkspaceMembership workspaces = 3;
+  string next_page_token = 4;
+}
+
+message GetWorkspaceRequest {
+  string workspace_id = 1;
+}
+
+message GetWorkspaceResponse {
+  Workspace workspace = 1;
+  WorkspaceRole role = 2;
+}
+
+// ListMembersRequest pages active members by (joined_at, user_id) ascending.
+message ListMembersRequest {
+  string workspace_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListMembersResponse {
+  repeated WorkspaceMember members = 1;
+  string next_page_token = 2;
+}
+
+// CreateInvitationRequest requires a UUID request_id and explicit MEMBER role.
+message CreateInvitationRequest {
+  string workspace_id = 1;
+  string email = 2;
+  WorkspaceRole role = 3;
+  // request_id is canonical UUID, scoped to actor/workspace/canonical payload.
+  string request_id = 4;
+}
+
+message CreateInvitationResponse {
+  Invitation invitation = 1;
+  // token is returned only on the first committed response, never on a retry.
+  // It is 43 canonical unpadded base64url characters encoding 32 random bytes.
+  string token = 2;
+}
+
+// ListInvitationsRequest pages metadata by (created_at, id) ascending.
+message ListInvitationsRequest {
+  string workspace_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListInvitationsResponse {
+  repeated Invitation invitations = 1;
+  string next_page_token = 2;
+}
+
+message RevokeInvitationRequest {
+  string workspace_id = 1;
+  string invitation_id = 2;
+}
+
+message RevokeInvitationResponse {
+  Invitation invitation = 1;
+}
+
+// AcceptInvitationRequest carries only the opaque invitation admission token.
+// Author, email, workspace and role are derived from trusted current state.
+message AcceptInvitationRequest {
+  string token = 1;
+}
+
+message AcceptInvitationResponse {
+  UserProfile profile = 1;
+  WorkspaceMembership membership = 2;
+}

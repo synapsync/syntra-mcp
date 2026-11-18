@@ -1,0 +1,9 @@
+{
+  "name": "@synapsync/syntra-win32-x64",
+  "version": "0.0.0-handoff",
+  "private": true,
+  "description": "Private Windows x64 executable package for Syntra",
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "files": ["bin/syntra.exe"]
+}

@@ -1,0 +1,53 @@
+syntax = "proto3";
+package syntra.v1;
+import "google/protobuf/timestamp.proto";
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// Exactly one variant. Unlinked content remains owner-private and undelivered.
+message ContentDestination {
+  oneof target {
+    string linked_member_id = 1;
+    string unlinked_label = 2;
+  }
+}
+// Standalone envelope, not a modification of released collaboration messages.
+// Digest encoding is specified in CONTENT-INTEGRITY.md, never protobuf bytes.
+message AuthoredContent {
+  uint32 format_version = 1;
+  string expected_author_user_id = 2;
+  string workspace_id = 3;
+  optional string project_id = 4;
+  reserved 5;
+  reserved "area_id";
+  optional string existing_ticket_id = 6;
+  string title = 7;
+  string original_destination_intent = 8;
+  ContentDestination destination = 9;
+  string summary = 10;
+  string context_markdown = 11;
+}
+// Optional immutable client assertions; no model/provider attestation.
+message ClientReportedProvenance {
+  optional string provider = 1;
+  optional string model = 2;
+  optional string tool = 3;
+  optional string run = 4;
+}
+enum ContentIntegrityOrigin {
+  CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED = 0;
+  CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED = 1;
+  CONTENT_INTEGRITY_ORIGIN_LEGACY_SERVER_COMPUTED = 2;
+}
+// Server-verified attribution is separate from content and client assertions.
+// CLIENT_EXPECTED records a checked expectation, not remote authenticity.
+message ContentProvenanceReceipt {
+  bytes content_digest = 1;
+  string owner_user_id = 2;
+  optional string connection_id = 3;
+  string request_id = 4;
+  string ticket_id = 5;
+  string message_id = 6;
+  google.protobuf.Timestamp recorded_at = 7;
+  ClientReportedProvenance client_reported = 8;
+  ContentIntegrityOrigin integrity_origin = 9;
+}

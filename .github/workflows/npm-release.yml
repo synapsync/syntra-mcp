@@ -1,0 +1,168 @@
+name: Syntra npm release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Stable X.Y.Z for a public bootstrap candidate. Leave empty for a private preview.
+        type: string
+  push:
+    branches: ['ci/npm-preview/**']
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: syntra-npm-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name != 'push' || github.ref_type == 'tag' || github.event.repository.private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      manifest_sha256: ${{ steps.pack.outputs.manifest_sha256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: core/go.mod
+          cache: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.12.0'
+          package-manager-cache: false
+      - name: Download pinned Go modules
+        working-directory: core
+        env:
+          GOTOOLCHAIN: local
+          GOTELEMETRY: 'off'
+          GOWORK: 'off'
+        run: go mod download
+      - name: Test source
+        run: |
+          python3 scripts/check-protocol-parity.py
+          python3 scripts/test-protocol-parity.py
+          python3 scripts/test-core.py
+          npm run test:launcher
+          npm run test:setup
+      - name: Build and record the six tarballs
+        id: pack
+        env:
+          REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+          BOOTSTRAP_VERSION: ${{ inputs.release_version }}
+        run: |
+          version="$BOOTSTRAP_VERSION"
+          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_EVENT_NAME" == push ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if [[ "$REPOSITORY_PRIVATE" == true && -n "$version" ]] ||
+             [[ "$REPOSITORY_PRIVATE" != true && -z "$version" ]]; then
+            echo 'Use a private repository for previews and the public client repository for release packages.' >&2
+            exit 1
+          fi
+          build_args=()
+          capture_args=()
+          if [[ -n "$version" ]]; then
+            build_args+=(--release-version "$version" --repository "$GITHUB_REPOSITORY")
+            capture_args+=(--release)
+          fi
+          out="$RUNNER_TEMP/npm-release"
+          mkdir "$out"
+          python3 scripts/build-npm-packages.py "${build_args[@]}" \
+            --go-cache "$(go env GOCACHE)" --module-cache "$(go env GOMODCACHE)" \
+            --output-dir "$out/tarballs" > "$out/build.json"
+          python3 scripts/capture-npm-candidate.py "$out/tarballs" "$out/manifest.json" "${capture_args[@]}"
+          digest="$(sha256sum "$out/manifest.json" | cut -d ' ' -f 1)"
+          echo "manifest_sha256=$digest" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: syntra-npm
+          path: ${{ runner.temp }}/npm-release/
+          if-no-files-found: error
+
+  smoke:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm, macos-15-intel, macos-15, windows-2025]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    env:
+      MANIFEST_SHA256: ${{ needs.build.outputs.manifest_sha256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.12.0'
+          package-manager-cache: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: syntra-npm
+          path: ${{ runner.temp }}/npm-release
+      - name: Install from tarballs and start the packaged MCP
+        shell: bash
+        run: |
+          out="$RUNNER_TEMP/npm-release"
+          node scripts/test-setup-artifacts.cjs --artifacts "$out/tarballs" \
+            --manifest "$out/manifest.json" --manifest-sha256 "$MANIFEST_SHA256"
+
+  publish:
+    if: github.event_name == 'push' && github.ref_type == 'tag' && !github.event.repository.private && vars.NPM_PUBLISH_ENABLED == 'true'
+    needs: [build, smoke]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: npm-production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      MANIFEST_SHA256: ${{ needs.build.outputs.manifest_sha256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.12.0'
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: syntra-npm
+          path: ${{ runner.temp }}/npm-release
+      - name: Publish and verify platform packages before the launcher
+        run: |
+          out="$RUNNER_TEMP/npm-release"
+          python3 scripts/publish-npm-packages.py "$out/tarballs" "$out/manifest.json" "$MANIFEST_SHA256"
+
+  registry-smoke:
+    needs: [build, publish]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      MANIFEST_SHA256: ${{ needs.build.outputs.manifest_sha256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.12.0'
+          package-manager-cache: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: syntra-npm
+          path: ${{ runner.temp }}/npm-release
+      - name: Install the exact version from npm and verify automatic platform selection
+        run: |
+          out="$RUNNER_TEMP/npm-release"
+          node scripts/test-setup-artifacts.cjs --artifacts "$out/tarballs" \
+            --manifest "$out/manifest.json" --manifest-sha256 "$MANIFEST_SHA256" --from-registry

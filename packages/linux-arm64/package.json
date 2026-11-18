@@ -1,0 +1,9 @@
+{
+  "name": "@synapsync/syntra-linux-arm64",
+  "version": "0.0.0-handoff",
+  "private": true,
+  "description": "Private Linux arm64 executable package for Syntra",
+  "os": ["linux"],
+  "cpu": ["arm64"],
+  "files": ["bin/syntra"]
+}

@@ -1,0 +1,65 @@
+syntax = "proto3";
+package syntra.v1;
+import "google/protobuf/timestamp.proto";
+import "syntra/v1/tool_connection.proto";
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// First-party browser pairing, not a general OAuth authorization server.
+service ToolLoginService {
+  rpc BeginLogin(BeginLoginRequest) returns (BeginLoginResponse);
+  rpc PollLogin(PollLoginRequest) returns (PollLoginResponse);
+  rpc GetLoginRequest(GetLoginRequestRequest) returns (GetLoginRequestResponse);
+  rpc ApproveLogin(ApproveLoginRequest) returns (ApproveLoginResponse);
+  rpc DenyLogin(DenyLoginRequest) returns (DenyLoginResponse);
+}
+enum ToolLoginState {
+  TOOL_LOGIN_STATE_UNSPECIFIED = 0;
+  TOOL_LOGIN_STATE_PENDING = 1;
+  TOOL_LOGIN_STATE_APPROVED = 2;
+  TOOL_LOGIN_STATE_DENIED = 3;
+  TOOL_LOGIN_STATE_EXPIRED = 4;
+}
+// Immutable consent preview; never includes either credential digest or a secret.
+message ToolLoginRequest {
+  string request_id = 1;
+  string user_code = 2;
+  string label = 3;
+  repeated ToolCapability capabilities = 4;
+  int32 expires_in_seconds = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  bytes fingerprint = 7;
+  ToolLoginState state = 8;
+}
+// The client persists both secrets before this request. Only hashes are sent here.
+message BeginLoginRequest {
+  string request_id = 1;
+  bytes secret_digest = 2;
+  bytes proof_digest = 3;
+  string label = 4;
+  repeated ToolCapability capabilities = 5;
+  int32 expires_in_seconds = 6;
+}
+message BeginLoginResponse {
+  ToolLoginRequest request = 1;
+  string verification_uri = 2;
+  int32 interval_seconds = 3;
+}
+// Authorization: SyntraLogin <base64url of 32 random bytes>, never in a URL.
+message PollLoginRequest { string request_id = 1; }
+message PollLoginResponse {
+  ToolLoginState state = 1;
+  ToolConnection connection = 2;
+  int32 interval_seconds = 3;
+}
+// Remaining methods require current human authentication, never a tool credential.
+message GetLoginRequestRequest { string user_code = 1; }
+message GetLoginRequestResponse { ToolLoginRequest request = 1; }
+message ApproveLoginRequest {
+  string user_code = 1;
+  bytes expected_fingerprint = 2;
+  repeated ToolCapability capabilities = 3;
+  int32 expires_in_seconds = 4;
+}
+message ApproveLoginResponse { ToolConnection connection = 1; }
+message DenyLoginRequest { string user_code = 1; bytes expected_fingerprint = 2; }
+message DenyLoginResponse { ToolLoginState state = 1; }

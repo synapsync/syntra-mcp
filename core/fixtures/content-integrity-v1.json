@@ -1,0 +1,116 @@
+[
+  {
+    "name": "project-unlinked-crlf",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Pedro",
+      "destination": {
+        "kind": "unlinked",
+        "label": "Pedro"
+      },
+      "summary": "Revisión",
+      "contextMarkdown": "```ts\r\n\tconst x = 1;  \r\n```"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a65637400000000000850726567756e746100000005506564726f0200000005506564726f00000009526576697369c3b36e0000001b60606074730d0a09636f6e73742078203d20313b20200d0a606060",
+    "sha256": "c1d7ac540d09adeee5ca6b98360fe23c33b81380605d69194aba75d954913072"
+  },
+  {
+    "name": "linked-existing",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Pedro",
+      "destination": {
+        "kind": "linked",
+        "memberId": "member"
+      },
+      "summary": "Revisión",
+      "contextMarkdown": "```ts\r\n\tconst x = 1;  \r\n```",
+      "existingTicketId": "ticket"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a6563740001000000067469636b65740000000850726567756e746100000005506564726f01000000066d656d62657200000009526576697369c3b36e0000001b60606074730d0a09636f6e73742078203d20313b20200d0a606060",
+    "sha256": "7e012e58ac7f9ac8260b5034ba4e15a8531c52ab4134bce0ca62d72de5adcd55"
+  },
+  {
+    "name": "nfc",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Pedro",
+      "destination": {
+        "kind": "unlinked",
+        "label": "Pedro"
+      },
+      "summary": "é",
+      "contextMarkdown": "```ts\r\n\tconst x = 1;  \r\n```"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a65637400000000000850726567756e746100000005506564726f0200000005506564726f00000002c3a90000001b60606074730d0a09636f6e73742078203d20313b20200d0a606060",
+    "sha256": "8dd482a9ad9f51d76c99783c93aeca925aa5429cb155b1ea7aad85166ac94b18"
+  },
+  {
+    "name": "nfd",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Pedro",
+      "destination": {
+        "kind": "unlinked",
+        "label": "Pedro"
+      },
+      "summary": "é",
+      "contextMarkdown": "```ts\r\n\tconst x = 1;  \r\n```"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a65637400000000000850726567756e746100000005506564726f0200000005506564726f0000000365cc810000001b60606074730d0a09636f6e73742078203d20313b20200d0a606060",
+    "sha256": "b939015a2a2dd849e5952a4614cab0eb3a74722095a23b98db38a1f5858d98b0"
+  },
+  {
+    "name": "lf",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Pedro",
+      "destination": {
+        "kind": "unlinked",
+        "label": "Pedro"
+      },
+      "summary": "Revisión",
+      "contextMarkdown": "```ts\n\tconst x = 1;  \n```"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a65637400000000000850726567756e746100000005506564726f0200000005506564726f00000009526576697369c3b36e0000001960606074730a09636f6e73742078203d20313b20200a606060",
+    "sha256": "fe857d908164ca68790b94c9f8d7c397813349569a43a4ebd84ce3c1146440fd"
+  },
+  {
+    "name": "workspace-only",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Pedro",
+      "destination": {
+        "kind": "unlinked",
+        "label": "Pedro"
+      },
+      "summary": "Revisión",
+      "contextMarkdown": "```ts\r\n\tconst x = 1;  \r\n```"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b73706163650000000000000850726567756e746100000005506564726f0200000005506564726f00000009526576697369c3b36e0000001b60606074730d0a09636f6e73742078203d20313b20200d0a606060",
+    "sha256": "347e7cba4672118b4a70bd228205ad16987a4f0ce4d59802c4eb6d2acee22543"
+  }
+]

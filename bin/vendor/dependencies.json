@@ -1,0 +1,32 @@
+{
+  "format": 1,
+  "dependencies": [
+    {
+      "name": "jsonc-parser",
+      "version": "3.3.1",
+      "source": "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.3.1.tgz",
+      "integrity": "sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==",
+      "license": "MIT",
+      "files": {
+        "jsonc-parser/LICENSE.md": "c3a24c02d678e5f0711623dcf3ab3f243b273c2633f638a1fa8e35fb7c7f8e4d",
+        "jsonc-parser/lib/umd/main.js": "6dc132e2e792a9616688ff93d10dd671c1fbcfa3301d76bff3e81193d049337d",
+        "jsonc-parser/lib/umd/impl/edit.js": "9ecd115039cf7a478f223e4a9649170c7f5e8fd8016df1b267723b57553f9483",
+        "jsonc-parser/lib/umd/impl/format.js": "f9e468e436bf1014a4395b1ac70374edb918739ba90b19e6e6a22ca0214564a9",
+        "jsonc-parser/lib/umd/impl/parser.js": "a35db1bfb9631dcba643fa42972e9ebe2a318b4de3cac239d29081577a43d688",
+        "jsonc-parser/lib/umd/impl/scanner.js": "581d82c4f1aa84b0605369c01f414fb0164ee462e03daa298cb960076a2a9e82",
+        "jsonc-parser/lib/umd/impl/string-intern.js": "e590d27909a7c132382fbf9b8c4668054ab425734c1e0789753063356826c30f"
+      }
+    },
+    {
+      "name": "smol-toml",
+      "version": "1.9.1",
+      "source": "https://registry.npmjs.org/smol-toml/-/smol-toml-1.9.1.tgz",
+      "integrity": "sha512-j7WyPdf0CJoutMzMoPLF/bVXHtKZIT9Rb4eGeEbWw8X2t5oirjPgpL+OpaENZrILYaXqYwnVH+qgUwVbl+pUJQ==",
+      "license": "BSD-3-Clause",
+      "files": {
+        "smol-toml/LICENSE": "fa5659948374d4f555594f47f6da073b40dc503e921aeeece30df4362b3051a5",
+        "smol-toml/index.cjs": "f9029370259e9a43a2f3e64fa1d39e72f3598188380ace83a0abb8261fa33555"
+      }
+    }
+  ]
+}

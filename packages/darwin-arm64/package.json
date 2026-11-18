@@ -1,0 +1,9 @@
+{
+  "name": "@synapsync/syntra-darwin-arm64",
+  "version": "0.0.0-handoff",
+  "private": true,
+  "description": "Private macOS arm64 executable package for Syntra",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "files": ["bin/syntra"]
+}
