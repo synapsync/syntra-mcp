@@ -1,0 +1,36 @@
+name: Verify the 0.1.0 Apple Silicon artifact
+
+on:
+  push:
+    branches: ['ci/macos-arm64-artifact-0.1.0']
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.12.0'
+          package-manager-cache: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          github-token: ${{ github.token }}
+          run-id: 44291489563
+          name: syntra-npm
+          path: ${{ runner.temp }}/npm-release
+      - name: Install the exact Apple Silicon tarball and start the MCP
+        shell: bash
+        run: |
+          test "$(uname -m)" = arm64
+          out="$RUNNER_TEMP/npm-release"
+          node scripts/test-setup-artifacts.cjs --artifacts "$out/tarballs" \
+            --manifest "$out/manifest.json" \
+            --manifest-sha256 84ad6d2d2f557b4376c997619e5117f4ffe52a0d9bbd9f59df06e38a60f2c05d
