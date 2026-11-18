@@ -22,3 +22,8 @@ The server rejects unknown fields, duplicate JSON keys, unsafe scalar encodings 
 Example: “Record this question for Pedro in Bimtrazer.” Discover the account's spaces, resolve the named project and Pedro in its space, and clarify duplicate names. Prepare the question privately. If Pedro is absent, retain the intent “Pedro” as unlinked and explain that it was not delivered. A later explicit link to a real member still does not publish. If the user requests sending, publish only the exact authorized retained message.
 
 Example: “List my spaces.” Call `workspaces`; do not require choosing a space first. Directory access is checked by Syntra on every request and does not grant membership.
+
+For a reply, read the ticket first and copy its `revision` exactly to
+`expectedTicketRevision`. It is an opaque base64url token encoding 32 bytes,
+not a numeric revision. Use the exact ticket title and project ID; omit
+`projectId` if absent. Do not invent these values.

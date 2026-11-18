@@ -25,6 +25,7 @@ import (
 
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	"syntra.local/mcp/gen/syntra/v1/syntrav1connect"
+	ci "syntra.local/mcp/internal/contentintegrity"
 	"syntra.local/mcp/internal/testsupport"
 )
 
@@ -1091,5 +1092,60 @@ func TestCursorErrorRestartBoundaries(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestPrepareReportsInvalidReplyFieldsWithoutContent(t *testing.T) {
+	a, _, _, _ := setupContent(t)
+	for _, tc := range []struct {
+		name   string
+		change func(*v1.PrepareContentRequest)
+		field  string
+	}{
+		{"missing title", func(r *v1.PrepareContentRequest) { r.Content.Title = "" }, "content.title"},
+		{"missing revision", func(r *v1.PrepareContentRequest) { r.Content.ExistingTicketId = ptr(projectID) }, "expectedTicketRevision"},
+		{"documented numeric revision", func(r *v1.PrepareContentRequest) {
+			r.Content.ExistingTicketId = ptr(projectID)
+			r.ExpectedTicketRevision = ptr("12")
+		}, "expectedTicketRevision"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := request()
+			r.Content.Summary = "PRIVATE-SENTINEL"
+			tc.change(r)
+			_, err := a.Prepare(context.Background(), r, "")
+			if !errors.Is(err, ci.ErrWire) || !strings.Contains(err.Error(), tc.field) || strings.Contains(err.Error(), "PRIVATE-SENTINEL") {
+				t.Fatalf("expected safe field diagnostic %q; got %v", tc.field, err)
+			}
+		})
+	}
+}
+
+func TestCompiledCLIReplyRevision(t *testing.T) {
+	a, f, dir, ca := setupContent(t)
+	binary := testsupport.BuildCLI(t, "../../cmd/syntra", ca)
+	r := request()
+	r.Content.ProjectId = ptr(projectID)
+	r.Content.ExistingTicketId = ptr(ticketID)
+	r.Content.Destination = &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: accountB}}
+	input := t.TempDir() + "/reply.json"
+	a.store.Close()
+	for _, revision := range []string{"12", rev(1)} {
+		r.ExpectedTicketRevision = ptr(revision)
+		raw, err := protojson.Marshal(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(input, raw, 0600); err != nil {
+			t.Fatal(err)
+		}
+		out, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--file", input)
+		if revision == "12" {
+			if err == nil || !bytes.Contains(out, []byte("expectedTicketRevision")) || f.calls != 0 {
+				t.Fatalf("invalid revision: %v %s", err, out)
+			}
+		} else if err != nil || f.calls != 1 {
+			t.Fatalf("valid revision: %v %s", err, out)
+		}
 	}
 }

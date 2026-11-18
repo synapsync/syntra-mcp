@@ -56,6 +56,14 @@ selected profile with `syntra status`. If the registration specifies
 [troubleshooting](https://syntra.synapsynclabs.com/docs/troubleshooting.html)
 for permission changes, profile mismatches and startup errors.
 
+## Preparing a reply
+
+Read the ticket with `syntra ticket` and copy its `revision` exactly into
+`expectedTicketRevision`. The revision is an opaque base64url token encoding
+32 bytes, not a number or a value to invent. Use the ticket's exact title and
+project ID (omit `projectId` when absent). Field diagnostics identify invalid or
+missing input without including message content.
+
 ## Reference
 
 - [CLI commands and flags](https://syntra.synapsynclabs.com/docs/reference/cli.html)

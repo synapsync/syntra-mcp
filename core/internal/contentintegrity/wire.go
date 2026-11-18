@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -16,6 +17,8 @@ import (
 var ErrWire = errors.New("invalid authored content request")
 var ErrIntegrity = errors.New("authored content integrity mismatch")
 var canonicalID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+
+func invalidField(field string) error { return fmt.Errorf("%w: invalid or missing %s", ErrWire, field) }
 
 func validID(s string) bool {
 	return canonicalID.MatchString(s) && s != "00000000-0000-0000-0000-000000000000"
@@ -56,30 +59,53 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 		return Content{}, ErrWire
 	}
 	c := Content{FormatVersion: m.FormatVersion, ExpectedAuthorUserID: m.ExpectedAuthorUserId, WorkspaceID: m.WorkspaceId, ProjectID: m.ProjectId, ExistingTicketID: m.ExistingTicketId, Title: m.Title, OriginalDestinationIntent: m.OriginalDestinationIntent, Summary: m.Summary, ContextMarkdown: m.ContextMarkdown}
-	if !validID(c.ExpectedAuthorUserID) || !validID(c.WorkspaceID) {
-		return Content{}, ErrWire
+	if c.FormatVersion != 1 {
+		return Content{}, invalidField("content.formatVersion")
 	}
-	for _, id := range []*string{c.ProjectID, c.ExistingTicketID} {
-		if id != nil && !validID(*id) {
-			return Content{}, ErrWire
+	for _, f := range []struct {
+		name, value string
+		max         int
+		empty       bool
+	}{
+		{"content.title", c.Title, 1024, false},
+		{"content.originalDestinationIntent", c.OriginalDestinationIntent, 1024, false},
+		{"content.summary", c.Summary, 8192, false},
+		{"content.contextMarkdown", c.ContextMarkdown, 131072, true},
+	} {
+		if len(f.value) > f.max || (!f.empty && len(f.value) == 0) || !utf8.ValidString(f.value) || strings.ContainsRune(f.value, 0) {
+			return Content{}, invalidField(f.name)
+		}
+	}
+	if !validID(c.ExpectedAuthorUserID) {
+		return Content{}, invalidField("content.expectedAuthorUserId")
+	}
+	if !validID(c.WorkspaceID) {
+		return Content{}, invalidField("content.workspaceId")
+	}
+	for _, f := range []struct {
+		name string
+		id   *string
+	}{{"content.projectId", c.ProjectID}, {"content.existingTicketId", c.ExistingTicketID}} {
+		if f.id != nil && !validID(*f.id) {
+			return Content{}, invalidField(f.name)
 		}
 	}
 	if m.Destination == nil {
-		return Content{}, ErrWire
+		return Content{}, invalidField("content.destination")
 	}
 	switch d := m.Destination.Target.(type) {
 	case *v1.ContentDestination_LinkedMemberId:
 		if d == nil || !validID(d.LinkedMemberId) {
-			return Content{}, ErrWire
+			return Content{}, invalidField("content.destination.linkedMemberId")
 		}
 		c.Destination = Destination{Kind: "linked", MemberID: d.LinkedMemberId}
 	case *v1.ContentDestination_UnlinkedLabel:
-		if d == nil {
-			return Content{}, ErrWire
+		if d == nil || len(d.UnlinkedLabel) == 0 || len(d.UnlinkedLabel) > 1024 || !utf8.ValidString(d.UnlinkedLabel) || strings.ContainsRune(d.UnlinkedLabel, 0) {
+			return Content{}, invalidField("content.destination.unlinkedLabel")
 		}
 		c.Destination = Destination{Kind: "unlinked", Label: d.UnlinkedLabel}
 	default:
-		return Content{}, ErrWire
+		return Content{}, invalidField("content.destination")
 	}
 	for _, text := range []string{c.Title, c.OriginalDestinationIntent, c.Destination.Label, c.Summary, c.ContextMarkdown} {
 		if strings.ContainsRune(text, 0) {
@@ -141,7 +167,7 @@ func ValidatePrepare(r *v1.PrepareContentRequest, owner string) error {
 		}
 	} else if r.Content.ExistingTicketId != nil {
 		if r.ExpectedTicketRevision == nil || !validRevision(*r.ExpectedTicketRevision) {
-			return ErrWire
+			return invalidField("expectedTicketRevision")
 		}
 	} else if r.ExpectedTicketRevision != nil {
 		return ErrWire
