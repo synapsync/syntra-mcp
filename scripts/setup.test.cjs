@@ -208,6 +208,9 @@ test('explicit setup applies all host registrations and exact skill bytes, creat
     assert.equal(first.status, 0, first.stderr);
     assert.equal(first.stderr, '');
     assert.match(first.stdout, /Syntra setup complete/);
+    assert.ok(first.stdout.includes(`npx -y ${pinnedPackage} login`));
+    assert.ok(first.stdout.includes(`npx -y ${pinnedPackage} status`));
+    assert.match(first.stdout, /share that login/);
     assert.equal(first.stdout.includes(secretMarker), false);
     assert.equal(fs.readFileSync(configPath).equals(Buffer.from(source)), false);
     const installedConfig = fs.readFileSync(configPath, 'utf8');

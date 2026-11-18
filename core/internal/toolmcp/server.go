@@ -7,7 +7,9 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -107,7 +109,10 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 	}
 	app, close, e := openApp(ctx, cfg)
 	if e != nil {
-		return toolError("local connection unavailable or unauthorized; human login is available only outside MCP")
+		if errors.Is(e, os.ErrNotExist) {
+			return toolError("local connection unavailable or unauthorized: no Syntra login in the MCP profile. Run syntra login in a terminal on this machine. If the MCP uses --profile-dir, use the same flag and directory for login.")
+		}
+		return toolError("local connection unavailable or unauthorized. Run syntra status in a terminal on this machine using the same profile as the MCP. If the connection expired, renew it with syntra login --reauthorize using that profile.")
 	}
 	defer close()
 	var out any
@@ -181,6 +186,11 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		}
 		if ctx.Err() != nil {
 			return toolError("operation cancelled or deadline exceeded; retain the original requestId for exact retry")
+		}
+		var missingCapability *toolclient.MissingCapability
+		if errors.As(e, &missingCapability) {
+			name := strings.TrimPrefix(missingCapability.Required.String(), "TOOL_CAPABILITY_")
+			return toolError("Syntra connection lacks " + name + " permission. Run syntra status in a terminal on this machine using the same profile as the MCP. Use the profile from a login that has " + name + ", or authorize a separate connection with that permission.")
 		}
 		return toolError("operation rejected or response could not be verified; no rollback is implied; reuse the same requestId for exact retry")
 	}

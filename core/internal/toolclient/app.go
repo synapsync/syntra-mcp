@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"unicode/utf8"
 
@@ -37,6 +36,14 @@ func NewApp(ctx context.Context, c *Client, s *Store) (*App, error) {
 	}
 	return &App{c, s, p}, nil
 }
+
+// MissingCapability reports a missing permission on a verified connection.
+type MissingCapability struct {
+	Required v1.ToolCapability
+}
+
+func (e *MissingCapability) Error() string { return "connection capability unavailable" }
+
 func (a *App) authorize(ctx context.Context, cap v1.ToolCapability) error {
 	if _, e := a.client.Identity(ctx, a.profile); e != nil {
 		return e
@@ -46,7 +53,7 @@ func (a *App) authorize(ctx context.Context, cap v1.ToolCapability) error {
 			return nil
 		}
 	}
-	return errors.New("connection capability unavailable")
+	return &MissingCapability{Required: cap}
 }
 func (a *App) content() syntrav1connect.AuthoredContentServiceClient {
 	return syntrav1connect.NewAuthoredContentServiceClient(a.client, a.client.origin, RPCOptions()...)

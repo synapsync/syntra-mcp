@@ -1264,17 +1264,22 @@ function renderApplied(result) {
   if (result.unchanged) {
     lines.push('MCP registration and bundled skill already match the packaged files.');
     lines.push('No files were changed.');
-    return `${lines.join('\n')}\n`;
-  }
-  if (result.configChanged) {
-    lines.push(`MCP registration updated: ${result.plan.configPath}`);
-    if (result.backupPath) lines.push(`Private config backup: ${result.backupPath}`);
   } else {
-    lines.push('MCP registration already matches.');
+    if (result.configChanged) {
+      lines.push(`MCP registration updated: ${result.plan.configPath}`);
+      if (result.backupPath) lines.push(`Private config backup: ${result.backupPath}`);
+    } else {
+      lines.push('MCP registration already matches.');
+    }
+    lines.push(result.skillInstalled
+      ? `Bundled skill installed: ${result.plan.skillPath}`
+      : `Bundled skill already matches: ${result.plan.skillPath}`);
   }
-  lines.push(result.skillInstalled
-    ? `Bundled skill installed: ${result.plan.skillPath}`
-    : `Bundled skill already matches: ${result.plan.skillPath}`);
+  const packagePin = `${packageManifest.name}@${packageManifest.version}`;
+  lines.push(`First time on this machine? Run: npx -y ${packagePin} login`);
+  lines.push('Approve the permissions you need in the browser. Agent sessions using the default Syntra profile share that login.');
+  lines.push(`To check permissions and expiration, run: npx -y ${packagePin} status`);
+  lines.push('Start a new agent session to load this registration.');
   return `${lines.join('\n')}\n`;
 }
 

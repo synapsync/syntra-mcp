@@ -236,6 +236,9 @@ async function main() {
     }
     const result = await runMCP(command, [...launcherArgs, 'mcp', '--profile-dir', profile], {cwd:root, env});
     checkMCP(result);
+    const loginHint = result.frames[2].result.content.map(item => item.text || '').join(' ');
+    assert.match(loginHint, /syntra login/);
+    assert.match(loginHint, /same flag and directory/);
     const resolve = result.frames[1].result.tools.find(tool => tool.name === 'resolve');
     assert.ok(resolve.inputSchema.properties.team, 'MCP resolve must expose the project team selector');
     assert.deepEqual(fs.readdirSync(profile).sort(), ['.lock']);

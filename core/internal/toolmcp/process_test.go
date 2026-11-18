@@ -709,7 +709,10 @@ func TestMCPActualProcessCLIParity(t *testing.T) {
 	f.api.p.Config.Capabilities = []v1.ToolCapability{1, 2}
 	before := f.api.mutations
 	f.api.mu.Unlock()
-	toolResult(t, p.call(t, "retry", map[string]any{"requestId": pub.RequestId}), true)
+	raw = toolResult(t, p.call(t, "retry", map[string]any{"requestId": pub.RequestId}), true)
+	if !bytes.Contains(raw, []byte("lacks PUBLISH permission")) || !bytes.Contains(raw, []byte("syntra status")) {
+		t.Fatalf("missing recovery guidance for read-only connection: %s", raw)
+	}
 	f.api.mu.Lock()
 	if f.api.mutations != before {
 		t.Error("MCP capability denial reached publication")
