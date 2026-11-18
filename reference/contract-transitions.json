@@ -148,6 +148,21 @@
           "toSha256": "6fe8c0065c7ba4965b0a752ce91e924c335ef7a9c56da6ce38756d3cb29fc530"
         }
       ]
+    },
+    {
+      "sourceCommit": "ea6b6032350b554b1519b66c2c8ab499355d6ed2",
+      "files": [
+        {
+          "path": "core/gen/syntra/v1/collaboration.pb.go",
+          "fromSha256": "1bf028c7778745c1ae58d85e90ec16933c9de364aadf8dc5cb5df7e168eb7108",
+          "toSha256": "8c00e032c766e1423d332246081258bbb16c629a075e1365a66f37475d0eeaa0"
+        },
+        {
+          "path": "reference/proto/syntra/v1/collaboration.proto",
+          "fromSha256": "ff901f5d382e7f173944d15c74d18511c11a328b3f9d90fb2e0211bf08a6ef1c",
+          "toSha256": "893d368f936d61e8123de6d33e1857f18949c086d7d7f3e6d992c9a8e0c0e4e5"
+        }
+      ]
     }
   ]
 }
