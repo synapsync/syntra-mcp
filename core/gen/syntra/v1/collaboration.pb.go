@@ -3497,7 +3497,9 @@ type ListMessagesRequest struct {
 	// Zero defaults to 25; explicit 1..100 only.
 	PageSize int32 `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
-	PageToken     string `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	PageToken string `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	// Page published messages from newest to oldest. Applies only to the published view.
+	NewestFirst   bool `protobuf:"varint,6,opt,name=newest_first,json=newestFirst,proto3" json:"newest_first,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3565,6 +3567,13 @@ func (x *ListMessagesRequest) GetPageToken() string {
 		return x.PageToken
 	}
 	return ""
+}
+
+func (x *ListMessagesRequest) GetNewestFirst() bool {
+	if x != nil {
+		return x.NewestFirst
+	}
+	return false
 }
 
 type ListMessagesResponse struct {
@@ -4444,7 +4453,9 @@ type ListTicketEventsRequest struct {
 	// Zero defaults to 25; explicit 1..100 only.
 	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
-	PageToken     string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	PageToken string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	// Page events from newest to oldest.
+	NewestFirst   bool `protobuf:"varint,5,opt,name=newest_first,json=newestFirst,proto3" json:"newest_first,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4505,6 +4516,13 @@ func (x *ListTicketEventsRequest) GetPageToken() string {
 		return x.PageToken
 	}
 	return ""
+}
+
+func (x *ListTicketEventsRequest) GetNewestFirst() bool {
+	if x != nil {
+		return x.NewestFirst
+	}
+	return false
 }
 
 type ListTicketEventsResponse struct {
@@ -4938,14 +4956,15 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\n" +
 	"request_id\x18\x05 \x01(\tR\trequestId\"A\n" +
 	"\x14ReopenTicketResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\xbd\x01\n" +
+	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\xe0\x01\n" +
 	"\x13ListMessagesRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
 	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12*\n" +
 	"\x04view\x18\x03 \x01(\x0e2\x16.syntra.v1.MessageViewR\x04view\x12\x1b\n" +
 	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x05 \x01(\tR\tpageToken\"\xa8\x01\n" +
+	"page_token\x18\x05 \x01(\tR\tpageToken\x12!\n" +
+	"\fnewest_first\x18\x06 \x01(\bR\vnewestFirst\"\xa8\x01\n" +
 	"\x14ListMessagesResponse\x127\n" +
 	"\bmessages\x18\x01 \x03(\v2\x1b.syntra.v1.PublishedMessageR\bmessages\x12/\n" +
 	"\x06drafts\x18\x02 \x03(\v2\x17.syntra.v1.MessageDraftR\x06drafts\x12&\n" +
@@ -5014,13 +5033,14 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x04view\x18\x04 \x01(\x0e2\x14.syntra.v1.InboxViewR\x04view\"l\n" +
 	"\x16ListInboxItemsResponse\x12*\n" +
 	"\x05items\x18\x01 \x03(\v2\x14.syntra.v1.InboxItemR\x05items\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x95\x01\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xb8\x01\n" +
 	"\x17ListTicketEventsRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
 	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x1b\n" +
 	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\"r\n" +
+	"page_token\x18\x04 \x01(\tR\tpageToken\x12!\n" +
+	"\fnewest_first\x18\x05 \x01(\bR\vnewestFirst\"r\n" +
 	"\x18ListTicketEventsResponse\x12.\n" +
 	"\x06events\x18\x01 \x03(\v2\x16.syntra.v1.TicketEventR\x06events\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"7\n" +
