@@ -39,6 +39,8 @@ jobs:
           go version
           echo "Runner: $RUNNER_OS/$RUNNER_ARCH"
           go mod download
+          export GOPATH="$(go env GOPATH)" GOMODCACHE="$(go env GOMODCACHE)"
+          export GOROOT="$(go env GOROOT)" GOCACHE="$(go env GOCACHE)"
           args=()
           if [[ "$RUNNER_OPERATING_SYSTEM" != Windows ]]; then
             args+=(-race)
