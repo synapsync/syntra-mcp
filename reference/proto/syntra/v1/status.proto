@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package syntra.v1;
+
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// StatusService proves browser RPC transport without exposing application data.
+service StatusService {
+  // GetStatus reports only whether the process can serve this RPC.
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+}
+
+// GetStatusRequest intentionally carries no identity or workspace context.
+message GetStatusRequest {}
+
+// GetStatusResponse is transport status, not dependency or authorization health.
+message GetStatusResponse {
+  // status is "serving" when this RPC can be served.
+  string status = 1;
+}

@@ -1575,8 +1575,10 @@ type ListProjectsResponse struct {
 	Projects []*Project             `protobuf:"bytes,1,rep,name=projects,proto3" json:"projects,omitempty"`
 	// Empty at end; same opaque cursor policy as the request.
 	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Older backends omit this flag. Empty-project deletion requires server support.
+	SupportsProjectDeletion bool `protobuf:"varint,3,opt,name=supports_project_deletion,json=supportsProjectDeletion,proto3" json:"supports_project_deletion,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *ListProjectsResponse) Reset() {
@@ -1621,6 +1623,13 @@ func (x *ListProjectsResponse) GetNextPageToken() string {
 		return x.NextPageToken
 	}
 	return ""
+}
+
+func (x *ListProjectsResponse) GetSupportsProjectDeletion() bool {
+	if x != nil {
+		return x.SupportsProjectDeletion
+	}
+	return false
 }
 
 type GetProjectRequest struct {
@@ -1965,6 +1974,111 @@ func (x *UpdateProjectResponse) GetProject() *Project {
 	return nil
 }
 
+// Admin-only. Projects with any tickets or team assignments cannot be deleted.
+type DeleteProjectRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId      string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ProjectId        string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ExpectedRevision string                 `protobuf:"bytes,3,opt,name=expected_revision,json=expectedRevision,proto3" json:"expected_revision,omitempty"`
+	RequestId        string                 `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *DeleteProjectRequest) Reset() {
+	*x = DeleteProjectRequest{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProjectRequest) ProtoMessage() {}
+
+func (x *DeleteProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProjectRequest.ProtoReflect.Descriptor instead.
+func (*DeleteProjectRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DeleteProjectRequest) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
+func (x *DeleteProjectRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *DeleteProjectRequest) GetExpectedRevision() string {
+	if x != nil {
+		return x.ExpectedRevision
+	}
+	return ""
+}
+
+func (x *DeleteProjectRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+type DeleteProjectResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteProjectResponse) Reset() {
+	*x = DeleteProjectResponse{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProjectResponse) ProtoMessage() {}
+
+func (x *DeleteProjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProjectResponse.ProtoReflect.Descriptor instead.
+func (*DeleteProjectResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{19}
+}
+
 type ListProjectTeamsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
@@ -1980,7 +2094,7 @@ type ListProjectTeamsRequest struct {
 
 func (x *ListProjectTeamsRequest) Reset() {
 	*x = ListProjectTeamsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[18]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1992,7 +2106,7 @@ func (x *ListProjectTeamsRequest) String() string {
 func (*ListProjectTeamsRequest) ProtoMessage() {}
 
 func (x *ListProjectTeamsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[18]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2005,7 +2119,7 @@ func (x *ListProjectTeamsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProjectTeamsRequest.ProtoReflect.Descriptor instead.
 func (*ListProjectTeamsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{18}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListProjectTeamsRequest) GetWorkspaceId() string {
@@ -2047,7 +2161,7 @@ type ListProjectTeamsResponse struct {
 
 func (x *ListProjectTeamsResponse) Reset() {
 	*x = ListProjectTeamsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[19]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2059,7 +2173,7 @@ func (x *ListProjectTeamsResponse) String() string {
 func (*ListProjectTeamsResponse) ProtoMessage() {}
 
 func (x *ListProjectTeamsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[19]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2072,7 +2186,7 @@ func (x *ListProjectTeamsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProjectTeamsResponse.ProtoReflect.Descriptor instead.
 func (*ListProjectTeamsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{19}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ListProjectTeamsResponse) GetProjectTeams() []*ProjectTeam {
@@ -2111,7 +2225,7 @@ type SetProjectTeamRequest struct {
 
 func (x *SetProjectTeamRequest) Reset() {
 	*x = SetProjectTeamRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[20]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2123,7 +2237,7 @@ func (x *SetProjectTeamRequest) String() string {
 func (*SetProjectTeamRequest) ProtoMessage() {}
 
 func (x *SetProjectTeamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[20]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2136,7 +2250,7 @@ func (x *SetProjectTeamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetProjectTeamRequest.ProtoReflect.Descriptor instead.
 func (*SetProjectTeamRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{20}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *SetProjectTeamRequest) GetWorkspaceId() string {
@@ -2197,7 +2311,7 @@ type SetProjectTeamResponse struct {
 
 func (x *SetProjectTeamResponse) Reset() {
 	*x = SetProjectTeamResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[21]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2209,7 +2323,7 @@ func (x *SetProjectTeamResponse) String() string {
 func (*SetProjectTeamResponse) ProtoMessage() {}
 
 func (x *SetProjectTeamResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[21]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2222,7 +2336,7 @@ func (x *SetProjectTeamResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetProjectTeamResponse.ProtoReflect.Descriptor instead.
 func (*SetProjectTeamResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{21}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *SetProjectTeamResponse) GetProjectTeam() *ProjectTeam {
@@ -2246,7 +2360,7 @@ type RemoveProjectTeamRequest struct {
 
 func (x *RemoveProjectTeamRequest) Reset() {
 	*x = RemoveProjectTeamRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[22]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2258,7 +2372,7 @@ func (x *RemoveProjectTeamRequest) String() string {
 func (*RemoveProjectTeamRequest) ProtoMessage() {}
 
 func (x *RemoveProjectTeamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[22]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2271,7 +2385,7 @@ func (x *RemoveProjectTeamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveProjectTeamRequest.ProtoReflect.Descriptor instead.
 func (*RemoveProjectTeamRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{22}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *RemoveProjectTeamRequest) GetWorkspaceId() string {
@@ -2317,7 +2431,7 @@ type RemoveProjectTeamResponse struct {
 
 func (x *RemoveProjectTeamResponse) Reset() {
 	*x = RemoveProjectTeamResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[23]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2329,7 +2443,7 @@ func (x *RemoveProjectTeamResponse) String() string {
 func (*RemoveProjectTeamResponse) ProtoMessage() {}
 
 func (x *RemoveProjectTeamResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[23]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2342,7 +2456,7 @@ func (x *RemoveProjectTeamResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveProjectTeamResponse.ProtoReflect.Descriptor instead.
 func (*RemoveProjectTeamResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{23}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{25}
 }
 
 // Explicit visibility required; PUBLISHED never includes drafts. OWN_DRAFTS is creator-only. Empty query means no title search; state zero means any in that view.
@@ -2366,7 +2480,7 @@ type ListTicketsRequest struct {
 
 func (x *ListTicketsRequest) Reset() {
 	*x = ListTicketsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[24]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2378,7 +2492,7 @@ func (x *ListTicketsRequest) String() string {
 func (*ListTicketsRequest) ProtoMessage() {}
 
 func (x *ListTicketsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[24]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2391,7 +2505,7 @@ func (x *ListTicketsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTicketsRequest.ProtoReflect.Descriptor instead.
 func (*ListTicketsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{24}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ListTicketsRequest) GetWorkspaceId() string {
@@ -2461,7 +2575,7 @@ type ListTicketsResponse struct {
 
 func (x *ListTicketsResponse) Reset() {
 	*x = ListTicketsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[25]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2473,7 +2587,7 @@ func (x *ListTicketsResponse) String() string {
 func (*ListTicketsResponse) ProtoMessage() {}
 
 func (x *ListTicketsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[25]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2486,7 +2600,7 @@ func (x *ListTicketsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTicketsResponse.ProtoReflect.Descriptor instead.
 func (*ListTicketsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{25}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ListTicketsResponse) GetTickets() []*Ticket {
@@ -2514,7 +2628,7 @@ type GetTicketRequest struct {
 
 func (x *GetTicketRequest) Reset() {
 	*x = GetTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[26]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2526,7 +2640,7 @@ func (x *GetTicketRequest) String() string {
 func (*GetTicketRequest) ProtoMessage() {}
 
 func (x *GetTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[26]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2539,7 +2653,7 @@ func (x *GetTicketRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTicketRequest.ProtoReflect.Descriptor instead.
 func (*GetTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{26}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetTicketRequest) GetWorkspaceId() string {
@@ -2565,7 +2679,7 @@ type GetTicketResponse struct {
 
 func (x *GetTicketResponse) Reset() {
 	*x = GetTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[27]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2577,7 +2691,7 @@ func (x *GetTicketResponse) String() string {
 func (*GetTicketResponse) ProtoMessage() {}
 
 func (x *GetTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[27]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2590,7 +2704,7 @@ func (x *GetTicketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTicketResponse.ProtoReflect.Descriptor instead.
 func (*GetTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{27}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *GetTicketResponse) GetTicket() *Ticket {
@@ -2621,7 +2735,7 @@ type CreateTicketRequest struct {
 
 func (x *CreateTicketRequest) Reset() {
 	*x = CreateTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[28]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2633,7 +2747,7 @@ func (x *CreateTicketRequest) String() string {
 func (*CreateTicketRequest) ProtoMessage() {}
 
 func (x *CreateTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[28]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2646,7 +2760,7 @@ func (x *CreateTicketRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTicketRequest.ProtoReflect.Descriptor instead.
 func (*CreateTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{28}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CreateTicketRequest) GetWorkspaceId() string {
@@ -2709,7 +2823,7 @@ type CreateTicketResponse struct {
 
 func (x *CreateTicketResponse) Reset() {
 	*x = CreateTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[29]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2721,7 +2835,7 @@ func (x *CreateTicketResponse) String() string {
 func (*CreateTicketResponse) ProtoMessage() {}
 
 func (x *CreateTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[29]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2734,7 +2848,7 @@ func (x *CreateTicketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTicketResponse.ProtoReflect.Descriptor instead.
 func (*CreateTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{29}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *CreateTicketResponse) GetTicket() *Ticket {
@@ -2768,7 +2882,7 @@ type UpdateTicketRequest struct {
 
 func (x *UpdateTicketRequest) Reset() {
 	*x = UpdateTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[30]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2780,7 +2894,7 @@ func (x *UpdateTicketRequest) String() string {
 func (*UpdateTicketRequest) ProtoMessage() {}
 
 func (x *UpdateTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[30]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2793,7 +2907,7 @@ func (x *UpdateTicketRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTicketRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{30}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *UpdateTicketRequest) GetWorkspaceId() string {
@@ -2840,7 +2954,7 @@ type UpdateTicketResponse struct {
 
 func (x *UpdateTicketResponse) Reset() {
 	*x = UpdateTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[31]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2852,7 +2966,7 @@ func (x *UpdateTicketResponse) String() string {
 func (*UpdateTicketResponse) ProtoMessage() {}
 
 func (x *UpdateTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[31]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2865,7 +2979,7 @@ func (x *UpdateTicketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTicketResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{31}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *UpdateTicketResponse) GetTicket() *Ticket {
@@ -2892,7 +3006,7 @@ type AssignTicketRequest struct {
 
 func (x *AssignTicketRequest) Reset() {
 	*x = AssignTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[32]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2904,7 +3018,7 @@ func (x *AssignTicketRequest) String() string {
 func (*AssignTicketRequest) ProtoMessage() {}
 
 func (x *AssignTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[32]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2917,7 +3031,7 @@ func (x *AssignTicketRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignTicketRequest.ProtoReflect.Descriptor instead.
 func (*AssignTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{32}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *AssignTicketRequest) GetWorkspaceId() string {
@@ -2964,7 +3078,7 @@ type AssignTicketResponse struct {
 
 func (x *AssignTicketResponse) Reset() {
 	*x = AssignTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[33]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2976,7 +3090,7 @@ func (x *AssignTicketResponse) String() string {
 func (*AssignTicketResponse) ProtoMessage() {}
 
 func (x *AssignTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[33]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2989,7 +3103,7 @@ func (x *AssignTicketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignTicketResponse.ProtoReflect.Descriptor instead.
 func (*AssignTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{33}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *AssignTicketResponse) GetTicket() *Ticket {
@@ -3015,7 +3129,7 @@ type ProposeResolutionRequest struct {
 
 func (x *ProposeResolutionRequest) Reset() {
 	*x = ProposeResolutionRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[34]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3027,7 +3141,7 @@ func (x *ProposeResolutionRequest) String() string {
 func (*ProposeResolutionRequest) ProtoMessage() {}
 
 func (x *ProposeResolutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[34]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3040,7 +3154,7 @@ func (x *ProposeResolutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProposeResolutionRequest.ProtoReflect.Descriptor instead.
 func (*ProposeResolutionRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{34}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ProposeResolutionRequest) GetWorkspaceId() string {
@@ -3080,7 +3194,7 @@ type ProposeResolutionResponse struct {
 
 func (x *ProposeResolutionResponse) Reset() {
 	*x = ProposeResolutionResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[35]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3092,7 +3206,7 @@ func (x *ProposeResolutionResponse) String() string {
 func (*ProposeResolutionResponse) ProtoMessage() {}
 
 func (x *ProposeResolutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[35]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3105,7 +3219,7 @@ func (x *ProposeResolutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProposeResolutionResponse.ProtoReflect.Descriptor instead.
 func (*ProposeResolutionResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{35}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ProposeResolutionResponse) GetTicket() *Ticket {
@@ -3134,7 +3248,7 @@ type CloseTicketRequest struct {
 
 func (x *CloseTicketRequest) Reset() {
 	*x = CloseTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3146,7 +3260,7 @@ func (x *CloseTicketRequest) String() string {
 func (*CloseTicketRequest) ProtoMessage() {}
 
 func (x *CloseTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3159,7 +3273,7 @@ func (x *CloseTicketRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseTicketRequest.ProtoReflect.Descriptor instead.
 func (*CloseTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{36}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *CloseTicketRequest) GetWorkspaceId() string {
@@ -3213,7 +3327,7 @@ type CloseTicketResponse struct {
 
 func (x *CloseTicketResponse) Reset() {
 	*x = CloseTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3225,7 +3339,7 @@ func (x *CloseTicketResponse) String() string {
 func (*CloseTicketResponse) ProtoMessage() {}
 
 func (x *CloseTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3238,7 +3352,7 @@ func (x *CloseTicketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseTicketResponse.ProtoReflect.Descriptor instead.
 func (*CloseTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{37}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *CloseTicketResponse) GetTicket() *Ticket {
@@ -3266,7 +3380,7 @@ type ReopenTicketRequest struct {
 
 func (x *ReopenTicketRequest) Reset() {
 	*x = ReopenTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3278,7 +3392,7 @@ func (x *ReopenTicketRequest) String() string {
 func (*ReopenTicketRequest) ProtoMessage() {}
 
 func (x *ReopenTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3291,7 +3405,7 @@ func (x *ReopenTicketRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReopenTicketRequest.ProtoReflect.Descriptor instead.
 func (*ReopenTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{38}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *ReopenTicketRequest) GetWorkspaceId() string {
@@ -3338,7 +3452,7 @@ type ReopenTicketResponse struct {
 
 func (x *ReopenTicketResponse) Reset() {
 	*x = ReopenTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3350,7 +3464,7 @@ func (x *ReopenTicketResponse) String() string {
 func (*ReopenTicketResponse) ProtoMessage() {}
 
 func (x *ReopenTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3363,7 +3477,7 @@ func (x *ReopenTicketResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReopenTicketResponse.ProtoReflect.Descriptor instead.
 func (*ReopenTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{39}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ReopenTicketResponse) GetTicket() *Ticket {
@@ -3390,7 +3504,7 @@ type ListMessagesRequest struct {
 
 func (x *ListMessagesRequest) Reset() {
 	*x = ListMessagesRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3402,7 +3516,7 @@ func (x *ListMessagesRequest) String() string {
 func (*ListMessagesRequest) ProtoMessage() {}
 
 func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3415,7 +3529,7 @@ func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesRequest.ProtoReflect.Descriptor instead.
 func (*ListMessagesRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{40}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ListMessagesRequest) GetWorkspaceId() string {
@@ -3465,7 +3579,7 @@ type ListMessagesResponse struct {
 
 func (x *ListMessagesResponse) Reset() {
 	*x = ListMessagesResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3477,7 +3591,7 @@ func (x *ListMessagesResponse) String() string {
 func (*ListMessagesResponse) ProtoMessage() {}
 
 func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3490,7 +3604,7 @@ func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesResponse.ProtoReflect.Descriptor instead.
 func (*ListMessagesResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{41}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ListMessagesResponse) GetMessages() []*PublishedMessage {
@@ -3539,7 +3653,7 @@ type SaveDraftRequest struct {
 
 func (x *SaveDraftRequest) Reset() {
 	*x = SaveDraftRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3551,7 +3665,7 @@ func (x *SaveDraftRequest) String() string {
 func (*SaveDraftRequest) ProtoMessage() {}
 
 func (x *SaveDraftRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3564,7 +3678,7 @@ func (x *SaveDraftRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveDraftRequest.ProtoReflect.Descriptor instead.
 func (*SaveDraftRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{42}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *SaveDraftRequest) GetWorkspaceId() string {
@@ -3641,7 +3755,7 @@ type SaveDraftResponse struct {
 
 func (x *SaveDraftResponse) Reset() {
 	*x = SaveDraftResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3653,7 +3767,7 @@ func (x *SaveDraftResponse) String() string {
 func (*SaveDraftResponse) ProtoMessage() {}
 
 func (x *SaveDraftResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3666,7 +3780,7 @@ func (x *SaveDraftResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveDraftResponse.ProtoReflect.Descriptor instead.
 func (*SaveDraftResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{43}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *SaveDraftResponse) GetDraft() *MessageDraft {
@@ -3702,7 +3816,7 @@ type PublishMessageRequest struct {
 
 func (x *PublishMessageRequest) Reset() {
 	*x = PublishMessageRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3714,7 +3828,7 @@ func (x *PublishMessageRequest) String() string {
 func (*PublishMessageRequest) ProtoMessage() {}
 
 func (x *PublishMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3727,7 +3841,7 @@ func (x *PublishMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishMessageRequest.ProtoReflect.Descriptor instead.
 func (*PublishMessageRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{44}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *PublishMessageRequest) GetWorkspaceId() string {
@@ -3783,7 +3897,7 @@ type PublishMessageResponse struct {
 
 func (x *PublishMessageResponse) Reset() {
 	*x = PublishMessageResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3795,7 +3909,7 @@ func (x *PublishMessageResponse) String() string {
 func (*PublishMessageResponse) ProtoMessage() {}
 
 func (x *PublishMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3808,7 +3922,7 @@ func (x *PublishMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishMessageResponse.ProtoReflect.Descriptor instead.
 func (*PublishMessageResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{45}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *PublishMessageResponse) GetTicket() *Ticket {
@@ -3844,7 +3958,7 @@ type DiscardDraftRequest struct {
 
 func (x *DiscardDraftRequest) Reset() {
 	*x = DiscardDraftRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3856,7 +3970,7 @@ func (x *DiscardDraftRequest) String() string {
 func (*DiscardDraftRequest) ProtoMessage() {}
 
 func (x *DiscardDraftRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3869,7 +3983,7 @@ func (x *DiscardDraftRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiscardDraftRequest.ProtoReflect.Descriptor instead.
 func (*DiscardDraftRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{46}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *DiscardDraftRequest) GetWorkspaceId() string {
@@ -3924,7 +4038,7 @@ type DiscardDraftResponse struct {
 
 func (x *DiscardDraftResponse) Reset() {
 	*x = DiscardDraftResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3936,7 +4050,7 @@ func (x *DiscardDraftResponse) String() string {
 func (*DiscardDraftResponse) ProtoMessage() {}
 
 func (x *DiscardDraftResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3949,7 +4063,7 @@ func (x *DiscardDraftResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiscardDraftResponse.ProtoReflect.Descriptor instead.
 func (*DiscardDraftResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{47}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *DiscardDraftResponse) GetDraftId() string {
@@ -3981,7 +4095,7 @@ type MarkReadRequest struct {
 
 func (x *MarkReadRequest) Reset() {
 	*x = MarkReadRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3993,7 +4107,7 @@ func (x *MarkReadRequest) String() string {
 func (*MarkReadRequest) ProtoMessage() {}
 
 func (x *MarkReadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4006,7 +4120,7 @@ func (x *MarkReadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReadRequest.ProtoReflect.Descriptor instead.
 func (*MarkReadRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{48}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *MarkReadRequest) GetWorkspaceId() string {
@@ -4046,7 +4160,7 @@ type MarkReadResponse struct {
 
 func (x *MarkReadResponse) Reset() {
 	*x = MarkReadResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4058,7 +4172,7 @@ func (x *MarkReadResponse) String() string {
 func (*MarkReadResponse) ProtoMessage() {}
 
 func (x *MarkReadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4071,7 +4185,7 @@ func (x *MarkReadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReadResponse.ProtoReflect.Descriptor instead.
 func (*MarkReadResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{49}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *MarkReadResponse) GetReceipt() *RecipientReceipt {
@@ -4096,7 +4210,7 @@ type MarkReviewedRequest struct {
 
 func (x *MarkReviewedRequest) Reset() {
 	*x = MarkReviewedRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4108,7 +4222,7 @@ func (x *MarkReviewedRequest) String() string {
 func (*MarkReviewedRequest) ProtoMessage() {}
 
 func (x *MarkReviewedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4121,7 +4235,7 @@ func (x *MarkReviewedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReviewedRequest.ProtoReflect.Descriptor instead.
 func (*MarkReviewedRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{50}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *MarkReviewedRequest) GetWorkspaceId() string {
@@ -4161,7 +4275,7 @@ type MarkReviewedResponse struct {
 
 func (x *MarkReviewedResponse) Reset() {
 	*x = MarkReviewedResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4173,7 +4287,7 @@ func (x *MarkReviewedResponse) String() string {
 func (*MarkReviewedResponse) ProtoMessage() {}
 
 func (x *MarkReviewedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4186,7 +4300,7 @@ func (x *MarkReviewedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReviewedResponse.ProtoReflect.Descriptor instead.
 func (*MarkReviewedResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{51}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *MarkReviewedResponse) GetReceipt() *RecipientReceipt {
@@ -4212,7 +4326,7 @@ type ListInboxItemsRequest struct {
 
 func (x *ListInboxItemsRequest) Reset() {
 	*x = ListInboxItemsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4224,7 +4338,7 @@ func (x *ListInboxItemsRequest) String() string {
 func (*ListInboxItemsRequest) ProtoMessage() {}
 
 func (x *ListInboxItemsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4237,7 +4351,7 @@ func (x *ListInboxItemsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInboxItemsRequest.ProtoReflect.Descriptor instead.
 func (*ListInboxItemsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{52}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *ListInboxItemsRequest) GetWorkspaceId() string {
@@ -4279,7 +4393,7 @@ type ListInboxItemsResponse struct {
 
 func (x *ListInboxItemsResponse) Reset() {
 	*x = ListInboxItemsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4291,7 +4405,7 @@ func (x *ListInboxItemsResponse) String() string {
 func (*ListInboxItemsResponse) ProtoMessage() {}
 
 func (x *ListInboxItemsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4304,7 +4418,7 @@ func (x *ListInboxItemsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInboxItemsResponse.ProtoReflect.Descriptor instead.
 func (*ListInboxItemsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{53}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *ListInboxItemsResponse) GetItems() []*InboxItem {
@@ -4337,7 +4451,7 @@ type ListTicketEventsRequest struct {
 
 func (x *ListTicketEventsRequest) Reset() {
 	*x = ListTicketEventsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4349,7 +4463,7 @@ func (x *ListTicketEventsRequest) String() string {
 func (*ListTicketEventsRequest) ProtoMessage() {}
 
 func (x *ListTicketEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4362,7 +4476,7 @@ func (x *ListTicketEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTicketEventsRequest.ProtoReflect.Descriptor instead.
 func (*ListTicketEventsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{54}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *ListTicketEventsRequest) GetWorkspaceId() string {
@@ -4404,7 +4518,7 @@ type ListTicketEventsResponse struct {
 
 func (x *ListTicketEventsResponse) Reset() {
 	*x = ListTicketEventsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4416,7 +4530,7 @@ func (x *ListTicketEventsResponse) String() string {
 func (*ListTicketEventsResponse) ProtoMessage() {}
 
 func (x *ListTicketEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4429,7 +4543,7 @@ func (x *ListTicketEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTicketEventsResponse.ProtoReflect.Descriptor instead.
 func (*ListTicketEventsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{55}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *ListTicketEventsResponse) GetEvents() []*TicketEvent {
@@ -4456,7 +4570,7 @@ type GetOverviewRequest struct {
 
 func (x *GetOverviewRequest) Reset() {
 	*x = GetOverviewRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4468,7 +4582,7 @@ func (x *GetOverviewRequest) String() string {
 func (*GetOverviewRequest) ProtoMessage() {}
 
 func (x *GetOverviewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4481,7 +4595,7 @@ func (x *GetOverviewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewRequest.ProtoReflect.Descriptor instead.
 func (*GetOverviewRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{56}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *GetOverviewRequest) GetWorkspaceId() string {
@@ -4500,7 +4614,7 @@ type GetOverviewResponse struct {
 
 func (x *GetOverviewResponse) Reset() {
 	*x = GetOverviewResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4512,7 +4626,7 @@ func (x *GetOverviewResponse) String() string {
 func (*GetOverviewResponse) ProtoMessage() {}
 
 func (x *GetOverviewResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4525,7 +4639,7 @@ func (x *GetOverviewResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewResponse.ProtoReflect.Descriptor instead.
 func (*GetOverviewResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{57}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *GetOverviewResponse) GetOverview() *Overview {
@@ -4675,10 +4789,11 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"n\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"\xaa\x01\n" +
 	"\x14ListProjectsResponse\x12.\n" +
 	"\bprojects\x18\x01 \x03(\v2\x12.syntra.v1.ProjectR\bprojects\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"U\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12:\n" +
+	"\x19supports_project_deletion\x18\x03 \x01(\bR\x17supportsProjectDeletion\"U\n" +
 	"\x11GetProjectRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1d\n" +
 	"\n" +
@@ -4703,7 +4818,15 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\n" +
 	"request_id\x18\x06 \x01(\tR\trequestId\"E\n" +
 	"\x15UpdateProjectResponse\x12,\n" +
-	"\aproject\x18\x01 \x01(\v2\x12.syntra.v1.ProjectR\aproject\"\x97\x01\n" +
+	"\aproject\x18\x01 \x01(\v2\x12.syntra.v1.ProjectR\aproject\"\xa4\x01\n" +
+	"\x14DeleteProjectRequest\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12+\n" +
+	"\x11expected_revision\x18\x03 \x01(\tR\x10expectedRevision\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x04 \x01(\tR\trequestId\"\x17\n" +
+	"\x15DeleteProjectResponse\"\x97\x01\n" +
 	"\x17ListProjectTeamsRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1d\n" +
 	"\n" +
@@ -4938,13 +5061,14 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\"TICKET_EVENT_KIND_MESSAGE_REVIEWED\x10\x06\x12)\n" +
 	"%TICKET_EVENT_KIND_RESOLUTION_PROPOSED\x10\a\x12#\n" +
 	"\x1fTICKET_EVENT_KIND_TICKET_CLOSED\x10\b\x12%\n" +
-	"!TICKET_EVENT_KIND_TICKET_REOPENED\x10\t2\xd4\x02\n" +
+	"!TICKET_EVENT_KIND_TICKET_REOPENED\x10\t2\xa8\x03\n" +
 	"\x0eProjectService\x12O\n" +
 	"\fListProjects\x12\x1e.syntra.v1.ListProjectsRequest\x1a\x1f.syntra.v1.ListProjectsResponse\x12I\n" +
 	"\n" +
 	"GetProject\x12\x1c.syntra.v1.GetProjectRequest\x1a\x1d.syntra.v1.GetProjectResponse\x12R\n" +
 	"\rCreateProject\x12\x1f.syntra.v1.CreateProjectRequest\x1a .syntra.v1.CreateProjectResponse\x12R\n" +
-	"\rUpdateProject\x12\x1f.syntra.v1.UpdateProjectRequest\x1a .syntra.v1.UpdateProjectResponse2\xa8\x02\n" +
+	"\rUpdateProject\x12\x1f.syntra.v1.UpdateProjectRequest\x1a .syntra.v1.UpdateProjectResponse\x12R\n" +
+	"\rDeleteProject\x12\x1f.syntra.v1.DeleteProjectRequest\x1a .syntra.v1.DeleteProjectResponse2\xa8\x02\n" +
 	"\x12ProjectTeamService\x12[\n" +
 	"\x10ListProjectTeams\x12\".syntra.v1.ListProjectTeamsRequest\x1a#.syntra.v1.ListProjectTeamsResponse\x12U\n" +
 	"\x0eSetProjectTeam\x12 .syntra.v1.SetProjectTeamRequest\x1a!.syntra.v1.SetProjectTeamResponse\x12^\n" +
@@ -4985,7 +5109,7 @@ func file_syntra_v1_collaboration_proto_rawDescGZIP() []byte {
 }
 
 var file_syntra_v1_collaboration_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_syntra_v1_collaboration_proto_msgTypes = make([]protoimpl.MessageInfo, 58)
+var file_syntra_v1_collaboration_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
 var file_syntra_v1_collaboration_proto_goTypes = []any{
 	(TicketState)(0),                  // 0: syntra.v1.TicketState
 	(TicketVisibility)(0),             // 1: syntra.v1.TicketVisibility
@@ -5011,76 +5135,78 @@ var file_syntra_v1_collaboration_proto_goTypes = []any{
 	(*CreateProjectResponse)(nil),     // 21: syntra.v1.CreateProjectResponse
 	(*UpdateProjectRequest)(nil),      // 22: syntra.v1.UpdateProjectRequest
 	(*UpdateProjectResponse)(nil),     // 23: syntra.v1.UpdateProjectResponse
-	(*ListProjectTeamsRequest)(nil),   // 24: syntra.v1.ListProjectTeamsRequest
-	(*ListProjectTeamsResponse)(nil),  // 25: syntra.v1.ListProjectTeamsResponse
-	(*SetProjectTeamRequest)(nil),     // 26: syntra.v1.SetProjectTeamRequest
-	(*SetProjectTeamResponse)(nil),    // 27: syntra.v1.SetProjectTeamResponse
-	(*RemoveProjectTeamRequest)(nil),  // 28: syntra.v1.RemoveProjectTeamRequest
-	(*RemoveProjectTeamResponse)(nil), // 29: syntra.v1.RemoveProjectTeamResponse
-	(*ListTicketsRequest)(nil),        // 30: syntra.v1.ListTicketsRequest
-	(*ListTicketsResponse)(nil),       // 31: syntra.v1.ListTicketsResponse
-	(*GetTicketRequest)(nil),          // 32: syntra.v1.GetTicketRequest
-	(*GetTicketResponse)(nil),         // 33: syntra.v1.GetTicketResponse
-	(*CreateTicketRequest)(nil),       // 34: syntra.v1.CreateTicketRequest
-	(*CreateTicketResponse)(nil),      // 35: syntra.v1.CreateTicketResponse
-	(*UpdateTicketRequest)(nil),       // 36: syntra.v1.UpdateTicketRequest
-	(*UpdateTicketResponse)(nil),      // 37: syntra.v1.UpdateTicketResponse
-	(*AssignTicketRequest)(nil),       // 38: syntra.v1.AssignTicketRequest
-	(*AssignTicketResponse)(nil),      // 39: syntra.v1.AssignTicketResponse
-	(*ProposeResolutionRequest)(nil),  // 40: syntra.v1.ProposeResolutionRequest
-	(*ProposeResolutionResponse)(nil), // 41: syntra.v1.ProposeResolutionResponse
-	(*CloseTicketRequest)(nil),        // 42: syntra.v1.CloseTicketRequest
-	(*CloseTicketResponse)(nil),       // 43: syntra.v1.CloseTicketResponse
-	(*ReopenTicketRequest)(nil),       // 44: syntra.v1.ReopenTicketRequest
-	(*ReopenTicketResponse)(nil),      // 45: syntra.v1.ReopenTicketResponse
-	(*ListMessagesRequest)(nil),       // 46: syntra.v1.ListMessagesRequest
-	(*ListMessagesResponse)(nil),      // 47: syntra.v1.ListMessagesResponse
-	(*SaveDraftRequest)(nil),          // 48: syntra.v1.SaveDraftRequest
-	(*SaveDraftResponse)(nil),         // 49: syntra.v1.SaveDraftResponse
-	(*PublishMessageRequest)(nil),     // 50: syntra.v1.PublishMessageRequest
-	(*PublishMessageResponse)(nil),    // 51: syntra.v1.PublishMessageResponse
-	(*DiscardDraftRequest)(nil),       // 52: syntra.v1.DiscardDraftRequest
-	(*DiscardDraftResponse)(nil),      // 53: syntra.v1.DiscardDraftResponse
-	(*MarkReadRequest)(nil),           // 54: syntra.v1.MarkReadRequest
-	(*MarkReadResponse)(nil),          // 55: syntra.v1.MarkReadResponse
-	(*MarkReviewedRequest)(nil),       // 56: syntra.v1.MarkReviewedRequest
-	(*MarkReviewedResponse)(nil),      // 57: syntra.v1.MarkReviewedResponse
-	(*ListInboxItemsRequest)(nil),     // 58: syntra.v1.ListInboxItemsRequest
-	(*ListInboxItemsResponse)(nil),    // 59: syntra.v1.ListInboxItemsResponse
-	(*ListTicketEventsRequest)(nil),   // 60: syntra.v1.ListTicketEventsRequest
-	(*ListTicketEventsResponse)(nil),  // 61: syntra.v1.ListTicketEventsResponse
-	(*GetOverviewRequest)(nil),        // 62: syntra.v1.GetOverviewRequest
-	(*GetOverviewResponse)(nil),       // 63: syntra.v1.GetOverviewResponse
-	(*timestamppb.Timestamp)(nil),     // 64: google.protobuf.Timestamp
+	(*DeleteProjectRequest)(nil),      // 24: syntra.v1.DeleteProjectRequest
+	(*DeleteProjectResponse)(nil),     // 25: syntra.v1.DeleteProjectResponse
+	(*ListProjectTeamsRequest)(nil),   // 26: syntra.v1.ListProjectTeamsRequest
+	(*ListProjectTeamsResponse)(nil),  // 27: syntra.v1.ListProjectTeamsResponse
+	(*SetProjectTeamRequest)(nil),     // 28: syntra.v1.SetProjectTeamRequest
+	(*SetProjectTeamResponse)(nil),    // 29: syntra.v1.SetProjectTeamResponse
+	(*RemoveProjectTeamRequest)(nil),  // 30: syntra.v1.RemoveProjectTeamRequest
+	(*RemoveProjectTeamResponse)(nil), // 31: syntra.v1.RemoveProjectTeamResponse
+	(*ListTicketsRequest)(nil),        // 32: syntra.v1.ListTicketsRequest
+	(*ListTicketsResponse)(nil),       // 33: syntra.v1.ListTicketsResponse
+	(*GetTicketRequest)(nil),          // 34: syntra.v1.GetTicketRequest
+	(*GetTicketResponse)(nil),         // 35: syntra.v1.GetTicketResponse
+	(*CreateTicketRequest)(nil),       // 36: syntra.v1.CreateTicketRequest
+	(*CreateTicketResponse)(nil),      // 37: syntra.v1.CreateTicketResponse
+	(*UpdateTicketRequest)(nil),       // 38: syntra.v1.UpdateTicketRequest
+	(*UpdateTicketResponse)(nil),      // 39: syntra.v1.UpdateTicketResponse
+	(*AssignTicketRequest)(nil),       // 40: syntra.v1.AssignTicketRequest
+	(*AssignTicketResponse)(nil),      // 41: syntra.v1.AssignTicketResponse
+	(*ProposeResolutionRequest)(nil),  // 42: syntra.v1.ProposeResolutionRequest
+	(*ProposeResolutionResponse)(nil), // 43: syntra.v1.ProposeResolutionResponse
+	(*CloseTicketRequest)(nil),        // 44: syntra.v1.CloseTicketRequest
+	(*CloseTicketResponse)(nil),       // 45: syntra.v1.CloseTicketResponse
+	(*ReopenTicketRequest)(nil),       // 46: syntra.v1.ReopenTicketRequest
+	(*ReopenTicketResponse)(nil),      // 47: syntra.v1.ReopenTicketResponse
+	(*ListMessagesRequest)(nil),       // 48: syntra.v1.ListMessagesRequest
+	(*ListMessagesResponse)(nil),      // 49: syntra.v1.ListMessagesResponse
+	(*SaveDraftRequest)(nil),          // 50: syntra.v1.SaveDraftRequest
+	(*SaveDraftResponse)(nil),         // 51: syntra.v1.SaveDraftResponse
+	(*PublishMessageRequest)(nil),     // 52: syntra.v1.PublishMessageRequest
+	(*PublishMessageResponse)(nil),    // 53: syntra.v1.PublishMessageResponse
+	(*DiscardDraftRequest)(nil),       // 54: syntra.v1.DiscardDraftRequest
+	(*DiscardDraftResponse)(nil),      // 55: syntra.v1.DiscardDraftResponse
+	(*MarkReadRequest)(nil),           // 56: syntra.v1.MarkReadRequest
+	(*MarkReadResponse)(nil),          // 57: syntra.v1.MarkReadResponse
+	(*MarkReviewedRequest)(nil),       // 58: syntra.v1.MarkReviewedRequest
+	(*MarkReviewedResponse)(nil),      // 59: syntra.v1.MarkReviewedResponse
+	(*ListInboxItemsRequest)(nil),     // 60: syntra.v1.ListInboxItemsRequest
+	(*ListInboxItemsResponse)(nil),    // 61: syntra.v1.ListInboxItemsResponse
+	(*ListTicketEventsRequest)(nil),   // 62: syntra.v1.ListTicketEventsRequest
+	(*ListTicketEventsResponse)(nil),  // 63: syntra.v1.ListTicketEventsResponse
+	(*GetOverviewRequest)(nil),        // 64: syntra.v1.GetOverviewRequest
+	(*GetOverviewResponse)(nil),       // 65: syntra.v1.GetOverviewResponse
+	(*timestamppb.Timestamp)(nil),     // 66: google.protobuf.Timestamp
 }
 var file_syntra_v1_collaboration_proto_depIdxs = []int32{
-	64, // 0: syntra.v1.Project.created_at:type_name -> google.protobuf.Timestamp
-	64, // 1: syntra.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 0: syntra.v1.Project.created_at:type_name -> google.protobuf.Timestamp
+	66, // 1: syntra.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
 	8,  // 2: syntra.v1.ProjectTeam.members:type_name -> syntra.v1.ProjectTeamMember
-	64, // 3: syntra.v1.ProjectTeam.created_at:type_name -> google.protobuf.Timestamp
-	64, // 4: syntra.v1.ProjectTeam.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 3: syntra.v1.ProjectTeam.created_at:type_name -> google.protobuf.Timestamp
+	66, // 4: syntra.v1.ProjectTeam.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 5: syntra.v1.Ticket.state:type_name -> syntra.v1.TicketState
-	64, // 6: syntra.v1.Ticket.created_at:type_name -> google.protobuf.Timestamp
-	64, // 7: syntra.v1.Ticket.updated_at:type_name -> google.protobuf.Timestamp
-	64, // 8: syntra.v1.Ticket.published_at:type_name -> google.protobuf.Timestamp
-	64, // 9: syntra.v1.Ticket.resolution_proposed_at:type_name -> google.protobuf.Timestamp
+	66, // 6: syntra.v1.Ticket.created_at:type_name -> google.protobuf.Timestamp
+	66, // 7: syntra.v1.Ticket.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 8: syntra.v1.Ticket.published_at:type_name -> google.protobuf.Timestamp
+	66, // 9: syntra.v1.Ticket.resolution_proposed_at:type_name -> google.protobuf.Timestamp
 	4,  // 10: syntra.v1.Ticket.closure_kind:type_name -> syntra.v1.ClosureKind
-	64, // 11: syntra.v1.Ticket.closed_at:type_name -> google.protobuf.Timestamp
-	64, // 12: syntra.v1.MessageDraft.created_at:type_name -> google.protobuf.Timestamp
-	64, // 13: syntra.v1.MessageDraft.updated_at:type_name -> google.protobuf.Timestamp
-	64, // 14: syntra.v1.PublishedMessage.published_at:type_name -> google.protobuf.Timestamp
+	66, // 11: syntra.v1.Ticket.closed_at:type_name -> google.protobuf.Timestamp
+	66, // 12: syntra.v1.MessageDraft.created_at:type_name -> google.protobuf.Timestamp
+	66, // 13: syntra.v1.MessageDraft.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 14: syntra.v1.PublishedMessage.published_at:type_name -> google.protobuf.Timestamp
 	12, // 15: syntra.v1.PublishedMessage.receipt:type_name -> syntra.v1.RecipientReceipt
-	64, // 16: syntra.v1.RecipientReceipt.read_at:type_name -> google.protobuf.Timestamp
-	64, // 17: syntra.v1.RecipientReceipt.reviewed_at:type_name -> google.protobuf.Timestamp
+	66, // 16: syntra.v1.RecipientReceipt.read_at:type_name -> google.protobuf.Timestamp
+	66, // 17: syntra.v1.RecipientReceipt.reviewed_at:type_name -> google.protobuf.Timestamp
 	5,  // 18: syntra.v1.TicketEvent.kind:type_name -> syntra.v1.TicketEventKind
-	64, // 19: syntra.v1.TicketEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	66, // 19: syntra.v1.TicketEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	0,  // 20: syntra.v1.TicketEvent.previous_state:type_name -> syntra.v1.TicketState
 	0,  // 21: syntra.v1.TicketEvent.state:type_name -> syntra.v1.TicketState
 	4,  // 22: syntra.v1.TicketEvent.closure_kind:type_name -> syntra.v1.ClosureKind
 	11, // 23: syntra.v1.InboxItem.message:type_name -> syntra.v1.PublishedMessage
 	9,  // 24: syntra.v1.InboxItem.ticket:type_name -> syntra.v1.Ticket
 	10, // 25: syntra.v1.InboxItem.draft:type_name -> syntra.v1.MessageDraft
-	64, // 26: syntra.v1.Overview.as_of:type_name -> google.protobuf.Timestamp
+	66, // 26: syntra.v1.Overview.as_of:type_name -> google.protobuf.Timestamp
 	6,  // 27: syntra.v1.ListProjectsResponse.projects:type_name -> syntra.v1.Project
 	6,  // 28: syntra.v1.GetProjectResponse.project:type_name -> syntra.v1.Project
 	6,  // 29: syntra.v1.CreateProjectResponse.project:type_name -> syntra.v1.Project
@@ -5116,52 +5242,54 @@ var file_syntra_v1_collaboration_proto_depIdxs = []int32{
 	18, // 59: syntra.v1.ProjectService.GetProject:input_type -> syntra.v1.GetProjectRequest
 	20, // 60: syntra.v1.ProjectService.CreateProject:input_type -> syntra.v1.CreateProjectRequest
 	22, // 61: syntra.v1.ProjectService.UpdateProject:input_type -> syntra.v1.UpdateProjectRequest
-	24, // 62: syntra.v1.ProjectTeamService.ListProjectTeams:input_type -> syntra.v1.ListProjectTeamsRequest
-	26, // 63: syntra.v1.ProjectTeamService.SetProjectTeam:input_type -> syntra.v1.SetProjectTeamRequest
-	28, // 64: syntra.v1.ProjectTeamService.RemoveProjectTeam:input_type -> syntra.v1.RemoveProjectTeamRequest
-	30, // 65: syntra.v1.TicketService.ListTickets:input_type -> syntra.v1.ListTicketsRequest
-	32, // 66: syntra.v1.TicketService.GetTicket:input_type -> syntra.v1.GetTicketRequest
-	34, // 67: syntra.v1.TicketService.CreateTicket:input_type -> syntra.v1.CreateTicketRequest
-	36, // 68: syntra.v1.TicketService.UpdateTicket:input_type -> syntra.v1.UpdateTicketRequest
-	38, // 69: syntra.v1.TicketService.AssignTicket:input_type -> syntra.v1.AssignTicketRequest
-	40, // 70: syntra.v1.TicketService.ProposeResolution:input_type -> syntra.v1.ProposeResolutionRequest
-	42, // 71: syntra.v1.TicketService.CloseTicket:input_type -> syntra.v1.CloseTicketRequest
-	44, // 72: syntra.v1.TicketService.ReopenTicket:input_type -> syntra.v1.ReopenTicketRequest
-	46, // 73: syntra.v1.MessageService.ListMessages:input_type -> syntra.v1.ListMessagesRequest
-	48, // 74: syntra.v1.MessageService.SaveDraft:input_type -> syntra.v1.SaveDraftRequest
-	50, // 75: syntra.v1.MessageService.PublishMessage:input_type -> syntra.v1.PublishMessageRequest
-	52, // 76: syntra.v1.MessageService.DiscardDraft:input_type -> syntra.v1.DiscardDraftRequest
-	54, // 77: syntra.v1.MessageService.MarkRead:input_type -> syntra.v1.MarkReadRequest
-	56, // 78: syntra.v1.MessageService.MarkReviewed:input_type -> syntra.v1.MarkReviewedRequest
-	58, // 79: syntra.v1.InboxService.ListInboxItems:input_type -> syntra.v1.ListInboxItemsRequest
-	60, // 80: syntra.v1.ActivityService.ListTicketEvents:input_type -> syntra.v1.ListTicketEventsRequest
-	62, // 81: syntra.v1.DashboardService.GetOverview:input_type -> syntra.v1.GetOverviewRequest
-	17, // 82: syntra.v1.ProjectService.ListProjects:output_type -> syntra.v1.ListProjectsResponse
-	19, // 83: syntra.v1.ProjectService.GetProject:output_type -> syntra.v1.GetProjectResponse
-	21, // 84: syntra.v1.ProjectService.CreateProject:output_type -> syntra.v1.CreateProjectResponse
-	23, // 85: syntra.v1.ProjectService.UpdateProject:output_type -> syntra.v1.UpdateProjectResponse
-	25, // 86: syntra.v1.ProjectTeamService.ListProjectTeams:output_type -> syntra.v1.ListProjectTeamsResponse
-	27, // 87: syntra.v1.ProjectTeamService.SetProjectTeam:output_type -> syntra.v1.SetProjectTeamResponse
-	29, // 88: syntra.v1.ProjectTeamService.RemoveProjectTeam:output_type -> syntra.v1.RemoveProjectTeamResponse
-	31, // 89: syntra.v1.TicketService.ListTickets:output_type -> syntra.v1.ListTicketsResponse
-	33, // 90: syntra.v1.TicketService.GetTicket:output_type -> syntra.v1.GetTicketResponse
-	35, // 91: syntra.v1.TicketService.CreateTicket:output_type -> syntra.v1.CreateTicketResponse
-	37, // 92: syntra.v1.TicketService.UpdateTicket:output_type -> syntra.v1.UpdateTicketResponse
-	39, // 93: syntra.v1.TicketService.AssignTicket:output_type -> syntra.v1.AssignTicketResponse
-	41, // 94: syntra.v1.TicketService.ProposeResolution:output_type -> syntra.v1.ProposeResolutionResponse
-	43, // 95: syntra.v1.TicketService.CloseTicket:output_type -> syntra.v1.CloseTicketResponse
-	45, // 96: syntra.v1.TicketService.ReopenTicket:output_type -> syntra.v1.ReopenTicketResponse
-	47, // 97: syntra.v1.MessageService.ListMessages:output_type -> syntra.v1.ListMessagesResponse
-	49, // 98: syntra.v1.MessageService.SaveDraft:output_type -> syntra.v1.SaveDraftResponse
-	51, // 99: syntra.v1.MessageService.PublishMessage:output_type -> syntra.v1.PublishMessageResponse
-	53, // 100: syntra.v1.MessageService.DiscardDraft:output_type -> syntra.v1.DiscardDraftResponse
-	55, // 101: syntra.v1.MessageService.MarkRead:output_type -> syntra.v1.MarkReadResponse
-	57, // 102: syntra.v1.MessageService.MarkReviewed:output_type -> syntra.v1.MarkReviewedResponse
-	59, // 103: syntra.v1.InboxService.ListInboxItems:output_type -> syntra.v1.ListInboxItemsResponse
-	61, // 104: syntra.v1.ActivityService.ListTicketEvents:output_type -> syntra.v1.ListTicketEventsResponse
-	63, // 105: syntra.v1.DashboardService.GetOverview:output_type -> syntra.v1.GetOverviewResponse
-	82, // [82:106] is the sub-list for method output_type
-	58, // [58:82] is the sub-list for method input_type
+	24, // 62: syntra.v1.ProjectService.DeleteProject:input_type -> syntra.v1.DeleteProjectRequest
+	26, // 63: syntra.v1.ProjectTeamService.ListProjectTeams:input_type -> syntra.v1.ListProjectTeamsRequest
+	28, // 64: syntra.v1.ProjectTeamService.SetProjectTeam:input_type -> syntra.v1.SetProjectTeamRequest
+	30, // 65: syntra.v1.ProjectTeamService.RemoveProjectTeam:input_type -> syntra.v1.RemoveProjectTeamRequest
+	32, // 66: syntra.v1.TicketService.ListTickets:input_type -> syntra.v1.ListTicketsRequest
+	34, // 67: syntra.v1.TicketService.GetTicket:input_type -> syntra.v1.GetTicketRequest
+	36, // 68: syntra.v1.TicketService.CreateTicket:input_type -> syntra.v1.CreateTicketRequest
+	38, // 69: syntra.v1.TicketService.UpdateTicket:input_type -> syntra.v1.UpdateTicketRequest
+	40, // 70: syntra.v1.TicketService.AssignTicket:input_type -> syntra.v1.AssignTicketRequest
+	42, // 71: syntra.v1.TicketService.ProposeResolution:input_type -> syntra.v1.ProposeResolutionRequest
+	44, // 72: syntra.v1.TicketService.CloseTicket:input_type -> syntra.v1.CloseTicketRequest
+	46, // 73: syntra.v1.TicketService.ReopenTicket:input_type -> syntra.v1.ReopenTicketRequest
+	48, // 74: syntra.v1.MessageService.ListMessages:input_type -> syntra.v1.ListMessagesRequest
+	50, // 75: syntra.v1.MessageService.SaveDraft:input_type -> syntra.v1.SaveDraftRequest
+	52, // 76: syntra.v1.MessageService.PublishMessage:input_type -> syntra.v1.PublishMessageRequest
+	54, // 77: syntra.v1.MessageService.DiscardDraft:input_type -> syntra.v1.DiscardDraftRequest
+	56, // 78: syntra.v1.MessageService.MarkRead:input_type -> syntra.v1.MarkReadRequest
+	58, // 79: syntra.v1.MessageService.MarkReviewed:input_type -> syntra.v1.MarkReviewedRequest
+	60, // 80: syntra.v1.InboxService.ListInboxItems:input_type -> syntra.v1.ListInboxItemsRequest
+	62, // 81: syntra.v1.ActivityService.ListTicketEvents:input_type -> syntra.v1.ListTicketEventsRequest
+	64, // 82: syntra.v1.DashboardService.GetOverview:input_type -> syntra.v1.GetOverviewRequest
+	17, // 83: syntra.v1.ProjectService.ListProjects:output_type -> syntra.v1.ListProjectsResponse
+	19, // 84: syntra.v1.ProjectService.GetProject:output_type -> syntra.v1.GetProjectResponse
+	21, // 85: syntra.v1.ProjectService.CreateProject:output_type -> syntra.v1.CreateProjectResponse
+	23, // 86: syntra.v1.ProjectService.UpdateProject:output_type -> syntra.v1.UpdateProjectResponse
+	25, // 87: syntra.v1.ProjectService.DeleteProject:output_type -> syntra.v1.DeleteProjectResponse
+	27, // 88: syntra.v1.ProjectTeamService.ListProjectTeams:output_type -> syntra.v1.ListProjectTeamsResponse
+	29, // 89: syntra.v1.ProjectTeamService.SetProjectTeam:output_type -> syntra.v1.SetProjectTeamResponse
+	31, // 90: syntra.v1.ProjectTeamService.RemoveProjectTeam:output_type -> syntra.v1.RemoveProjectTeamResponse
+	33, // 91: syntra.v1.TicketService.ListTickets:output_type -> syntra.v1.ListTicketsResponse
+	35, // 92: syntra.v1.TicketService.GetTicket:output_type -> syntra.v1.GetTicketResponse
+	37, // 93: syntra.v1.TicketService.CreateTicket:output_type -> syntra.v1.CreateTicketResponse
+	39, // 94: syntra.v1.TicketService.UpdateTicket:output_type -> syntra.v1.UpdateTicketResponse
+	41, // 95: syntra.v1.TicketService.AssignTicket:output_type -> syntra.v1.AssignTicketResponse
+	43, // 96: syntra.v1.TicketService.ProposeResolution:output_type -> syntra.v1.ProposeResolutionResponse
+	45, // 97: syntra.v1.TicketService.CloseTicket:output_type -> syntra.v1.CloseTicketResponse
+	47, // 98: syntra.v1.TicketService.ReopenTicket:output_type -> syntra.v1.ReopenTicketResponse
+	49, // 99: syntra.v1.MessageService.ListMessages:output_type -> syntra.v1.ListMessagesResponse
+	51, // 100: syntra.v1.MessageService.SaveDraft:output_type -> syntra.v1.SaveDraftResponse
+	53, // 101: syntra.v1.MessageService.PublishMessage:output_type -> syntra.v1.PublishMessageResponse
+	55, // 102: syntra.v1.MessageService.DiscardDraft:output_type -> syntra.v1.DiscardDraftResponse
+	57, // 103: syntra.v1.MessageService.MarkRead:output_type -> syntra.v1.MarkReadResponse
+	59, // 104: syntra.v1.MessageService.MarkReviewed:output_type -> syntra.v1.MarkReviewedResponse
+	61, // 105: syntra.v1.InboxService.ListInboxItems:output_type -> syntra.v1.ListInboxItemsResponse
+	63, // 106: syntra.v1.ActivityService.ListTicketEvents:output_type -> syntra.v1.ListTicketEventsResponse
+	65, // 107: syntra.v1.DashboardService.GetOverview:output_type -> syntra.v1.GetOverviewResponse
+	83, // [83:108] is the sub-list for method output_type
+	58, // [58:83] is the sub-list for method input_type
 	58, // [58:58] is the sub-list for extension type_name
 	58, // [58:58] is the sub-list for extension extendee
 	0,  // [0:58] is the sub-list for field type_name
@@ -5174,15 +5302,15 @@ func file_syntra_v1_collaboration_proto_init() {
 	}
 	file_syntra_v1_collaboration_proto_msgTypes[3].OneofWrappers = []any{}
 	file_syntra_v1_collaboration_proto_msgTypes[7].OneofWrappers = []any{}
-	file_syntra_v1_collaboration_proto_msgTypes[24].OneofWrappers = []any{}
-	file_syntra_v1_collaboration_proto_msgTypes[42].OneofWrappers = []any{}
+	file_syntra_v1_collaboration_proto_msgTypes[26].OneofWrappers = []any{}
+	file_syntra_v1_collaboration_proto_msgTypes[44].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_collaboration_proto_rawDesc), len(file_syntra_v1_collaboration_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   58,
+			NumMessages:   60,
 			NumExtensions: 0,
 			NumServices:   7,
 		},

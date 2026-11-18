@@ -641,6 +641,13 @@ func TestCompiledCLIHumanTTYAndProcessRecovery(t *testing.T) {
 					os.Link(filepath.Dir(f.dir)+"/target", target)
 				case "unsafe-mode":
 					os.WriteFile(target, raw, 0644)
+					// WriteFile honors umask; set and verify the unsafe fixture explicitly.
+					if err := os.Chmod(target, 0644); err != nil {
+						t.Fatal(err)
+					}
+					if info, err := os.Stat(target); err != nil || info.Mode().Perm() != 0644 {
+						t.Fatal("unsafe fixture mode was not established")
+					}
 				case "unsafe-dir":
 					os.Chmod(f.dir, 0755)
 				case "symlink-lock":
@@ -740,5 +747,21 @@ func TestPTYLateSecretOutputFault(t *testing.T) {
 	out, e := cmd.CombinedOutput()
 	if e == nil || !bytes.Contains(out, []byte("sensitive synthetic value leaked to terminal")) {
 		t.Fatal("late-output redaction fault was not detected for the intended reason")
+	}
+}
+
+func TestAllCommandHelp(t *testing.T) {
+	for _, name := range helpOrder {
+		for _, args := range [][]string{{"help", name}, {name, "--help"}, {name, "-h"}} {
+			if err := run(context.Background(), args); err != nil {
+				t.Fatalf("%v: %v", args, err)
+			}
+		}
+	}
+	if err := run(context.Background(), []string{"--help"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := unknownCommand("prepar"); !strings.Contains(err.Error(), `Did you mean "prepare"`) {
+		t.Fatal(err)
 	}
 }

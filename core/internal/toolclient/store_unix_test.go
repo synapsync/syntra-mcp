@@ -165,8 +165,22 @@ func TestUnsafeFilesystemRejected(t *testing.T) {
 				os.Mkdir(target, 0600)
 			case "unsafe-file":
 				os.WriteFile(target, raw, 0644)
+				// WriteFile honors umask; set and verify the unsafe fixture explicitly.
+				if err := os.Chmod(target, 0644); err != nil {
+					t.Fatal(err)
+				}
+				if info, err := os.Stat(target); err != nil || info.Mode().Perm() != 0644 {
+					t.Fatal("unsafe fixture mode was not established")
+				}
 			case "unsafe-lock":
 				os.WriteFile(dir+"/.lock", nil, 0644)
+				// WriteFile honors umask; set and verify the unsafe fixture explicitly.
+				if err := os.Chmod(dir+"/.lock", 0644); err != nil {
+					t.Fatal(err)
+				}
+				if info, err := os.Stat(dir + "/.lock"); err != nil || info.Mode().Perm() != 0644 {
+					t.Fatal("unsafe fixture mode was not established")
+				}
 			case "symlink-lock":
 				os.WriteFile(root+"/target", nil, 0600)
 				os.Symlink(root+"/target", dir+"/.lock")

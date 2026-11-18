@@ -128,6 +128,194 @@ func (InvitationState) EnumDescriptor() ([]byte, []int) {
 	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{1}
 }
 
+// Delivery never proves inbox receipt. MANUAL means no mail was scheduled.
+type InvitationDeliveryState int32
+
+const (
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_UNSPECIFIED       InvitationDeliveryState = 0
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_MANUAL            InvitationDeliveryState = 1
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_QUEUED            InvitationDeliveryState = 2
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_ATTEMPTING        InvitationDeliveryState = 3
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_RETRY_WAIT        InvitationDeliveryState = 4
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_PROVIDER_ACCEPTED InvitationDeliveryState = 5
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_FAILED            InvitationDeliveryState = 6
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_UNCERTAIN         InvitationDeliveryState = 7
+	InvitationDeliveryState_INVITATION_DELIVERY_STATE_CANCELLED         InvitationDeliveryState = 8
+)
+
+// Enum value maps for InvitationDeliveryState.
+var (
+	InvitationDeliveryState_name = map[int32]string{
+		0: "INVITATION_DELIVERY_STATE_UNSPECIFIED",
+		1: "INVITATION_DELIVERY_STATE_MANUAL",
+		2: "INVITATION_DELIVERY_STATE_QUEUED",
+		3: "INVITATION_DELIVERY_STATE_ATTEMPTING",
+		4: "INVITATION_DELIVERY_STATE_RETRY_WAIT",
+		5: "INVITATION_DELIVERY_STATE_PROVIDER_ACCEPTED",
+		6: "INVITATION_DELIVERY_STATE_FAILED",
+		7: "INVITATION_DELIVERY_STATE_UNCERTAIN",
+		8: "INVITATION_DELIVERY_STATE_CANCELLED",
+	}
+	InvitationDeliveryState_value = map[string]int32{
+		"INVITATION_DELIVERY_STATE_UNSPECIFIED":       0,
+		"INVITATION_DELIVERY_STATE_MANUAL":            1,
+		"INVITATION_DELIVERY_STATE_QUEUED":            2,
+		"INVITATION_DELIVERY_STATE_ATTEMPTING":        3,
+		"INVITATION_DELIVERY_STATE_RETRY_WAIT":        4,
+		"INVITATION_DELIVERY_STATE_PROVIDER_ACCEPTED": 5,
+		"INVITATION_DELIVERY_STATE_FAILED":            6,
+		"INVITATION_DELIVERY_STATE_UNCERTAIN":         7,
+		"INVITATION_DELIVERY_STATE_CANCELLED":         8,
+	}
+)
+
+func (x InvitationDeliveryState) Enum() *InvitationDeliveryState {
+	p := new(InvitationDeliveryState)
+	*p = x
+	return p
+}
+
+func (x InvitationDeliveryState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (InvitationDeliveryState) Descriptor() protoreflect.EnumDescriptor {
+	return file_syntra_v1_identity_proto_enumTypes[2].Descriptor()
+}
+
+func (InvitationDeliveryState) Type() protoreflect.EnumType {
+	return &file_syntra_v1_identity_proto_enumTypes[2]
+}
+
+func (x InvitationDeliveryState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use InvitationDeliveryState.Descriptor instead.
+func (InvitationDeliveryState) EnumDescriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{2}
+}
+
+// Safe operational categories; no raw provider diagnostics are exposed.
+type InvitationDeliveryFailure int32
+
+const (
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_UNSPECIFIED         InvitationDeliveryFailure = 0
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_CONFIGURATION       InvitationDeliveryFailure = 1
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_PROVIDER_REJECTED   InvitationDeliveryFailure = 2
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_RATE_LIMIT          InvitationDeliveryFailure = 3
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_AMBIGUOUS           InvitationDeliveryFailure = 4
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_RETRY_EXHAUSTED     InvitationDeliveryFailure = 5
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_INVITATION_INACTIVE InvitationDeliveryFailure = 6
+	InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_AUTHORITY_REVOKED   InvitationDeliveryFailure = 7
+)
+
+// Enum value maps for InvitationDeliveryFailure.
+var (
+	InvitationDeliveryFailure_name = map[int32]string{
+		0: "INVITATION_DELIVERY_FAILURE_UNSPECIFIED",
+		1: "INVITATION_DELIVERY_FAILURE_CONFIGURATION",
+		2: "INVITATION_DELIVERY_FAILURE_PROVIDER_REJECTED",
+		3: "INVITATION_DELIVERY_FAILURE_RATE_LIMIT",
+		4: "INVITATION_DELIVERY_FAILURE_AMBIGUOUS",
+		5: "INVITATION_DELIVERY_FAILURE_RETRY_EXHAUSTED",
+		6: "INVITATION_DELIVERY_FAILURE_INVITATION_INACTIVE",
+		7: "INVITATION_DELIVERY_FAILURE_AUTHORITY_REVOKED",
+	}
+	InvitationDeliveryFailure_value = map[string]int32{
+		"INVITATION_DELIVERY_FAILURE_UNSPECIFIED":         0,
+		"INVITATION_DELIVERY_FAILURE_CONFIGURATION":       1,
+		"INVITATION_DELIVERY_FAILURE_PROVIDER_REJECTED":   2,
+		"INVITATION_DELIVERY_FAILURE_RATE_LIMIT":          3,
+		"INVITATION_DELIVERY_FAILURE_AMBIGUOUS":           4,
+		"INVITATION_DELIVERY_FAILURE_RETRY_EXHAUSTED":     5,
+		"INVITATION_DELIVERY_FAILURE_INVITATION_INACTIVE": 6,
+		"INVITATION_DELIVERY_FAILURE_AUTHORITY_REVOKED":   7,
+	}
+)
+
+func (x InvitationDeliveryFailure) Enum() *InvitationDeliveryFailure {
+	p := new(InvitationDeliveryFailure)
+	*p = x
+	return p
+}
+
+func (x InvitationDeliveryFailure) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (InvitationDeliveryFailure) Descriptor() protoreflect.EnumDescriptor {
+	return file_syntra_v1_identity_proto_enumTypes[3].Descriptor()
+}
+
+func (InvitationDeliveryFailure) Type() protoreflect.EnumType {
+	return &file_syntra_v1_identity_proto_enumTypes[3]
+}
+
+func (x InvitationDeliveryFailure) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use InvitationDeliveryFailure.Descriptor instead.
+func (InvitationDeliveryFailure) EnumDescriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{3}
+}
+
+type InvitationDeliveryRetryOutcome int32
+
+const (
+	InvitationDeliveryRetryOutcome_INVITATION_DELIVERY_RETRY_OUTCOME_UNSPECIFIED      InvitationDeliveryRetryOutcome = 0
+	InvitationDeliveryRetryOutcome_INVITATION_DELIVERY_RETRY_OUTCOME_SCHEDULED        InvitationDeliveryRetryOutcome = 1
+	InvitationDeliveryRetryOutcome_INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_PENDING  InvitationDeliveryRetryOutcome = 2
+	InvitationDeliveryRetryOutcome_INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_ACCEPTED InvitationDeliveryRetryOutcome = 3
+	InvitationDeliveryRetryOutcome_INVITATION_DELIVERY_RETRY_OUTCOME_NOT_RETRYABLE    InvitationDeliveryRetryOutcome = 4
+)
+
+// Enum value maps for InvitationDeliveryRetryOutcome.
+var (
+	InvitationDeliveryRetryOutcome_name = map[int32]string{
+		0: "INVITATION_DELIVERY_RETRY_OUTCOME_UNSPECIFIED",
+		1: "INVITATION_DELIVERY_RETRY_OUTCOME_SCHEDULED",
+		2: "INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_PENDING",
+		3: "INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_ACCEPTED",
+		4: "INVITATION_DELIVERY_RETRY_OUTCOME_NOT_RETRYABLE",
+	}
+	InvitationDeliveryRetryOutcome_value = map[string]int32{
+		"INVITATION_DELIVERY_RETRY_OUTCOME_UNSPECIFIED":      0,
+		"INVITATION_DELIVERY_RETRY_OUTCOME_SCHEDULED":        1,
+		"INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_PENDING":  2,
+		"INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_ACCEPTED": 3,
+		"INVITATION_DELIVERY_RETRY_OUTCOME_NOT_RETRYABLE":    4,
+	}
+)
+
+func (x InvitationDeliveryRetryOutcome) Enum() *InvitationDeliveryRetryOutcome {
+	p := new(InvitationDeliveryRetryOutcome)
+	*p = x
+	return p
+}
+
+func (x InvitationDeliveryRetryOutcome) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (InvitationDeliveryRetryOutcome) Descriptor() protoreflect.EnumDescriptor {
+	return file_syntra_v1_identity_proto_enumTypes[4].Descriptor()
+}
+
+func (InvitationDeliveryRetryOutcome) Type() protoreflect.EnumType {
+	return &file_syntra_v1_identity_proto_enumTypes[4]
+}
+
+func (x InvitationDeliveryRetryOutcome) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use InvitationDeliveryRetryOutcome.Descriptor instead.
+func (InvitationDeliveryRetryOutcome) EnumDescriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{4}
+}
+
 // SelfIdentity is verified identity, own-only, never a fabricated product user.
 type SelfIdentity struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -180,9 +368,19 @@ type UserProfile struct {
 	// id is a canonical lowercase application UUID, not the provider subject.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// display_name is UTF-8, at most 120 Unicode scalar values and 480 bytes.
-	DisplayName   string `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	DisplayName string `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	// username is the installation-wide unique handle. It is not a login method.
+	Username string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	// first_name is UTF-8, 1..60 Unicode scalar values. Empty before completion.
+	FirstName string `protobuf:"bytes,4,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	// last_name is UTF-8, 1..60 Unicode scalar values. Empty before completion.
+	LastName string `protobuf:"bytes,5,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	// profile_complete is computed by the server from the persisted fields.
+	ProfileComplete bool `protobuf:"varint,6,opt,name=profile_complete,json=profileComplete,proto3" json:"profile_complete,omitempty"`
+	// profile_revision increases by one on every accepted profile change.
+	ProfileRevision int64 `protobuf:"varint,7,opt,name=profile_revision,json=profileRevision,proto3" json:"profile_revision,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *UserProfile) Reset() {
@@ -227,6 +425,41 @@ func (x *UserProfile) GetDisplayName() string {
 		return x.DisplayName
 	}
 	return ""
+}
+
+func (x *UserProfile) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *UserProfile) GetFirstName() string {
+	if x != nil {
+		return x.FirstName
+	}
+	return ""
+}
+
+func (x *UserProfile) GetLastName() string {
+	if x != nil {
+		return x.LastName
+	}
+	return ""
+}
+
+func (x *UserProfile) GetProfileComplete() bool {
+	if x != nil {
+		return x.ProfileComplete
+	}
+	return false
+}
+
+func (x *UserProfile) GetProfileRevision() int64 {
+	if x != nil {
+		return x.ProfileRevision
+	}
+	return 0
 }
 
 // Workspace is a currently accessible active workspace, without private fields.
@@ -355,11 +588,13 @@ func (x *WorkspaceMembership) GetJoinedAt() *timestamppb.Timestamp {
 // WorkspaceMember is a public-within-workspace active directory projection.
 // No provider subject, email, invitation secret or token digest is exposed.
 type WorkspaceMember struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	Role          WorkspaceRole          `protobuf:"varint,3,opt,name=role,proto3,enum=syntra.v1.WorkspaceRole" json:"role,omitempty"`
-	JoinedAt      *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=joined_at,json=joinedAt,proto3" json:"joined_at,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	UserId      string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	DisplayName string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Role        WorkspaceRole          `protobuf:"varint,3,opt,name=role,proto3,enum=syntra.v1.WorkspaceRole" json:"role,omitempty"`
+	JoinedAt    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=joined_at,json=joinedAt,proto3" json:"joined_at,omitempty"`
+	// Workspace directory and member state return the profile username when set.
+	Username      string `protobuf:"bytes,5,opt,name=username,proto3" json:"username,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -422,6 +657,13 @@ func (x *WorkspaceMember) GetJoinedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *WorkspaceMember) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
 // Invitation is admin-only metadata; raw tokens/digests never appear here.
 type Invitation struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
@@ -438,6 +680,7 @@ type Invitation struct {
 	// revoked_at and accepted_at are absent until their respective transition.
 	RevokedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
 	AcceptedAt    *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=accepted_at,json=acceptedAt,proto3" json:"accepted_at,omitempty"`
+	Delivery      *InvitationDelivery    `protobuf:"bytes,11,opt,name=delivery,proto3" json:"delivery,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -542,6 +785,13 @@ func (x *Invitation) GetAcceptedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Invitation) GetDelivery() *InvitationDelivery {
+	if x != nil {
+		return x.Delivery
+	}
+	return nil
+}
+
 // GetMeRequest pages accessible active workspaces by (created_at, id) ascending.
 type GetMeRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -598,6 +848,135 @@ func (x *GetMeRequest) GetPageToken() string {
 }
 
 // GetMeResponse is safe for a valid identity with no active memberships.
+// UpdateMyProfileRequest carries the caller's own personal data. The target
+// account is derived from trusted authentication, never from request fields.
+type UpdateMyProfileRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// username is normalized lowercase ASCII, 3..30 characters, starts with a letter.
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	// first_name and last_name are trimmed Unicode personal names.
+	FirstName string `protobuf:"bytes,2,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	LastName  string `protobuf:"bytes,3,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	// expected_revision is the caller's last observed profile revision. A stale
+	// value is rejected instead of overwriting a newer change from another tab.
+	ExpectedRevision int64 `protobuf:"varint,4,opt,name=expected_revision,json=expectedRevision,proto3" json:"expected_revision,omitempty"`
+	// request_id is a canonical UUID. An exact retry with the same request id and
+	// the same content returns the canonical profile without a second change.
+	RequestId     string `protobuf:"bytes,5,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMyProfileRequest) Reset() {
+	*x = UpdateMyProfileRequest{}
+	mi := &file_syntra_v1_identity_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMyProfileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMyProfileRequest) ProtoMessage() {}
+
+func (x *UpdateMyProfileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_identity_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMyProfileRequest.ProtoReflect.Descriptor instead.
+func (*UpdateMyProfileRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UpdateMyProfileRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *UpdateMyProfileRequest) GetFirstName() string {
+	if x != nil {
+		return x.FirstName
+	}
+	return ""
+}
+
+func (x *UpdateMyProfileRequest) GetLastName() string {
+	if x != nil {
+		return x.LastName
+	}
+	return ""
+}
+
+func (x *UpdateMyProfileRequest) GetExpectedRevision() int64 {
+	if x != nil {
+		return x.ExpectedRevision
+	}
+	return 0
+}
+
+func (x *UpdateMyProfileRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+// UpdateMyProfileResponse is the canonical persisted state of the caller's profile.
+type UpdateMyProfileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Profile       *UserProfile           `protobuf:"bytes,1,opt,name=profile,proto3" json:"profile,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMyProfileResponse) Reset() {
+	*x = UpdateMyProfileResponse{}
+	mi := &file_syntra_v1_identity_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMyProfileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMyProfileResponse) ProtoMessage() {}
+
+func (x *UpdateMyProfileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_identity_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMyProfileResponse.ProtoReflect.Descriptor instead.
+func (*UpdateMyProfileResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UpdateMyProfileResponse) GetProfile() *UserProfile {
+	if x != nil {
+		return x.Profile
+	}
+	return nil
+}
+
 type GetMeResponse struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	Identity *SelfIdentity          `protobuf:"bytes,1,opt,name=identity,proto3" json:"identity,omitempty"`
@@ -611,7 +990,7 @@ type GetMeResponse struct {
 
 func (x *GetMeResponse) Reset() {
 	*x = GetMeResponse{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[7]
+	mi := &file_syntra_v1_identity_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -623,7 +1002,7 @@ func (x *GetMeResponse) String() string {
 func (*GetMeResponse) ProtoMessage() {}
 
 func (x *GetMeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[7]
+	mi := &file_syntra_v1_identity_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -636,7 +1015,7 @@ func (x *GetMeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMeResponse.ProtoReflect.Descriptor instead.
 func (*GetMeResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{7}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetMeResponse) GetIdentity() *SelfIdentity {
@@ -676,7 +1055,7 @@ type GetWorkspaceRequest struct {
 
 func (x *GetWorkspaceRequest) Reset() {
 	*x = GetWorkspaceRequest{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[8]
+	mi := &file_syntra_v1_identity_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -688,7 +1067,7 @@ func (x *GetWorkspaceRequest) String() string {
 func (*GetWorkspaceRequest) ProtoMessage() {}
 
 func (x *GetWorkspaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[8]
+	mi := &file_syntra_v1_identity_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -701,7 +1080,7 @@ func (x *GetWorkspaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkspaceRequest.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{8}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetWorkspaceRequest) GetWorkspaceId() string {
@@ -721,7 +1100,7 @@ type GetWorkspaceResponse struct {
 
 func (x *GetWorkspaceResponse) Reset() {
 	*x = GetWorkspaceResponse{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[9]
+	mi := &file_syntra_v1_identity_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -733,7 +1112,7 @@ func (x *GetWorkspaceResponse) String() string {
 func (*GetWorkspaceResponse) ProtoMessage() {}
 
 func (x *GetWorkspaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[9]
+	mi := &file_syntra_v1_identity_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -746,7 +1125,7 @@ func (x *GetWorkspaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkspaceResponse.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{9}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetWorkspaceResponse) GetWorkspace() *Workspace {
@@ -775,7 +1154,7 @@ type ListMembersRequest struct {
 
 func (x *ListMembersRequest) Reset() {
 	*x = ListMembersRequest{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[10]
+	mi := &file_syntra_v1_identity_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -787,7 +1166,7 @@ func (x *ListMembersRequest) String() string {
 func (*ListMembersRequest) ProtoMessage() {}
 
 func (x *ListMembersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[10]
+	mi := &file_syntra_v1_identity_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -800,7 +1179,7 @@ func (x *ListMembersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMembersRequest.ProtoReflect.Descriptor instead.
 func (*ListMembersRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{10}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListMembersRequest) GetWorkspaceId() string {
@@ -834,7 +1213,7 @@ type ListMembersResponse struct {
 
 func (x *ListMembersResponse) Reset() {
 	*x = ListMembersResponse{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[11]
+	mi := &file_syntra_v1_identity_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -846,7 +1225,7 @@ func (x *ListMembersResponse) String() string {
 func (*ListMembersResponse) ProtoMessage() {}
 
 func (x *ListMembersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[11]
+	mi := &file_syntra_v1_identity_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -859,7 +1238,7 @@ func (x *ListMembersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMembersResponse.ProtoReflect.Descriptor instead.
 func (*ListMembersResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{11}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListMembersResponse) GetMembers() []*WorkspaceMember {
@@ -883,14 +1262,16 @@ type CreateInvitationRequest struct {
 	Email       string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Role        WorkspaceRole          `protobuf:"varint,3,opt,name=role,proto3,enum=syntra.v1.WorkspaceRole" json:"role,omitempty"`
 	// request_id is canonical UUID, scoped to actor/workspace/canonical payload.
-	RequestId     string `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	RequestId string `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	// Default false preserves manual-link semantics. True requires configured mail.
+	SendEmail     bool `protobuf:"varint,5,opt,name=send_email,json=sendEmail,proto3" json:"send_email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateInvitationRequest) Reset() {
 	*x = CreateInvitationRequest{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[12]
+	mi := &file_syntra_v1_identity_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -902,7 +1283,7 @@ func (x *CreateInvitationRequest) String() string {
 func (*CreateInvitationRequest) ProtoMessage() {}
 
 func (x *CreateInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[12]
+	mi := &file_syntra_v1_identity_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -915,7 +1296,7 @@ func (x *CreateInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInvitationRequest.ProtoReflect.Descriptor instead.
 func (*CreateInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{12}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CreateInvitationRequest) GetWorkspaceId() string {
@@ -946,10 +1327,18 @@ func (x *CreateInvitationRequest) GetRequestId() string {
 	return ""
 }
 
+func (x *CreateInvitationRequest) GetSendEmail() bool {
+	if x != nil {
+		return x.SendEmail
+	}
+	return false
+}
+
 type CreateInvitationResponse struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	Invitation *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
-	// token is returned only on the first committed response, never on a retry.
+	// Manual-link only: returned on the first committed response, never on a retry.
+	// Explicit email intent returns an empty token, including the first response.
 	// It is 43 canonical unpadded base64url characters encoding 32 random bytes.
 	Token         string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -958,7 +1347,7 @@ type CreateInvitationResponse struct {
 
 func (x *CreateInvitationResponse) Reset() {
 	*x = CreateInvitationResponse{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[13]
+	mi := &file_syntra_v1_identity_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -970,7 +1359,7 @@ func (x *CreateInvitationResponse) String() string {
 func (*CreateInvitationResponse) ProtoMessage() {}
 
 func (x *CreateInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[13]
+	mi := &file_syntra_v1_identity_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -983,7 +1372,7 @@ func (x *CreateInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInvitationResponse.ProtoReflect.Descriptor instead.
 func (*CreateInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{13}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *CreateInvitationResponse) GetInvitation() *Invitation {
@@ -1012,7 +1401,7 @@ type ListInvitationsRequest struct {
 
 func (x *ListInvitationsRequest) Reset() {
 	*x = ListInvitationsRequest{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[14]
+	mi := &file_syntra_v1_identity_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1024,7 +1413,7 @@ func (x *ListInvitationsRequest) String() string {
 func (*ListInvitationsRequest) ProtoMessage() {}
 
 func (x *ListInvitationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[14]
+	mi := &file_syntra_v1_identity_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1037,7 +1426,7 @@ func (x *ListInvitationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInvitationsRequest.ProtoReflect.Descriptor instead.
 func (*ListInvitationsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{14}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListInvitationsRequest) GetWorkspaceId() string {
@@ -1071,7 +1460,7 @@ type ListInvitationsResponse struct {
 
 func (x *ListInvitationsResponse) Reset() {
 	*x = ListInvitationsResponse{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[15]
+	mi := &file_syntra_v1_identity_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1083,7 +1472,7 @@ func (x *ListInvitationsResponse) String() string {
 func (*ListInvitationsResponse) ProtoMessage() {}
 
 func (x *ListInvitationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[15]
+	mi := &file_syntra_v1_identity_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1096,7 +1485,7 @@ func (x *ListInvitationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInvitationsResponse.ProtoReflect.Descriptor instead.
 func (*ListInvitationsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{15}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListInvitationsResponse) GetInvitations() []*Invitation {
@@ -1123,7 +1512,7 @@ type RevokeInvitationRequest struct {
 
 func (x *RevokeInvitationRequest) Reset() {
 	*x = RevokeInvitationRequest{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[16]
+	mi := &file_syntra_v1_identity_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1135,7 +1524,7 @@ func (x *RevokeInvitationRequest) String() string {
 func (*RevokeInvitationRequest) ProtoMessage() {}
 
 func (x *RevokeInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[16]
+	mi := &file_syntra_v1_identity_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1148,7 +1537,7 @@ func (x *RevokeInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeInvitationRequest.ProtoReflect.Descriptor instead.
 func (*RevokeInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{16}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *RevokeInvitationRequest) GetWorkspaceId() string {
@@ -1174,7 +1563,7 @@ type RevokeInvitationResponse struct {
 
 func (x *RevokeInvitationResponse) Reset() {
 	*x = RevokeInvitationResponse{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[17]
+	mi := &file_syntra_v1_identity_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1186,7 +1575,7 @@ func (x *RevokeInvitationResponse) String() string {
 func (*RevokeInvitationResponse) ProtoMessage() {}
 
 func (x *RevokeInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[17]
+	mi := &file_syntra_v1_identity_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1199,7 +1588,7 @@ func (x *RevokeInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeInvitationResponse.ProtoReflect.Descriptor instead.
 func (*RevokeInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{17}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RevokeInvitationResponse) GetInvitation() *Invitation {
@@ -1220,7 +1609,7 @@ type AcceptInvitationRequest struct {
 
 func (x *AcceptInvitationRequest) Reset() {
 	*x = AcceptInvitationRequest{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[18]
+	mi := &file_syntra_v1_identity_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1232,7 +1621,7 @@ func (x *AcceptInvitationRequest) String() string {
 func (*AcceptInvitationRequest) ProtoMessage() {}
 
 func (x *AcceptInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[18]
+	mi := &file_syntra_v1_identity_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1245,7 +1634,7 @@ func (x *AcceptInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptInvitationRequest.ProtoReflect.Descriptor instead.
 func (*AcceptInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{18}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AcceptInvitationRequest) GetToken() string {
@@ -1265,7 +1654,7 @@ type AcceptInvitationResponse struct {
 
 func (x *AcceptInvitationResponse) Reset() {
 	*x = AcceptInvitationResponse{}
-	mi := &file_syntra_v1_identity_proto_msgTypes[19]
+	mi := &file_syntra_v1_identity_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1277,7 +1666,7 @@ func (x *AcceptInvitationResponse) String() string {
 func (*AcceptInvitationResponse) ProtoMessage() {}
 
 func (x *AcceptInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_identity_proto_msgTypes[19]
+	mi := &file_syntra_v1_identity_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1290,7 +1679,7 @@ func (x *AcceptInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptInvitationResponse.ProtoReflect.Descriptor instead.
 func (*AcceptInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{19}
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *AcceptInvitationResponse) GetProfile() *UserProfile {
@@ -1307,16 +1696,229 @@ func (x *AcceptInvitationResponse) GetMembership() *WorkspaceMembership {
 	return nil
 }
 
+type InvitationDelivery struct {
+	state              protoimpl.MessageState    `protogen:"open.v1"`
+	State              InvitationDeliveryState   `protobuf:"varint,1,opt,name=state,proto3,enum=syntra.v1.InvitationDeliveryState" json:"state,omitempty"`
+	Failure            InvitationDeliveryFailure `protobuf:"varint,2,opt,name=failure,proto3,enum=syntra.v1.InvitationDeliveryFailure" json:"failure,omitempty"`
+	Attempts           int32                     `protobuf:"varint,3,opt,name=attempts,proto3" json:"attempts,omitempty"`
+	NextAttemptAt      *timestamppb.Timestamp    `protobuf:"bytes,4,opt,name=next_attempt_at,json=nextAttemptAt,proto3" json:"next_attempt_at,omitempty"`
+	ProviderAcceptedAt *timestamppb.Timestamp    `protobuf:"bytes,5,opt,name=provider_accepted_at,json=providerAcceptedAt,proto3" json:"provider_accepted_at,omitempty"`
+	// True permits an explicit same-job retry; caps/deadline still apply.
+	CanRetry bool `protobuf:"varint,6,opt,name=can_retry,json=canRetry,proto3" json:"can_retry,omitempty"`
+	// An attempt may have been accepted, including a cancelled in-flight request.
+	AcceptanceUncertain bool `protobuf:"varint,7,opt,name=acceptance_uncertain,json=acceptanceUncertain,proto3" json:"acceptance_uncertain,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *InvitationDelivery) Reset() {
+	*x = InvitationDelivery{}
+	mi := &file_syntra_v1_identity_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InvitationDelivery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InvitationDelivery) ProtoMessage() {}
+
+func (x *InvitationDelivery) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_identity_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InvitationDelivery.ProtoReflect.Descriptor instead.
+func (*InvitationDelivery) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *InvitationDelivery) GetState() InvitationDeliveryState {
+	if x != nil {
+		return x.State
+	}
+	return InvitationDeliveryState_INVITATION_DELIVERY_STATE_UNSPECIFIED
+}
+
+func (x *InvitationDelivery) GetFailure() InvitationDeliveryFailure {
+	if x != nil {
+		return x.Failure
+	}
+	return InvitationDeliveryFailure_INVITATION_DELIVERY_FAILURE_UNSPECIFIED
+}
+
+func (x *InvitationDelivery) GetAttempts() int32 {
+	if x != nil {
+		return x.Attempts
+	}
+	return 0
+}
+
+func (x *InvitationDelivery) GetNextAttemptAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.NextAttemptAt
+	}
+	return nil
+}
+
+func (x *InvitationDelivery) GetProviderAcceptedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ProviderAcceptedAt
+	}
+	return nil
+}
+
+func (x *InvitationDelivery) GetCanRetry() bool {
+	if x != nil {
+		return x.CanRetry
+	}
+	return false
+}
+
+func (x *InvitationDelivery) GetAcceptanceUncertain() bool {
+	if x != nil {
+		return x.AcceptanceUncertain
+	}
+	return false
+}
+
+type RetryInvitationDeliveryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId   string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	InvitationId  string                 `protobuf:"bytes,2,opt,name=invitation_id,json=invitationId,proto3" json:"invitation_id,omitempty"`
+	RequestId     string                 `protobuf:"bytes,3,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RetryInvitationDeliveryRequest) Reset() {
+	*x = RetryInvitationDeliveryRequest{}
+	mi := &file_syntra_v1_identity_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetryInvitationDeliveryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetryInvitationDeliveryRequest) ProtoMessage() {}
+
+func (x *RetryInvitationDeliveryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_identity_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetryInvitationDeliveryRequest.ProtoReflect.Descriptor instead.
+func (*RetryInvitationDeliveryRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *RetryInvitationDeliveryRequest) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
+func (x *RetryInvitationDeliveryRequest) GetInvitationId() string {
+	if x != nil {
+		return x.InvitationId
+	}
+	return ""
+}
+
+func (x *RetryInvitationDeliveryRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+type RetryInvitationDeliveryResponse struct {
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Invitation *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	// Deduplicated request returns its original canonical outcome and current metadata.
+	Outcome       InvitationDeliveryRetryOutcome `protobuf:"varint,2,opt,name=outcome,proto3,enum=syntra.v1.InvitationDeliveryRetryOutcome" json:"outcome,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RetryInvitationDeliveryResponse) Reset() {
+	*x = RetryInvitationDeliveryResponse{}
+	mi := &file_syntra_v1_identity_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetryInvitationDeliveryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetryInvitationDeliveryResponse) ProtoMessage() {}
+
+func (x *RetryInvitationDeliveryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_identity_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetryInvitationDeliveryResponse.ProtoReflect.Descriptor instead.
+func (*RetryInvitationDeliveryResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_identity_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *RetryInvitationDeliveryResponse) GetInvitation() *Invitation {
+	if x != nil {
+		return x.Invitation
+	}
+	return nil
+}
+
+func (x *RetryInvitationDeliveryResponse) GetOutcome() InvitationDeliveryRetryOutcome {
+	if x != nil {
+		return x.Outcome
+	}
+	return InvitationDeliveryRetryOutcome_INVITATION_DELIVERY_RETRY_OUTCOME_UNSPECIFIED
+}
+
 var File_syntra_v1_identity_proto protoreflect.FileDescriptor
 
 const file_syntra_v1_identity_proto_rawDesc = "" +
 	"\n" +
 	"\x18syntra/v1/identity.proto\x12\tsyntra.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"9\n" +
 	"\fSelfIdentity\x12)\n" +
-	"\x10provider_subject\x18\x01 \x01(\tR\x0fproviderSubject\"@\n" +
+	"\x10provider_subject\x18\x01 \x01(\tR\x0fproviderSubject\"\xee\x01\n" +
 	"\vUserProfile\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
-	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\"j\n" +
+	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x1a\n" +
+	"\busername\x18\x03 \x01(\tR\busername\x12\x1d\n" +
+	"\n" +
+	"first_name\x18\x04 \x01(\tR\tfirstName\x12\x1b\n" +
+	"\tlast_name\x18\x05 \x01(\tR\blastName\x12)\n" +
+	"\x10profile_complete\x18\x06 \x01(\bR\x0fprofileComplete\x12)\n" +
+	"\x10profile_revision\x18\a \x01(\x03R\x0fprofileRevision\"j\n" +
 	"\tWorkspace\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x129\n" +
@@ -1325,12 +1927,13 @@ const file_syntra_v1_identity_proto_rawDesc = "" +
 	"\x13WorkspaceMembership\x122\n" +
 	"\tworkspace\x18\x01 \x01(\v2\x14.syntra.v1.WorkspaceR\tworkspace\x12,\n" +
 	"\x04role\x18\x02 \x01(\x0e2\x18.syntra.v1.WorkspaceRoleR\x04role\x127\n" +
-	"\tjoined_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\bjoinedAt\"\xb4\x01\n" +
+	"\tjoined_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\bjoinedAt\"\xd0\x01\n" +
 	"\x0fWorkspaceMember\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12,\n" +
 	"\x04role\x18\x03 \x01(\x0e2\x18.syntra.v1.WorkspaceRoleR\x04role\x127\n" +
-	"\tjoined_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bjoinedAt\"\xd0\x03\n" +
+	"\tjoined_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bjoinedAt\x12\x1a\n" +
+	"\busername\x18\x05 \x01(\tR\busername\"\x8b\x04\n" +
 	"\n" +
 	"Invitation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
@@ -1347,11 +1950,22 @@ const file_syntra_v1_identity_proto_rawDesc = "" +
 	"revoked_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAt\x12;\n" +
 	"\vaccepted_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"acceptedAt\"J\n" +
+	"acceptedAt\x129\n" +
+	"\bdelivery\x18\v \x01(\v2\x1d.syntra.v1.InvitationDeliveryR\bdelivery\"J\n" +
 	"\fGetMeRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x02 \x01(\tR\tpageToken\"\xde\x01\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\"\xbc\x01\n" +
+	"\x16UpdateMyProfileRequest\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x1d\n" +
+	"\n" +
+	"first_name\x18\x02 \x01(\tR\tfirstName\x12\x1b\n" +
+	"\tlast_name\x18\x03 \x01(\tR\blastName\x12+\n" +
+	"\x11expected_revision\x18\x04 \x01(\x03R\x10expectedRevision\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x05 \x01(\tR\trequestId\"K\n" +
+	"\x17UpdateMyProfileResponse\x120\n" +
+	"\aprofile\x18\x01 \x01(\v2\x16.syntra.v1.UserProfileR\aprofile\"\xde\x01\n" +
 	"\rGetMeResponse\x123\n" +
 	"\bidentity\x18\x01 \x01(\v2\x17.syntra.v1.SelfIdentityR\bidentity\x120\n" +
 	"\aprofile\x18\x02 \x01(\v2\x16.syntra.v1.UserProfileR\aprofile\x12>\n" +
@@ -1371,13 +1985,15 @@ const file_syntra_v1_identity_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"s\n" +
 	"\x13ListMembersResponse\x124\n" +
 	"\amembers\x18\x01 \x03(\v2\x1a.syntra.v1.WorkspaceMemberR\amembers\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x9f\x01\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xbe\x01\n" +
 	"\x17CreateInvitationRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12,\n" +
 	"\x04role\x18\x03 \x01(\x0e2\x18.syntra.v1.WorkspaceRoleR\x04role\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\x04 \x01(\tR\trequestId\"g\n" +
+	"request_id\x18\x04 \x01(\tR\trequestId\x12\x1d\n" +
+	"\n" +
+	"send_email\x18\x05 \x01(\bR\tsendEmail\"g\n" +
 	"\x18CreateInvitationResponse\x125\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2\x15.syntra.v1.InvitationR\n" +
@@ -1404,7 +2020,25 @@ const file_syntra_v1_identity_proto_rawDesc = "" +
 	"\aprofile\x18\x01 \x01(\v2\x16.syntra.v1.UserProfileR\aprofile\x12>\n" +
 	"\n" +
 	"membership\x18\x02 \x01(\v2\x1e.syntra.v1.WorkspaceMembershipR\n" +
-	"membership*d\n" +
+	"membership\"\x8c\x03\n" +
+	"\x12InvitationDelivery\x128\n" +
+	"\x05state\x18\x01 \x01(\x0e2\".syntra.v1.InvitationDeliveryStateR\x05state\x12>\n" +
+	"\afailure\x18\x02 \x01(\x0e2$.syntra.v1.InvitationDeliveryFailureR\afailure\x12\x1a\n" +
+	"\battempts\x18\x03 \x01(\x05R\battempts\x12B\n" +
+	"\x0fnext_attempt_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\rnextAttemptAt\x12L\n" +
+	"\x14provider_accepted_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x12providerAcceptedAt\x12\x1b\n" +
+	"\tcan_retry\x18\x06 \x01(\bR\bcanRetry\x121\n" +
+	"\x14acceptance_uncertain\x18\a \x01(\bR\x13acceptanceUncertain\"\x87\x01\n" +
+	"\x1eRetryInvitationDeliveryRequest\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12#\n" +
+	"\rinvitation_id\x18\x02 \x01(\tR\finvitationId\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x03 \x01(\tR\trequestId\"\x9d\x01\n" +
+	"\x1fRetryInvitationDeliveryResponse\x125\n" +
+	"\n" +
+	"invitation\x18\x01 \x01(\v2\x15.syntra.v1.InvitationR\n" +
+	"invitation\x12C\n" +
+	"\aoutcome\x18\x02 \x01(\x0e2).syntra.v1.InvitationDeliveryRetryOutcomeR\aoutcome*d\n" +
 	"\rWorkspaceRole\x12\x1e\n" +
 	"\x1aWORKSPACE_ROLE_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14WORKSPACE_ROLE_ADMIN\x10\x01\x12\x19\n" +
@@ -1414,17 +2048,44 @@ const file_syntra_v1_identity_proto_rawDesc = "" +
 	"\x18INVITATION_STATE_PENDING\x10\x01\x12\x1d\n" +
 	"\x19INVITATION_STATE_ACCEPTED\x10\x02\x12\x1c\n" +
 	"\x18INVITATION_STATE_REVOKED\x10\x03\x12\x1c\n" +
-	"\x18INVITATION_STATE_EXPIRED\x10\x042I\n" +
+	"\x18INVITATION_STATE_EXPIRED\x10\x04*\x8d\x03\n" +
+	"\x17InvitationDeliveryState\x12)\n" +
+	"%INVITATION_DELIVERY_STATE_UNSPECIFIED\x10\x00\x12$\n" +
+	" INVITATION_DELIVERY_STATE_MANUAL\x10\x01\x12$\n" +
+	" INVITATION_DELIVERY_STATE_QUEUED\x10\x02\x12(\n" +
+	"$INVITATION_DELIVERY_STATE_ATTEMPTING\x10\x03\x12(\n" +
+	"$INVITATION_DELIVERY_STATE_RETRY_WAIT\x10\x04\x12/\n" +
+	"+INVITATION_DELIVERY_STATE_PROVIDER_ACCEPTED\x10\x05\x12$\n" +
+	" INVITATION_DELIVERY_STATE_FAILED\x10\x06\x12'\n" +
+	"#INVITATION_DELIVERY_STATE_UNCERTAIN\x10\a\x12'\n" +
+	"#INVITATION_DELIVERY_STATE_CANCELLED\x10\b*\x9a\x03\n" +
+	"\x19InvitationDeliveryFailure\x12+\n" +
+	"'INVITATION_DELIVERY_FAILURE_UNSPECIFIED\x10\x00\x12-\n" +
+	")INVITATION_DELIVERY_FAILURE_CONFIGURATION\x10\x01\x121\n" +
+	"-INVITATION_DELIVERY_FAILURE_PROVIDER_REJECTED\x10\x02\x12*\n" +
+	"&INVITATION_DELIVERY_FAILURE_RATE_LIMIT\x10\x03\x12)\n" +
+	"%INVITATION_DELIVERY_FAILURE_AMBIGUOUS\x10\x04\x12/\n" +
+	"+INVITATION_DELIVERY_FAILURE_RETRY_EXHAUSTED\x10\x05\x123\n" +
+	"/INVITATION_DELIVERY_FAILURE_INVITATION_INACTIVE\x10\x06\x121\n" +
+	"-INVITATION_DELIVERY_FAILURE_AUTHORITY_REVOKED\x10\a*\xa8\x02\n" +
+	"\x1eInvitationDeliveryRetryOutcome\x121\n" +
+	"-INVITATION_DELIVERY_RETRY_OUTCOME_UNSPECIFIED\x10\x00\x12/\n" +
+	"+INVITATION_DELIVERY_RETRY_OUTCOME_SCHEDULED\x10\x01\x125\n" +
+	"1INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_PENDING\x10\x02\x126\n" +
+	"2INVITATION_DELIVERY_RETRY_OUTCOME_ALREADY_ACCEPTED\x10\x03\x123\n" +
+	"/INVITATION_DELIVERY_RETRY_OUTCOME_NOT_RETRYABLE\x10\x042\xa3\x01\n" +
 	"\vUserService\x12:\n" +
-	"\x05GetMe\x12\x17.syntra.v1.GetMeRequest\x1a\x18.syntra.v1.GetMeResponse2\xb1\x01\n" +
+	"\x05GetMe\x12\x17.syntra.v1.GetMeRequest\x1a\x18.syntra.v1.GetMeResponse\x12X\n" +
+	"\x0fUpdateMyProfile\x12!.syntra.v1.UpdateMyProfileRequest\x1a\".syntra.v1.UpdateMyProfileResponse2\xb1\x01\n" +
 	"\x10WorkspaceService\x12O\n" +
 	"\fGetWorkspace\x12\x1e.syntra.v1.GetWorkspaceRequest\x1a\x1f.syntra.v1.GetWorkspaceResponse\x12L\n" +
-	"\vListMembers\x12\x1d.syntra.v1.ListMembersRequest\x1a\x1e.syntra.v1.ListMembersResponse2\x84\x03\n" +
+	"\vListMembers\x12\x1d.syntra.v1.ListMembersRequest\x1a\x1e.syntra.v1.ListMembersResponse2\xf6\x03\n" +
 	"\x11InvitationService\x12[\n" +
 	"\x10CreateInvitation\x12\".syntra.v1.CreateInvitationRequest\x1a#.syntra.v1.CreateInvitationResponse\x12X\n" +
 	"\x0fListInvitations\x12!.syntra.v1.ListInvitationsRequest\x1a\".syntra.v1.ListInvitationsResponse\x12[\n" +
 	"\x10RevokeInvitation\x12\".syntra.v1.RevokeInvitationRequest\x1a#.syntra.v1.RevokeInvitationResponse\x12[\n" +
-	"\x10AcceptInvitation\x12\".syntra.v1.AcceptInvitationRequest\x1a#.syntra.v1.AcceptInvitationResponseB)Z'syntra.local/mcp/gen/syntra/v1;syntrav1b\x06proto3"
+	"\x10AcceptInvitation\x12\".syntra.v1.AcceptInvitationRequest\x1a#.syntra.v1.AcceptInvitationResponse\x12p\n" +
+	"\x17RetryInvitationDelivery\x12).syntra.v1.RetryInvitationDeliveryRequest\x1a*.syntra.v1.RetryInvitationDeliveryResponseB)Z'syntra.local/mcp/gen/syntra/v1;syntrav1b\x06proto3"
 
 var (
 	file_syntra_v1_identity_proto_rawDescOnce sync.Once
@@ -1438,77 +2099,97 @@ func file_syntra_v1_identity_proto_rawDescGZIP() []byte {
 	return file_syntra_v1_identity_proto_rawDescData
 }
 
-var file_syntra_v1_identity_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_syntra_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_syntra_v1_identity_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_syntra_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_syntra_v1_identity_proto_goTypes = []any{
-	(WorkspaceRole)(0),               // 0: syntra.v1.WorkspaceRole
-	(InvitationState)(0),             // 1: syntra.v1.InvitationState
-	(*SelfIdentity)(nil),             // 2: syntra.v1.SelfIdentity
-	(*UserProfile)(nil),              // 3: syntra.v1.UserProfile
-	(*Workspace)(nil),                // 4: syntra.v1.Workspace
-	(*WorkspaceMembership)(nil),      // 5: syntra.v1.WorkspaceMembership
-	(*WorkspaceMember)(nil),          // 6: syntra.v1.WorkspaceMember
-	(*Invitation)(nil),               // 7: syntra.v1.Invitation
-	(*GetMeRequest)(nil),             // 8: syntra.v1.GetMeRequest
-	(*GetMeResponse)(nil),            // 9: syntra.v1.GetMeResponse
-	(*GetWorkspaceRequest)(nil),      // 10: syntra.v1.GetWorkspaceRequest
-	(*GetWorkspaceResponse)(nil),     // 11: syntra.v1.GetWorkspaceResponse
-	(*ListMembersRequest)(nil),       // 12: syntra.v1.ListMembersRequest
-	(*ListMembersResponse)(nil),      // 13: syntra.v1.ListMembersResponse
-	(*CreateInvitationRequest)(nil),  // 14: syntra.v1.CreateInvitationRequest
-	(*CreateInvitationResponse)(nil), // 15: syntra.v1.CreateInvitationResponse
-	(*ListInvitationsRequest)(nil),   // 16: syntra.v1.ListInvitationsRequest
-	(*ListInvitationsResponse)(nil),  // 17: syntra.v1.ListInvitationsResponse
-	(*RevokeInvitationRequest)(nil),  // 18: syntra.v1.RevokeInvitationRequest
-	(*RevokeInvitationResponse)(nil), // 19: syntra.v1.RevokeInvitationResponse
-	(*AcceptInvitationRequest)(nil),  // 20: syntra.v1.AcceptInvitationRequest
-	(*AcceptInvitationResponse)(nil), // 21: syntra.v1.AcceptInvitationResponse
-	(*timestamppb.Timestamp)(nil),    // 22: google.protobuf.Timestamp
+	(WorkspaceRole)(0),                      // 0: syntra.v1.WorkspaceRole
+	(InvitationState)(0),                    // 1: syntra.v1.InvitationState
+	(InvitationDeliveryState)(0),            // 2: syntra.v1.InvitationDeliveryState
+	(InvitationDeliveryFailure)(0),          // 3: syntra.v1.InvitationDeliveryFailure
+	(InvitationDeliveryRetryOutcome)(0),     // 4: syntra.v1.InvitationDeliveryRetryOutcome
+	(*SelfIdentity)(nil),                    // 5: syntra.v1.SelfIdentity
+	(*UserProfile)(nil),                     // 6: syntra.v1.UserProfile
+	(*Workspace)(nil),                       // 7: syntra.v1.Workspace
+	(*WorkspaceMembership)(nil),             // 8: syntra.v1.WorkspaceMembership
+	(*WorkspaceMember)(nil),                 // 9: syntra.v1.WorkspaceMember
+	(*Invitation)(nil),                      // 10: syntra.v1.Invitation
+	(*GetMeRequest)(nil),                    // 11: syntra.v1.GetMeRequest
+	(*UpdateMyProfileRequest)(nil),          // 12: syntra.v1.UpdateMyProfileRequest
+	(*UpdateMyProfileResponse)(nil),         // 13: syntra.v1.UpdateMyProfileResponse
+	(*GetMeResponse)(nil),                   // 14: syntra.v1.GetMeResponse
+	(*GetWorkspaceRequest)(nil),             // 15: syntra.v1.GetWorkspaceRequest
+	(*GetWorkspaceResponse)(nil),            // 16: syntra.v1.GetWorkspaceResponse
+	(*ListMembersRequest)(nil),              // 17: syntra.v1.ListMembersRequest
+	(*ListMembersResponse)(nil),             // 18: syntra.v1.ListMembersResponse
+	(*CreateInvitationRequest)(nil),         // 19: syntra.v1.CreateInvitationRequest
+	(*CreateInvitationResponse)(nil),        // 20: syntra.v1.CreateInvitationResponse
+	(*ListInvitationsRequest)(nil),          // 21: syntra.v1.ListInvitationsRequest
+	(*ListInvitationsResponse)(nil),         // 22: syntra.v1.ListInvitationsResponse
+	(*RevokeInvitationRequest)(nil),         // 23: syntra.v1.RevokeInvitationRequest
+	(*RevokeInvitationResponse)(nil),        // 24: syntra.v1.RevokeInvitationResponse
+	(*AcceptInvitationRequest)(nil),         // 25: syntra.v1.AcceptInvitationRequest
+	(*AcceptInvitationResponse)(nil),        // 26: syntra.v1.AcceptInvitationResponse
+	(*InvitationDelivery)(nil),              // 27: syntra.v1.InvitationDelivery
+	(*RetryInvitationDeliveryRequest)(nil),  // 28: syntra.v1.RetryInvitationDeliveryRequest
+	(*RetryInvitationDeliveryResponse)(nil), // 29: syntra.v1.RetryInvitationDeliveryResponse
+	(*timestamppb.Timestamp)(nil),           // 30: google.protobuf.Timestamp
 }
 var file_syntra_v1_identity_proto_depIdxs = []int32{
-	22, // 0: syntra.v1.Workspace.created_at:type_name -> google.protobuf.Timestamp
-	4,  // 1: syntra.v1.WorkspaceMembership.workspace:type_name -> syntra.v1.Workspace
+	30, // 0: syntra.v1.Workspace.created_at:type_name -> google.protobuf.Timestamp
+	7,  // 1: syntra.v1.WorkspaceMembership.workspace:type_name -> syntra.v1.Workspace
 	0,  // 2: syntra.v1.WorkspaceMembership.role:type_name -> syntra.v1.WorkspaceRole
-	22, // 3: syntra.v1.WorkspaceMembership.joined_at:type_name -> google.protobuf.Timestamp
+	30, // 3: syntra.v1.WorkspaceMembership.joined_at:type_name -> google.protobuf.Timestamp
 	0,  // 4: syntra.v1.WorkspaceMember.role:type_name -> syntra.v1.WorkspaceRole
-	22, // 5: syntra.v1.WorkspaceMember.joined_at:type_name -> google.protobuf.Timestamp
+	30, // 5: syntra.v1.WorkspaceMember.joined_at:type_name -> google.protobuf.Timestamp
 	0,  // 6: syntra.v1.Invitation.role:type_name -> syntra.v1.WorkspaceRole
 	1,  // 7: syntra.v1.Invitation.state:type_name -> syntra.v1.InvitationState
-	22, // 8: syntra.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
-	22, // 9: syntra.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
-	22, // 10: syntra.v1.Invitation.revoked_at:type_name -> google.protobuf.Timestamp
-	22, // 11: syntra.v1.Invitation.accepted_at:type_name -> google.protobuf.Timestamp
-	2,  // 12: syntra.v1.GetMeResponse.identity:type_name -> syntra.v1.SelfIdentity
-	3,  // 13: syntra.v1.GetMeResponse.profile:type_name -> syntra.v1.UserProfile
-	5,  // 14: syntra.v1.GetMeResponse.workspaces:type_name -> syntra.v1.WorkspaceMembership
-	4,  // 15: syntra.v1.GetWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
-	0,  // 16: syntra.v1.GetWorkspaceResponse.role:type_name -> syntra.v1.WorkspaceRole
-	6,  // 17: syntra.v1.ListMembersResponse.members:type_name -> syntra.v1.WorkspaceMember
-	0,  // 18: syntra.v1.CreateInvitationRequest.role:type_name -> syntra.v1.WorkspaceRole
-	7,  // 19: syntra.v1.CreateInvitationResponse.invitation:type_name -> syntra.v1.Invitation
-	7,  // 20: syntra.v1.ListInvitationsResponse.invitations:type_name -> syntra.v1.Invitation
-	7,  // 21: syntra.v1.RevokeInvitationResponse.invitation:type_name -> syntra.v1.Invitation
-	3,  // 22: syntra.v1.AcceptInvitationResponse.profile:type_name -> syntra.v1.UserProfile
-	5,  // 23: syntra.v1.AcceptInvitationResponse.membership:type_name -> syntra.v1.WorkspaceMembership
-	8,  // 24: syntra.v1.UserService.GetMe:input_type -> syntra.v1.GetMeRequest
-	10, // 25: syntra.v1.WorkspaceService.GetWorkspace:input_type -> syntra.v1.GetWorkspaceRequest
-	12, // 26: syntra.v1.WorkspaceService.ListMembers:input_type -> syntra.v1.ListMembersRequest
-	14, // 27: syntra.v1.InvitationService.CreateInvitation:input_type -> syntra.v1.CreateInvitationRequest
-	16, // 28: syntra.v1.InvitationService.ListInvitations:input_type -> syntra.v1.ListInvitationsRequest
-	18, // 29: syntra.v1.InvitationService.RevokeInvitation:input_type -> syntra.v1.RevokeInvitationRequest
-	20, // 30: syntra.v1.InvitationService.AcceptInvitation:input_type -> syntra.v1.AcceptInvitationRequest
-	9,  // 31: syntra.v1.UserService.GetMe:output_type -> syntra.v1.GetMeResponse
-	11, // 32: syntra.v1.WorkspaceService.GetWorkspace:output_type -> syntra.v1.GetWorkspaceResponse
-	13, // 33: syntra.v1.WorkspaceService.ListMembers:output_type -> syntra.v1.ListMembersResponse
-	15, // 34: syntra.v1.InvitationService.CreateInvitation:output_type -> syntra.v1.CreateInvitationResponse
-	17, // 35: syntra.v1.InvitationService.ListInvitations:output_type -> syntra.v1.ListInvitationsResponse
-	19, // 36: syntra.v1.InvitationService.RevokeInvitation:output_type -> syntra.v1.RevokeInvitationResponse
-	21, // 37: syntra.v1.InvitationService.AcceptInvitation:output_type -> syntra.v1.AcceptInvitationResponse
-	31, // [31:38] is the sub-list for method output_type
-	24, // [24:31] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	30, // 8: syntra.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
+	30, // 9: syntra.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
+	30, // 10: syntra.v1.Invitation.revoked_at:type_name -> google.protobuf.Timestamp
+	30, // 11: syntra.v1.Invitation.accepted_at:type_name -> google.protobuf.Timestamp
+	27, // 12: syntra.v1.Invitation.delivery:type_name -> syntra.v1.InvitationDelivery
+	6,  // 13: syntra.v1.UpdateMyProfileResponse.profile:type_name -> syntra.v1.UserProfile
+	5,  // 14: syntra.v1.GetMeResponse.identity:type_name -> syntra.v1.SelfIdentity
+	6,  // 15: syntra.v1.GetMeResponse.profile:type_name -> syntra.v1.UserProfile
+	8,  // 16: syntra.v1.GetMeResponse.workspaces:type_name -> syntra.v1.WorkspaceMembership
+	7,  // 17: syntra.v1.GetWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
+	0,  // 18: syntra.v1.GetWorkspaceResponse.role:type_name -> syntra.v1.WorkspaceRole
+	9,  // 19: syntra.v1.ListMembersResponse.members:type_name -> syntra.v1.WorkspaceMember
+	0,  // 20: syntra.v1.CreateInvitationRequest.role:type_name -> syntra.v1.WorkspaceRole
+	10, // 21: syntra.v1.CreateInvitationResponse.invitation:type_name -> syntra.v1.Invitation
+	10, // 22: syntra.v1.ListInvitationsResponse.invitations:type_name -> syntra.v1.Invitation
+	10, // 23: syntra.v1.RevokeInvitationResponse.invitation:type_name -> syntra.v1.Invitation
+	6,  // 24: syntra.v1.AcceptInvitationResponse.profile:type_name -> syntra.v1.UserProfile
+	8,  // 25: syntra.v1.AcceptInvitationResponse.membership:type_name -> syntra.v1.WorkspaceMembership
+	2,  // 26: syntra.v1.InvitationDelivery.state:type_name -> syntra.v1.InvitationDeliveryState
+	3,  // 27: syntra.v1.InvitationDelivery.failure:type_name -> syntra.v1.InvitationDeliveryFailure
+	30, // 28: syntra.v1.InvitationDelivery.next_attempt_at:type_name -> google.protobuf.Timestamp
+	30, // 29: syntra.v1.InvitationDelivery.provider_accepted_at:type_name -> google.protobuf.Timestamp
+	10, // 30: syntra.v1.RetryInvitationDeliveryResponse.invitation:type_name -> syntra.v1.Invitation
+	4,  // 31: syntra.v1.RetryInvitationDeliveryResponse.outcome:type_name -> syntra.v1.InvitationDeliveryRetryOutcome
+	11, // 32: syntra.v1.UserService.GetMe:input_type -> syntra.v1.GetMeRequest
+	12, // 33: syntra.v1.UserService.UpdateMyProfile:input_type -> syntra.v1.UpdateMyProfileRequest
+	15, // 34: syntra.v1.WorkspaceService.GetWorkspace:input_type -> syntra.v1.GetWorkspaceRequest
+	17, // 35: syntra.v1.WorkspaceService.ListMembers:input_type -> syntra.v1.ListMembersRequest
+	19, // 36: syntra.v1.InvitationService.CreateInvitation:input_type -> syntra.v1.CreateInvitationRequest
+	21, // 37: syntra.v1.InvitationService.ListInvitations:input_type -> syntra.v1.ListInvitationsRequest
+	23, // 38: syntra.v1.InvitationService.RevokeInvitation:input_type -> syntra.v1.RevokeInvitationRequest
+	25, // 39: syntra.v1.InvitationService.AcceptInvitation:input_type -> syntra.v1.AcceptInvitationRequest
+	28, // 40: syntra.v1.InvitationService.RetryInvitationDelivery:input_type -> syntra.v1.RetryInvitationDeliveryRequest
+	14, // 41: syntra.v1.UserService.GetMe:output_type -> syntra.v1.GetMeResponse
+	13, // 42: syntra.v1.UserService.UpdateMyProfile:output_type -> syntra.v1.UpdateMyProfileResponse
+	16, // 43: syntra.v1.WorkspaceService.GetWorkspace:output_type -> syntra.v1.GetWorkspaceResponse
+	18, // 44: syntra.v1.WorkspaceService.ListMembers:output_type -> syntra.v1.ListMembersResponse
+	20, // 45: syntra.v1.InvitationService.CreateInvitation:output_type -> syntra.v1.CreateInvitationResponse
+	22, // 46: syntra.v1.InvitationService.ListInvitations:output_type -> syntra.v1.ListInvitationsResponse
+	24, // 47: syntra.v1.InvitationService.RevokeInvitation:output_type -> syntra.v1.RevokeInvitationResponse
+	26, // 48: syntra.v1.InvitationService.AcceptInvitation:output_type -> syntra.v1.AcceptInvitationResponse
+	29, // 49: syntra.v1.InvitationService.RetryInvitationDelivery:output_type -> syntra.v1.RetryInvitationDeliveryResponse
+	41, // [41:50] is the sub-list for method output_type
+	32, // [32:41] is the sub-list for method input_type
+	32, // [32:32] is the sub-list for extension type_name
+	32, // [32:32] is the sub-list for extension extendee
+	0,  // [0:32] is the sub-list for field type_name
 }
 
 func init() { file_syntra_v1_identity_proto_init() }
@@ -1521,8 +2202,8 @@ func file_syntra_v1_identity_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_identity_proto_rawDesc), len(file_syntra_v1_identity_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   20,
+			NumEnums:      5,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   3,
 		},
