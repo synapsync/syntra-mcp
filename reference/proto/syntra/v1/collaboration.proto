@@ -176,6 +176,10 @@ message Thread {
   // summary of the latest published message (published visibility) or of the caller's own current prepared message (own-prepared
   // visibility). It carries no more authority than the message itself and is never a substitute for reading the message.
   string summary_preview = 20;
+  // Published ListThreads only. Up to three distinct participant IDs, with the creator first.
+  repeated string participant_preview_user_ids = 21;
+  // Published ListThreads only. Counts the creator, current assignee, and published message authors and recipients once each.
+  int32 participant_count = 22;
 }
 
 // Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.

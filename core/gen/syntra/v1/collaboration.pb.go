@@ -676,8 +676,12 @@ type Thread struct {
 	// summary of the latest published message (published visibility) or of the caller's own current prepared message (own-prepared
 	// visibility). It carries no more authority than the message itself and is never a substitute for reading the message.
 	SummaryPreview string `protobuf:"bytes,20,opt,name=summary_preview,json=summaryPreview,proto3" json:"summary_preview,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Published ListThreads only. Up to three distinct participant IDs, with the creator first.
+	ParticipantPreviewUserIds []string `protobuf:"bytes,21,rep,name=participant_preview_user_ids,json=participantPreviewUserIds,proto3" json:"participant_preview_user_ids,omitempty"`
+	// Published ListThreads only. Counts the creator, current assignee, and published message authors and recipients once each.
+	ParticipantCount int32 `protobuf:"varint,22,opt,name=participant_count,json=participantCount,proto3" json:"participant_count,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Thread) Reset() {
@@ -820,6 +824,20 @@ func (x *Thread) GetSummaryPreview() string {
 		return x.SummaryPreview
 	}
 	return ""
+}
+
+func (x *Thread) GetParticipantPreviewUserIds() []string {
+	if x != nil {
+		return x.ParticipantPreviewUserIds
+	}
+	return nil
+}
+
+func (x *Thread) GetParticipantCount() int32 {
+	if x != nil {
+		return x.ParticipantCount
+	}
+	return 0
 }
 
 // Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.
@@ -4562,7 +4580,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x11ProjectTeamMember\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x16\n" +
-	"\x06active\x18\x03 \x01(\bR\x06active\"\xcb\x05\n" +
+	"\x06active\x18\x03 \x01(\bR\x06active\"\xb9\x06\n" +
 	"\x06Thread\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1d\n" +
@@ -4583,7 +4601,9 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x11closed_by_user_id\x18\x11 \x01(\tH\x00R\x0eclosedByUserId\x88\x01\x01\x127\n" +
 	"\tclosed_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\bclosedAt\x12%\n" +
 	"\x0eclosure_reason\x18\x13 \x01(\tR\rclosureReason\x12'\n" +
-	"\x0fsummary_preview\x18\x14 \x01(\tR\x0esummaryPreviewB\x14\n" +
+	"\x0fsummary_preview\x18\x14 \x01(\tR\x0esummaryPreview\x12?\n" +
+	"\x1cparticipant_preview_user_ids\x18\x15 \x03(\tR\x19participantPreviewUserIds\x12+\n" +
+	"\x11participant_count\x18\x16 \x01(\x05R\x10participantCountB\x14\n" +
 	"\x12_closed_by_user_id\"\xa4\x03\n" +
 	"\x0fPreparedMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
