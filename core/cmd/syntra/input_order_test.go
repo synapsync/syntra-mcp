@@ -28,7 +28,7 @@ func TestBadInputBeforeProfile(t *testing.T) {
 			}
 		})
 	}
-	out, err := exec.Command(binary, "reply", "--profile-dir", profile, "--workspace", "44444444-4444-4444-8444-444444444444", "--ticket", "77777777-7777-4777-8777-777777777777", "--summary", "hello", "--context-file", filepath.Join(root, "absent")).CombinedOutput()
+	out, err := exec.Command(binary, "reply", "--profile-dir", profile, "--workspace", "44444444-4444-4444-8444-444444444444", "--thread", "77777777-7777-4777-8777-777777777777", "--summary", "hello", "--context-file", filepath.Join(root, "absent")).CombinedOutput()
 	if err == nil || !strings.Contains(string(out), "context file unavailable") || strings.Contains(string(out), "profile") {
 		t.Fatalf("reply: %v %s", err, out)
 	}
@@ -40,7 +40,7 @@ func TestBadInputBeforeProfile(t *testing.T) {
 	if err == nil || !strings.Contains(string(out), "requestId") || strings.Contains(string(out), "local profile") {
 		t.Fatalf("semantic validation: %v %s", err, out)
 	}
-	out, err = exec.Command(binary, "prepare", "--profile-dir", profile, "--template", "reply", "--workspace", "bad", "--ticket", "bad").CombinedOutput()
+	out, err = exec.Command(binary, "prepare", "--profile-dir", profile, "--template", "reply", "--workspace", "bad", "--thread", "bad").CombinedOutput()
 	if err == nil || !strings.Contains(string(out), "workspace") || strings.Contains(string(out), "local profile") {
 		t.Fatalf("template validation: %v %s", err, out)
 	}

@@ -21,33 +21,33 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Required together when replacing/linking/publishing a private draft.
+// Required together when replacing/linking/publishing a private prepared message.
 // Digest refers to the prior exact content, not the new replacement.
-type ContentDraftExpectation struct {
-	state                  protoimpl.MessageState `protogen:"open.v1"`
-	TicketId               string                 `protobuf:"bytes,1,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
-	DraftId                string                 `protobuf:"bytes,2,opt,name=draft_id,json=draftId,proto3" json:"draft_id,omitempty"`
-	ExpectedTicketRevision string                 `protobuf:"bytes,3,opt,name=expected_ticket_revision,json=expectedTicketRevision,proto3" json:"expected_ticket_revision,omitempty"`
-	ExpectedDraftRevision  string                 `protobuf:"bytes,4,opt,name=expected_draft_revision,json=expectedDraftRevision,proto3" json:"expected_draft_revision,omitempty"`
-	ExpectedContentDigest  []byte                 `protobuf:"bytes,5,opt,name=expected_content_digest,json=expectedContentDigest,proto3" json:"expected_content_digest,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+type PreparedContentExpectation struct {
+	state                           protoimpl.MessageState `protogen:"open.v1"`
+	ThreadId                        string                 `protobuf:"bytes,1,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	PreparedMessageId               string                 `protobuf:"bytes,2,opt,name=prepared_message_id,json=preparedMessageId,proto3" json:"prepared_message_id,omitempty"`
+	ExpectedThreadRevision          string                 `protobuf:"bytes,3,opt,name=expected_thread_revision,json=expectedThreadRevision,proto3" json:"expected_thread_revision,omitempty"`
+	ExpectedPreparedMessageRevision string                 `protobuf:"bytes,4,opt,name=expected_prepared_message_revision,json=expectedPreparedMessageRevision,proto3" json:"expected_prepared_message_revision,omitempty"`
+	ExpectedContentDigest           []byte                 `protobuf:"bytes,5,opt,name=expected_content_digest,json=expectedContentDigest,proto3" json:"expected_content_digest,omitempty"`
+	unknownFields                   protoimpl.UnknownFields
+	sizeCache                       protoimpl.SizeCache
 }
 
-func (x *ContentDraftExpectation) Reset() {
-	*x = ContentDraftExpectation{}
+func (x *PreparedContentExpectation) Reset() {
+	*x = PreparedContentExpectation{}
 	mi := &file_syntra_v1_content_service_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ContentDraftExpectation) String() string {
+func (x *PreparedContentExpectation) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ContentDraftExpectation) ProtoMessage() {}
+func (*PreparedContentExpectation) ProtoMessage() {}
 
-func (x *ContentDraftExpectation) ProtoReflect() protoreflect.Message {
+func (x *PreparedContentExpectation) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_content_service_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -59,40 +59,40 @@ func (x *ContentDraftExpectation) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ContentDraftExpectation.ProtoReflect.Descriptor instead.
-func (*ContentDraftExpectation) Descriptor() ([]byte, []int) {
+// Deprecated: Use PreparedContentExpectation.ProtoReflect.Descriptor instead.
+func (*PreparedContentExpectation) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ContentDraftExpectation) GetTicketId() string {
+func (x *PreparedContentExpectation) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *ContentDraftExpectation) GetDraftId() string {
+func (x *PreparedContentExpectation) GetPreparedMessageId() string {
 	if x != nil {
-		return x.DraftId
+		return x.PreparedMessageId
 	}
 	return ""
 }
 
-func (x *ContentDraftExpectation) GetExpectedTicketRevision() string {
+func (x *PreparedContentExpectation) GetExpectedThreadRevision() string {
 	if x != nil {
-		return x.ExpectedTicketRevision
+		return x.ExpectedThreadRevision
 	}
 	return ""
 }
 
-func (x *ContentDraftExpectation) GetExpectedDraftRevision() string {
+func (x *PreparedContentExpectation) GetExpectedPreparedMessageRevision() string {
 	if x != nil {
-		return x.ExpectedDraftRevision
+		return x.ExpectedPreparedMessageRevision
 	}
 	return ""
 }
 
-func (x *ContentDraftExpectation) GetExpectedContentDigest() []byte {
+func (x *PreparedContentExpectation) GetExpectedContentDigest() []byte {
 	if x != nil {
 		return x.ExpectedContentDigest
 	}
@@ -100,17 +100,17 @@ func (x *ContentDraftExpectation) GetExpectedContentDigest() []byte {
 }
 
 // Requires PREPARE. No publication, delivery or recipient-side receipt.
-// New initial: existing_ticket_id and update absent, ticket revision absent.
-// New reply: existing_ticket_id and ticket revision present, update absent.
-// Replacement: update present, ticket revision absent (contained in update).
+// New initial: existing_thread_id and update absent, thread revision absent.
+// New reply: existing_thread_id and thread revision present, update absent.
+// Replacement: update present, thread revision absent (contained in update).
 type PrepareContentRequest struct {
-	state                  protoimpl.MessageState    `protogen:"open.v1"`
-	Content                *AuthoredContent          `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
-	ExpectedContentDigest  []byte                    `protobuf:"bytes,2,opt,name=expected_content_digest,json=expectedContentDigest,proto3" json:"expected_content_digest,omitempty"`
-	RequestId              string                    `protobuf:"bytes,3,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	ExpectedTicketRevision *string                   `protobuf:"bytes,4,opt,name=expected_ticket_revision,json=expectedTicketRevision,proto3,oneof" json:"expected_ticket_revision,omitempty"`
-	Update                 *ContentDraftExpectation  `protobuf:"bytes,5,opt,name=update,proto3" json:"update,omitempty"`
-	ClientReported         *ClientReportedProvenance `protobuf:"bytes,6,opt,name=client_reported,json=clientReported,proto3" json:"client_reported,omitempty"`
+	state                  protoimpl.MessageState      `protogen:"open.v1"`
+	Content                *AuthoredContent            `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	ExpectedContentDigest  []byte                      `protobuf:"bytes,2,opt,name=expected_content_digest,json=expectedContentDigest,proto3" json:"expected_content_digest,omitempty"`
+	RequestId              string                      `protobuf:"bytes,3,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	ExpectedThreadRevision *string                     `protobuf:"bytes,4,opt,name=expected_thread_revision,json=expectedThreadRevision,proto3,oneof" json:"expected_thread_revision,omitempty"`
+	Update                 *PreparedContentExpectation `protobuf:"bytes,5,opt,name=update,proto3" json:"update,omitempty"`
+	ClientReported         *ClientReportedProvenance   `protobuf:"bytes,6,opt,name=client_reported,json=clientReported,proto3" json:"client_reported,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -166,14 +166,14 @@ func (x *PrepareContentRequest) GetRequestId() string {
 	return ""
 }
 
-func (x *PrepareContentRequest) GetExpectedTicketRevision() string {
-	if x != nil && x.ExpectedTicketRevision != nil {
-		return *x.ExpectedTicketRevision
+func (x *PrepareContentRequest) GetExpectedThreadRevision() string {
+	if x != nil && x.ExpectedThreadRevision != nil {
+		return *x.ExpectedThreadRevision
 	}
 	return ""
 }
 
-func (x *PrepareContentRequest) GetUpdate() *ContentDraftExpectation {
+func (x *PrepareContentRequest) GetUpdate() *PreparedContentExpectation {
 	if x != nil {
 		return x.Update
 	}
@@ -234,12 +234,12 @@ func (x *PrepareContentResponse) GetSnapshot() *AuthoredContentSnapshot {
 // Requires PREPARE. Only unlinked -> linked; preserves every other envelope
 // field including original intent. Never sends. Both old and new digests bind.
 type LinkContentRequest struct {
-	state                 protoimpl.MessageState    `protogen:"open.v1"`
-	Current               *ContentDraftExpectation  `protobuf:"bytes,1,opt,name=current,proto3" json:"current,omitempty"`
-	LinkedContent         *AuthoredContent          `protobuf:"bytes,2,opt,name=linked_content,json=linkedContent,proto3" json:"linked_content,omitempty"`
-	ExpectedContentDigest []byte                    `protobuf:"bytes,3,opt,name=expected_content_digest,json=expectedContentDigest,proto3" json:"expected_content_digest,omitempty"`
-	RequestId             string                    `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	ClientReported        *ClientReportedProvenance `protobuf:"bytes,5,opt,name=client_reported,json=clientReported,proto3" json:"client_reported,omitempty"`
+	state                 protoimpl.MessageState      `protogen:"open.v1"`
+	Current               *PreparedContentExpectation `protobuf:"bytes,1,opt,name=current,proto3" json:"current,omitempty"`
+	LinkedContent         *AuthoredContent            `protobuf:"bytes,2,opt,name=linked_content,json=linkedContent,proto3" json:"linked_content,omitempty"`
+	ExpectedContentDigest []byte                      `protobuf:"bytes,3,opt,name=expected_content_digest,json=expectedContentDigest,proto3" json:"expected_content_digest,omitempty"`
+	RequestId             string                      `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	ClientReported        *ClientReportedProvenance   `protobuf:"bytes,5,opt,name=client_reported,json=clientReported,proto3" json:"client_reported,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -274,7 +274,7 @@ func (*LinkContentRequest) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *LinkContentRequest) GetCurrent() *ContentDraftExpectation {
+func (x *LinkContentRequest) GetCurrent() *PreparedContentExpectation {
 	if x != nil {
 		return x.Current
 	}
@@ -353,15 +353,16 @@ func (x *LinkContentResponse) GetSnapshot() *AuthoredContentSnapshot {
 	return nil
 }
 
-// Requires explicit PUBLISH capability and linked active member, nonclosed
-// ticket, current authorization and both CAS tokens. No implicit approval field.
+// Requires the authenticated human author or an agent with PUBLISH capability,
+// a linked active member, current authorization and both CAS tokens. Closed
+// threads reject publication. No implicit approval field.
 type PublishContentRequest struct {
-	state                protoimpl.MessageState    `protogen:"open.v1"`
-	WorkspaceId          string                    `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	ExpectedAuthorUserId string                    `protobuf:"bytes,2,opt,name=expected_author_user_id,json=expectedAuthorUserId,proto3" json:"expected_author_user_id,omitempty"`
-	Current              *ContentDraftExpectation  `protobuf:"bytes,3,opt,name=current,proto3" json:"current,omitempty"`
-	RequestId            string                    `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	ClientReported       *ClientReportedProvenance `protobuf:"bytes,5,opt,name=client_reported,json=clientReported,proto3" json:"client_reported,omitempty"`
+	state                protoimpl.MessageState      `protogen:"open.v1"`
+	WorkspaceId          string                      `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ExpectedAuthorUserId string                      `protobuf:"bytes,2,opt,name=expected_author_user_id,json=expectedAuthorUserId,proto3" json:"expected_author_user_id,omitempty"`
+	Current              *PreparedContentExpectation `protobuf:"bytes,3,opt,name=current,proto3" json:"current,omitempty"`
+	RequestId            string                      `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	ClientReported       *ClientReportedProvenance   `protobuf:"bytes,5,opt,name=client_reported,json=clientReported,proto3" json:"client_reported,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -410,7 +411,7 @@ func (x *PublishContentRequest) GetExpectedAuthorUserId() string {
 	return ""
 }
 
-func (x *PublishContentRequest) GetCurrent() *ContentDraftExpectation {
+func (x *PublishContentRequest) GetCurrent() *PreparedContentExpectation {
 	if x != nil {
 		return x.Current
 	}
@@ -481,10 +482,10 @@ type AuthoredContentSnapshot struct {
 	state          protoimpl.MessageState    `protogen:"open.v1"`
 	Content        *AuthoredContent          `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	Receipt        *ContentProvenanceReceipt `protobuf:"bytes,2,opt,name=receipt,proto3" json:"receipt,omitempty"`
-	TicketRevision string                    `protobuf:"bytes,3,opt,name=ticket_revision,json=ticketRevision,proto3" json:"ticket_revision,omitempty"`
+	ThreadRevision string                    `protobuf:"bytes,3,opt,name=thread_revision,json=threadRevision,proto3" json:"thread_revision,omitempty"`
 	// Types that are valid to be assigned to Record:
 	//
-	//	*AuthoredContentSnapshot_PrivateDraft
+	//	*AuthoredContentSnapshot_PreparedMessage
 	//	*AuthoredContentSnapshot_PublishedMessageId
 	Record        isAuthoredContentSnapshot_Record `protobuf_oneof:"record"`
 	unknownFields protoimpl.UnknownFields
@@ -535,9 +536,9 @@ func (x *AuthoredContentSnapshot) GetReceipt() *ContentProvenanceReceipt {
 	return nil
 }
 
-func (x *AuthoredContentSnapshot) GetTicketRevision() string {
+func (x *AuthoredContentSnapshot) GetThreadRevision() string {
 	if x != nil {
-		return x.TicketRevision
+		return x.ThreadRevision
 	}
 	return ""
 }
@@ -549,10 +550,10 @@ func (x *AuthoredContentSnapshot) GetRecord() isAuthoredContentSnapshot_Record {
 	return nil
 }
 
-func (x *AuthoredContentSnapshot) GetPrivateDraft() *PrivateContentRevision {
+func (x *AuthoredContentSnapshot) GetPreparedMessage() *PrivateContentRevision {
 	if x != nil {
-		if x, ok := x.Record.(*AuthoredContentSnapshot_PrivateDraft); ok {
-			return x.PrivateDraft
+		if x, ok := x.Record.(*AuthoredContentSnapshot_PreparedMessage); ok {
+			return x.PreparedMessage
 		}
 	}
 	return nil
@@ -571,24 +572,24 @@ type isAuthoredContentSnapshot_Record interface {
 	isAuthoredContentSnapshot_Record()
 }
 
-type AuthoredContentSnapshot_PrivateDraft struct {
-	PrivateDraft *PrivateContentRevision `protobuf:"bytes,4,opt,name=private_draft,json=privateDraft,proto3,oneof"`
+type AuthoredContentSnapshot_PreparedMessage struct {
+	PreparedMessage *PrivateContentRevision `protobuf:"bytes,4,opt,name=prepared_message,json=preparedMessage,proto3,oneof"`
 }
 
 type AuthoredContentSnapshot_PublishedMessageId struct {
 	PublishedMessageId string `protobuf:"bytes,5,opt,name=published_message_id,json=publishedMessageId,proto3,oneof"`
 }
 
-func (*AuthoredContentSnapshot_PrivateDraft) isAuthoredContentSnapshot_Record() {}
+func (*AuthoredContentSnapshot_PreparedMessage) isAuthoredContentSnapshot_Record() {}
 
 func (*AuthoredContentSnapshot_PublishedMessageId) isAuthoredContentSnapshot_Record() {}
 
 type PrivateContentRevision struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DraftId       string                 `protobuf:"bytes,1,opt,name=draft_id,json=draftId,proto3" json:"draft_id,omitempty"`
-	Revision      string                 `protobuf:"bytes,2,opt,name=revision,proto3" json:"revision,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	PreparedMessageId string                 `protobuf:"bytes,1,opt,name=prepared_message_id,json=preparedMessageId,proto3" json:"prepared_message_id,omitempty"`
+	Revision          string                 `protobuf:"bytes,2,opt,name=revision,proto3" json:"revision,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *PrivateContentRevision) Reset() {
@@ -621,9 +622,9 @@ func (*PrivateContentRevision) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *PrivateContentRevision) GetDraftId() string {
+func (x *PrivateContentRevision) GetPreparedMessageId() string {
 	if x != nil {
-		return x.DraftId
+		return x.PreparedMessageId
 	}
 	return ""
 }
@@ -635,107 +636,15 @@ func (x *PrivateContentRevision) GetRevision() string {
 	return ""
 }
 
-// Exact released representation. There is no retained authored v1 preimage,
-// client expectation or canonical content digest; do not manufacture them.
-type LegacyContentSnapshot struct {
-	state  protoimpl.MessageState `protogen:"open.v1"`
-	Ticket *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
-	// Types that are valid to be assigned to Record:
-	//
-	//	*LegacyContentSnapshot_PrivateDraft
-	//	*LegacyContentSnapshot_PublishedMessage
-	Record        isLegacyContentSnapshot_Record `protobuf_oneof:"record"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LegacyContentSnapshot) Reset() {
-	*x = LegacyContentSnapshot{}
-	mi := &file_syntra_v1_content_service_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LegacyContentSnapshot) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LegacyContentSnapshot) ProtoMessage() {}
-
-func (x *LegacyContentSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_content_service_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LegacyContentSnapshot.ProtoReflect.Descriptor instead.
-func (*LegacyContentSnapshot) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *LegacyContentSnapshot) GetTicket() *Ticket {
-	if x != nil {
-		return x.Ticket
-	}
-	return nil
-}
-
-func (x *LegacyContentSnapshot) GetRecord() isLegacyContentSnapshot_Record {
-	if x != nil {
-		return x.Record
-	}
-	return nil
-}
-
-func (x *LegacyContentSnapshot) GetPrivateDraft() *MessageDraft {
-	if x != nil {
-		if x, ok := x.Record.(*LegacyContentSnapshot_PrivateDraft); ok {
-			return x.PrivateDraft
-		}
-	}
-	return nil
-}
-
-func (x *LegacyContentSnapshot) GetPublishedMessage() *PublishedMessage {
-	if x != nil {
-		if x, ok := x.Record.(*LegacyContentSnapshot_PublishedMessage); ok {
-			return x.PublishedMessage
-		}
-	}
-	return nil
-}
-
-type isLegacyContentSnapshot_Record interface {
-	isLegacyContentSnapshot_Record()
-}
-
-type LegacyContentSnapshot_PrivateDraft struct {
-	PrivateDraft *MessageDraft `protobuf:"bytes,2,opt,name=private_draft,json=privateDraft,proto3,oneof"`
-}
-
-type LegacyContentSnapshot_PublishedMessage struct {
-	PublishedMessage *PublishedMessage `protobuf:"bytes,3,opt,name=published_message,json=publishedMessage,proto3,oneof"`
-}
-
-func (*LegacyContentSnapshot_PrivateDraft) isLegacyContentSnapshot_Record() {}
-
-func (*LegacyContentSnapshot_PublishedMessage) isLegacyContentSnapshot_Record() {}
-
 // READ. Private snapshots are owner-only and require exact retained revision;
 // published IDs address immutable content. Missing/foreign resources are hidden.
 type GetContentSnapshotRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	WorkspaceId string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string                 `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string                 `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	// Types that are valid to be assigned to Record:
 	//
-	//	*GetContentSnapshotRequest_PrivateDraft
+	//	*GetContentSnapshotRequest_PreparedMessage
 	//	*GetContentSnapshotRequest_PublishedMessageId
 	Record        isGetContentSnapshotRequest_Record `protobuf_oneof:"record"`
 	unknownFields protoimpl.UnknownFields
@@ -744,7 +653,7 @@ type GetContentSnapshotRequest struct {
 
 func (x *GetContentSnapshotRequest) Reset() {
 	*x = GetContentSnapshotRequest{}
-	mi := &file_syntra_v1_content_service_proto_msgTypes[10]
+	mi := &file_syntra_v1_content_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -756,7 +665,7 @@ func (x *GetContentSnapshotRequest) String() string {
 func (*GetContentSnapshotRequest) ProtoMessage() {}
 
 func (x *GetContentSnapshotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_content_service_proto_msgTypes[10]
+	mi := &file_syntra_v1_content_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -769,7 +678,7 @@ func (x *GetContentSnapshotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetContentSnapshotRequest.ProtoReflect.Descriptor instead.
 func (*GetContentSnapshotRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{10}
+	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetContentSnapshotRequest) GetWorkspaceId() string {
@@ -779,9 +688,9 @@ func (x *GetContentSnapshotRequest) GetWorkspaceId() string {
 	return ""
 }
 
-func (x *GetContentSnapshotRequest) GetTicketId() string {
+func (x *GetContentSnapshotRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
@@ -793,10 +702,10 @@ func (x *GetContentSnapshotRequest) GetRecord() isGetContentSnapshotRequest_Reco
 	return nil
 }
 
-func (x *GetContentSnapshotRequest) GetPrivateDraft() *PrivateContentRevision {
+func (x *GetContentSnapshotRequest) GetPreparedMessage() *PrivateContentRevision {
 	if x != nil {
-		if x, ok := x.Record.(*GetContentSnapshotRequest_PrivateDraft); ok {
-			return x.PrivateDraft
+		if x, ok := x.Record.(*GetContentSnapshotRequest_PreparedMessage); ok {
+			return x.PreparedMessage
 		}
 	}
 	return nil
@@ -815,32 +724,38 @@ type isGetContentSnapshotRequest_Record interface {
 	isGetContentSnapshotRequest_Record()
 }
 
-type GetContentSnapshotRequest_PrivateDraft struct {
-	PrivateDraft *PrivateContentRevision `protobuf:"bytes,3,opt,name=private_draft,json=privateDraft,proto3,oneof"`
+type GetContentSnapshotRequest_PreparedMessage struct {
+	PreparedMessage *PrivateContentRevision `protobuf:"bytes,3,opt,name=prepared_message,json=preparedMessage,proto3,oneof"`
 }
 
 type GetContentSnapshotRequest_PublishedMessageId struct {
 	PublishedMessageId string `protobuf:"bytes,4,opt,name=published_message_id,json=publishedMessageId,proto3,oneof"`
 }
 
-func (*GetContentSnapshotRequest_PrivateDraft) isGetContentSnapshotRequest_Record() {}
+func (*GetContentSnapshotRequest_PreparedMessage) isGetContentSnapshotRequest_Record() {}
 
 func (*GetContentSnapshotRequest_PublishedMessageId) isGetContentSnapshotRequest_Record() {}
 
+// Current authorized message record, with optional retained authored evidence.
+// current_prepared_message is the current persisted version; authored may identify
+// an exact historical revision requested by the caller. No digest is invented
+// for messages that have no retained authored envelope.
 type GetContentSnapshotResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Types that are valid to be assigned to Representation:
+	state    protoimpl.MessageState   `protogen:"open.v1"`
+	Authored *AuthoredContentSnapshot `protobuf:"bytes,1,opt,name=authored,proto3" json:"authored,omitempty"`
+	Thread   *Thread                  `protobuf:"bytes,2,opt,name=thread,proto3" json:"thread,omitempty"`
+	// Types that are valid to be assigned to Record:
 	//
-	//	*GetContentSnapshotResponse_Authored
-	//	*GetContentSnapshotResponse_Legacy
-	Representation isGetContentSnapshotResponse_Representation `protobuf_oneof:"representation"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	//	*GetContentSnapshotResponse_CurrentPreparedMessage
+	//	*GetContentSnapshotResponse_PublishedMessage
+	Record        isGetContentSnapshotResponse_Record `protobuf_oneof:"record"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetContentSnapshotResponse) Reset() {
 	*x = GetContentSnapshotResponse{}
-	mi := &file_syntra_v1_content_service_proto_msgTypes[11]
+	mi := &file_syntra_v1_content_service_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -852,7 +767,7 @@ func (x *GetContentSnapshotResponse) String() string {
 func (*GetContentSnapshotResponse) ProtoMessage() {}
 
 func (x *GetContentSnapshotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_content_service_proto_msgTypes[11]
+	mi := &file_syntra_v1_content_service_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -865,115 +780,126 @@ func (x *GetContentSnapshotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetContentSnapshotResponse.ProtoReflect.Descriptor instead.
 func (*GetContentSnapshotResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *GetContentSnapshotResponse) GetRepresentation() isGetContentSnapshotResponse_Representation {
-	if x != nil {
-		return x.Representation
-	}
-	return nil
+	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetContentSnapshotResponse) GetAuthored() *AuthoredContentSnapshot {
 	if x != nil {
-		if x, ok := x.Representation.(*GetContentSnapshotResponse_Authored); ok {
-			return x.Authored
-		}
+		return x.Authored
 	}
 	return nil
 }
 
-func (x *GetContentSnapshotResponse) GetLegacy() *LegacyContentSnapshot {
+func (x *GetContentSnapshotResponse) GetThread() *Thread {
 	if x != nil {
-		if x, ok := x.Representation.(*GetContentSnapshotResponse_Legacy); ok {
-			return x.Legacy
+		return x.Thread
+	}
+	return nil
+}
+
+func (x *GetContentSnapshotResponse) GetRecord() isGetContentSnapshotResponse_Record {
+	if x != nil {
+		return x.Record
+	}
+	return nil
+}
+
+func (x *GetContentSnapshotResponse) GetCurrentPreparedMessage() *PreparedMessage {
+	if x != nil {
+		if x, ok := x.Record.(*GetContentSnapshotResponse_CurrentPreparedMessage); ok {
+			return x.CurrentPreparedMessage
 		}
 	}
 	return nil
 }
 
-type isGetContentSnapshotResponse_Representation interface {
-	isGetContentSnapshotResponse_Representation()
+func (x *GetContentSnapshotResponse) GetPublishedMessage() *PublishedMessage {
+	if x != nil {
+		if x, ok := x.Record.(*GetContentSnapshotResponse_PublishedMessage); ok {
+			return x.PublishedMessage
+		}
+	}
+	return nil
 }
 
-type GetContentSnapshotResponse_Authored struct {
-	Authored *AuthoredContentSnapshot `protobuf:"bytes,1,opt,name=authored,proto3,oneof"`
+type isGetContentSnapshotResponse_Record interface {
+	isGetContentSnapshotResponse_Record()
 }
 
-type GetContentSnapshotResponse_Legacy struct {
-	Legacy *LegacyContentSnapshot `protobuf:"bytes,2,opt,name=legacy,proto3,oneof"`
+type GetContentSnapshotResponse_CurrentPreparedMessage struct {
+	CurrentPreparedMessage *PreparedMessage `protobuf:"bytes,3,opt,name=current_prepared_message,json=currentPreparedMessage,proto3,oneof"`
 }
 
-func (*GetContentSnapshotResponse_Authored) isGetContentSnapshotResponse_Representation() {}
+type GetContentSnapshotResponse_PublishedMessage struct {
+	PublishedMessage *PublishedMessage `protobuf:"bytes,4,opt,name=published_message,json=publishedMessage,proto3,oneof"`
+}
 
-func (*GetContentSnapshotResponse_Legacy) isGetContentSnapshotResponse_Representation() {}
+func (*GetContentSnapshotResponse_CurrentPreparedMessage) isGetContentSnapshotResponse_Record() {}
+
+func (*GetContentSnapshotResponse_PublishedMessage) isGetContentSnapshotResponse_Record() {}
 
 var File_syntra_v1_content_service_proto protoreflect.FileDescriptor
 
 const file_syntra_v1_content_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1fsyntra/v1/content_service.proto\x12\tsyntra.v1\x1a syntra/v1/authored_content.proto\x1a\x1dsyntra/v1/collaboration.proto\"\xfb\x01\n" +
-	"\x17ContentDraftExpectation\x12\x1b\n" +
-	"\tticket_id\x18\x01 \x01(\tR\bticketId\x12\x19\n" +
-	"\bdraft_id\x18\x02 \x01(\tR\adraftId\x128\n" +
-	"\x18expected_ticket_revision\x18\x03 \x01(\tR\x16expectedTicketRevision\x126\n" +
-	"\x17expected_draft_revision\x18\x04 \x01(\tR\x15expectedDraftRevision\x126\n" +
-	"\x17expected_content_digest\x18\x05 \x01(\fR\x15expectedContentDigest\"\x8a\x03\n" +
+	"\x1fsyntra/v1/content_service.proto\x12\tsyntra.v1\x1a syntra/v1/authored_content.proto\x1a\x1dsyntra/v1/collaboration.proto\"\xa8\x02\n" +
+	"\x1aPreparedContentExpectation\x12\x1b\n" +
+	"\tthread_id\x18\x01 \x01(\tR\bthreadId\x12.\n" +
+	"\x13prepared_message_id\x18\x02 \x01(\tR\x11preparedMessageId\x128\n" +
+	"\x18expected_thread_revision\x18\x03 \x01(\tR\x16expectedThreadRevision\x12K\n" +
+	"\"expected_prepared_message_revision\x18\x04 \x01(\tR\x1fexpectedPreparedMessageRevision\x126\n" +
+	"\x17expected_content_digest\x18\x05 \x01(\fR\x15expectedContentDigest\"\x8d\x03\n" +
 	"\x15PrepareContentRequest\x124\n" +
 	"\acontent\x18\x01 \x01(\v2\x1a.syntra.v1.AuthoredContentR\acontent\x126\n" +
 	"\x17expected_content_digest\x18\x02 \x01(\fR\x15expectedContentDigest\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x03 \x01(\tR\trequestId\x12=\n" +
-	"\x18expected_ticket_revision\x18\x04 \x01(\tH\x00R\x16expectedTicketRevision\x88\x01\x01\x12:\n" +
-	"\x06update\x18\x05 \x01(\v2\".syntra.v1.ContentDraftExpectationR\x06update\x12L\n" +
+	"\x18expected_thread_revision\x18\x04 \x01(\tH\x00R\x16expectedThreadRevision\x88\x01\x01\x12=\n" +
+	"\x06update\x18\x05 \x01(\v2%.syntra.v1.PreparedContentExpectationR\x06update\x12L\n" +
 	"\x0fclient_reported\x18\x06 \x01(\v2#.syntra.v1.ClientReportedProvenanceR\x0eclientReportedB\x1b\n" +
-	"\x19_expected_ticket_revision\"X\n" +
+	"\x19_expected_thread_revision\"X\n" +
 	"\x16PrepareContentResponse\x12>\n" +
-	"\bsnapshot\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotR\bsnapshot\"\xba\x02\n" +
-	"\x12LinkContentRequest\x12<\n" +
-	"\acurrent\x18\x01 \x01(\v2\".syntra.v1.ContentDraftExpectationR\acurrent\x12A\n" +
+	"\bsnapshot\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotR\bsnapshot\"\xbd\x02\n" +
+	"\x12LinkContentRequest\x12?\n" +
+	"\acurrent\x18\x01 \x01(\v2%.syntra.v1.PreparedContentExpectationR\acurrent\x12A\n" +
 	"\x0elinked_content\x18\x02 \x01(\v2\x1a.syntra.v1.AuthoredContentR\rlinkedContent\x126\n" +
 	"\x17expected_content_digest\x18\x03 \x01(\fR\x15expectedContentDigest\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x04 \x01(\tR\trequestId\x12L\n" +
 	"\x0fclient_reported\x18\x05 \x01(\v2#.syntra.v1.ClientReportedProvenanceR\x0eclientReported\"U\n" +
 	"\x13LinkContentResponse\x12>\n" +
-	"\bsnapshot\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotR\bsnapshot\"\x9c\x02\n" +
+	"\bsnapshot\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotR\bsnapshot\"\x9f\x02\n" +
 	"\x15PublishContentRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x125\n" +
-	"\x17expected_author_user_id\x18\x02 \x01(\tR\x14expectedAuthorUserId\x12<\n" +
-	"\acurrent\x18\x03 \x01(\v2\".syntra.v1.ContentDraftExpectationR\acurrent\x12\x1d\n" +
+	"\x17expected_author_user_id\x18\x02 \x01(\tR\x14expectedAuthorUserId\x12?\n" +
+	"\acurrent\x18\x03 \x01(\v2%.syntra.v1.PreparedContentExpectationR\acurrent\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x04 \x01(\tR\trequestId\x12L\n" +
 	"\x0fclient_reported\x18\x05 \x01(\v2#.syntra.v1.ClientReportedProvenanceR\x0eclientReported\"X\n" +
 	"\x16PublishContentResponse\x12>\n" +
-	"\bsnapshot\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotR\bsnapshot\"\xbf\x02\n" +
+	"\bsnapshot\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotR\bsnapshot\"\xc5\x02\n" +
 	"\x17AuthoredContentSnapshot\x124\n" +
 	"\acontent\x18\x01 \x01(\v2\x1a.syntra.v1.AuthoredContentR\acontent\x12=\n" +
 	"\areceipt\x18\x02 \x01(\v2#.syntra.v1.ContentProvenanceReceiptR\areceipt\x12'\n" +
-	"\x0fticket_revision\x18\x03 \x01(\tR\x0eticketRevision\x12H\n" +
-	"\rprivate_draft\x18\x04 \x01(\v2!.syntra.v1.PrivateContentRevisionH\x00R\fprivateDraft\x122\n" +
+	"\x0fthread_revision\x18\x03 \x01(\tR\x0ethreadRevision\x12N\n" +
+	"\x10prepared_message\x18\x04 \x01(\v2!.syntra.v1.PrivateContentRevisionH\x00R\x0fpreparedMessage\x122\n" +
 	"\x14published_message_id\x18\x05 \x01(\tH\x00R\x12publishedMessageIdB\b\n" +
-	"\x06record\"O\n" +
-	"\x16PrivateContentRevision\x12\x19\n" +
-	"\bdraft_id\x18\x01 \x01(\tR\adraftId\x12\x1a\n" +
-	"\brevision\x18\x02 \x01(\tR\brevision\"\xd8\x01\n" +
-	"\x15LegacyContentSnapshot\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\x12>\n" +
-	"\rprivate_draft\x18\x02 \x01(\v2\x17.syntra.v1.MessageDraftH\x00R\fprivateDraft\x12J\n" +
-	"\x11published_message\x18\x03 \x01(\v2\x1b.syntra.v1.PublishedMessageH\x00R\x10publishedMessageB\b\n" +
-	"\x06record\"\xe3\x01\n" +
+	"\x06record\"d\n" +
+	"\x16PrivateContentRevision\x12.\n" +
+	"\x13prepared_message_id\x18\x01 \x01(\tR\x11preparedMessageId\x12\x1a\n" +
+	"\brevision\x18\x02 \x01(\tR\brevision\"\xe9\x01\n" +
 	"\x19GetContentSnapshotRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12H\n" +
-	"\rprivate_draft\x18\x03 \x01(\v2!.syntra.v1.PrivateContentRevisionH\x00R\fprivateDraft\x122\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12N\n" +
+	"\x10prepared_message\x18\x03 \x01(\v2!.syntra.v1.PrivateContentRevisionH\x00R\x0fpreparedMessage\x122\n" +
 	"\x14published_message_id\x18\x04 \x01(\tH\x00R\x12publishedMessageIdB\b\n" +
-	"\x06record\"\xac\x01\n" +
-	"\x1aGetContentSnapshotResponse\x12@\n" +
-	"\bauthored\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotH\x00R\bauthored\x12:\n" +
-	"\x06legacy\x18\x02 \x01(\v2 .syntra.v1.LegacyContentSnapshotH\x00R\x06legacyB\x10\n" +
-	"\x0erepresentation2\xf7\x02\n" +
+	"\x06record\"\xb5\x02\n" +
+	"\x1aGetContentSnapshotResponse\x12>\n" +
+	"\bauthored\x18\x01 \x01(\v2\".syntra.v1.AuthoredContentSnapshotR\bauthored\x12)\n" +
+	"\x06thread\x18\x02 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\x12V\n" +
+	"\x18current_prepared_message\x18\x03 \x01(\v2\x1a.syntra.v1.PreparedMessageH\x00R\x16currentPreparedMessage\x12J\n" +
+	"\x11published_message\x18\x04 \x01(\v2\x1b.syntra.v1.PublishedMessageH\x00R\x10publishedMessageB\b\n" +
+	"\x06record2\xf7\x02\n" +
 	"\x16AuthoredContentService\x12U\n" +
 	"\x0ePrepareContent\x12 .syntra.v1.PrepareContentRequest\x1a!.syntra.v1.PrepareContentResponse\x12L\n" +
 	"\vLinkContent\x12\x1d.syntra.v1.LinkContentRequest\x1a\x1e.syntra.v1.LinkContentResponse\x12U\n" +
@@ -992,9 +918,9 @@ func file_syntra_v1_content_service_proto_rawDescGZIP() []byte {
 	return file_syntra_v1_content_service_proto_rawDescData
 }
 
-var file_syntra_v1_content_service_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_syntra_v1_content_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_syntra_v1_content_service_proto_goTypes = []any{
-	(*ContentDraftExpectation)(nil),    // 0: syntra.v1.ContentDraftExpectation
+	(*PreparedContentExpectation)(nil), // 0: syntra.v1.PreparedContentExpectation
 	(*PrepareContentRequest)(nil),      // 1: syntra.v1.PrepareContentRequest
 	(*PrepareContentResponse)(nil),     // 2: syntra.v1.PrepareContentResponse
 	(*LinkContentRequest)(nil),         // 3: syntra.v1.LinkContentRequest
@@ -1003,50 +929,48 @@ var file_syntra_v1_content_service_proto_goTypes = []any{
 	(*PublishContentResponse)(nil),     // 6: syntra.v1.PublishContentResponse
 	(*AuthoredContentSnapshot)(nil),    // 7: syntra.v1.AuthoredContentSnapshot
 	(*PrivateContentRevision)(nil),     // 8: syntra.v1.PrivateContentRevision
-	(*LegacyContentSnapshot)(nil),      // 9: syntra.v1.LegacyContentSnapshot
-	(*GetContentSnapshotRequest)(nil),  // 10: syntra.v1.GetContentSnapshotRequest
-	(*GetContentSnapshotResponse)(nil), // 11: syntra.v1.GetContentSnapshotResponse
-	(*AuthoredContent)(nil),            // 12: syntra.v1.AuthoredContent
-	(*ClientReportedProvenance)(nil),   // 13: syntra.v1.ClientReportedProvenance
-	(*ContentProvenanceReceipt)(nil),   // 14: syntra.v1.ContentProvenanceReceipt
-	(*Ticket)(nil),                     // 15: syntra.v1.Ticket
-	(*MessageDraft)(nil),               // 16: syntra.v1.MessageDraft
-	(*PublishedMessage)(nil),           // 17: syntra.v1.PublishedMessage
+	(*GetContentSnapshotRequest)(nil),  // 9: syntra.v1.GetContentSnapshotRequest
+	(*GetContentSnapshotResponse)(nil), // 10: syntra.v1.GetContentSnapshotResponse
+	(*AuthoredContent)(nil),            // 11: syntra.v1.AuthoredContent
+	(*ClientReportedProvenance)(nil),   // 12: syntra.v1.ClientReportedProvenance
+	(*ContentProvenanceReceipt)(nil),   // 13: syntra.v1.ContentProvenanceReceipt
+	(*Thread)(nil),                     // 14: syntra.v1.Thread
+	(*PreparedMessage)(nil),            // 15: syntra.v1.PreparedMessage
+	(*PublishedMessage)(nil),           // 16: syntra.v1.PublishedMessage
 }
 var file_syntra_v1_content_service_proto_depIdxs = []int32{
-	12, // 0: syntra.v1.PrepareContentRequest.content:type_name -> syntra.v1.AuthoredContent
-	0,  // 1: syntra.v1.PrepareContentRequest.update:type_name -> syntra.v1.ContentDraftExpectation
-	13, // 2: syntra.v1.PrepareContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
+	11, // 0: syntra.v1.PrepareContentRequest.content:type_name -> syntra.v1.AuthoredContent
+	0,  // 1: syntra.v1.PrepareContentRequest.update:type_name -> syntra.v1.PreparedContentExpectation
+	12, // 2: syntra.v1.PrepareContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
 	7,  // 3: syntra.v1.PrepareContentResponse.snapshot:type_name -> syntra.v1.AuthoredContentSnapshot
-	0,  // 4: syntra.v1.LinkContentRequest.current:type_name -> syntra.v1.ContentDraftExpectation
-	12, // 5: syntra.v1.LinkContentRequest.linked_content:type_name -> syntra.v1.AuthoredContent
-	13, // 6: syntra.v1.LinkContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
+	0,  // 4: syntra.v1.LinkContentRequest.current:type_name -> syntra.v1.PreparedContentExpectation
+	11, // 5: syntra.v1.LinkContentRequest.linked_content:type_name -> syntra.v1.AuthoredContent
+	12, // 6: syntra.v1.LinkContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
 	7,  // 7: syntra.v1.LinkContentResponse.snapshot:type_name -> syntra.v1.AuthoredContentSnapshot
-	0,  // 8: syntra.v1.PublishContentRequest.current:type_name -> syntra.v1.ContentDraftExpectation
-	13, // 9: syntra.v1.PublishContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
+	0,  // 8: syntra.v1.PublishContentRequest.current:type_name -> syntra.v1.PreparedContentExpectation
+	12, // 9: syntra.v1.PublishContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
 	7,  // 10: syntra.v1.PublishContentResponse.snapshot:type_name -> syntra.v1.AuthoredContentSnapshot
-	12, // 11: syntra.v1.AuthoredContentSnapshot.content:type_name -> syntra.v1.AuthoredContent
-	14, // 12: syntra.v1.AuthoredContentSnapshot.receipt:type_name -> syntra.v1.ContentProvenanceReceipt
-	8,  // 13: syntra.v1.AuthoredContentSnapshot.private_draft:type_name -> syntra.v1.PrivateContentRevision
-	15, // 14: syntra.v1.LegacyContentSnapshot.ticket:type_name -> syntra.v1.Ticket
-	16, // 15: syntra.v1.LegacyContentSnapshot.private_draft:type_name -> syntra.v1.MessageDraft
-	17, // 16: syntra.v1.LegacyContentSnapshot.published_message:type_name -> syntra.v1.PublishedMessage
-	8,  // 17: syntra.v1.GetContentSnapshotRequest.private_draft:type_name -> syntra.v1.PrivateContentRevision
-	7,  // 18: syntra.v1.GetContentSnapshotResponse.authored:type_name -> syntra.v1.AuthoredContentSnapshot
-	9,  // 19: syntra.v1.GetContentSnapshotResponse.legacy:type_name -> syntra.v1.LegacyContentSnapshot
-	1,  // 20: syntra.v1.AuthoredContentService.PrepareContent:input_type -> syntra.v1.PrepareContentRequest
-	3,  // 21: syntra.v1.AuthoredContentService.LinkContent:input_type -> syntra.v1.LinkContentRequest
-	5,  // 22: syntra.v1.AuthoredContentService.PublishContent:input_type -> syntra.v1.PublishContentRequest
-	10, // 23: syntra.v1.AuthoredContentService.GetContentSnapshot:input_type -> syntra.v1.GetContentSnapshotRequest
-	2,  // 24: syntra.v1.AuthoredContentService.PrepareContent:output_type -> syntra.v1.PrepareContentResponse
-	4,  // 25: syntra.v1.AuthoredContentService.LinkContent:output_type -> syntra.v1.LinkContentResponse
-	6,  // 26: syntra.v1.AuthoredContentService.PublishContent:output_type -> syntra.v1.PublishContentResponse
-	11, // 27: syntra.v1.AuthoredContentService.GetContentSnapshot:output_type -> syntra.v1.GetContentSnapshotResponse
-	24, // [24:28] is the sub-list for method output_type
-	20, // [20:24] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	11, // 11: syntra.v1.AuthoredContentSnapshot.content:type_name -> syntra.v1.AuthoredContent
+	13, // 12: syntra.v1.AuthoredContentSnapshot.receipt:type_name -> syntra.v1.ContentProvenanceReceipt
+	8,  // 13: syntra.v1.AuthoredContentSnapshot.prepared_message:type_name -> syntra.v1.PrivateContentRevision
+	8,  // 14: syntra.v1.GetContentSnapshotRequest.prepared_message:type_name -> syntra.v1.PrivateContentRevision
+	7,  // 15: syntra.v1.GetContentSnapshotResponse.authored:type_name -> syntra.v1.AuthoredContentSnapshot
+	14, // 16: syntra.v1.GetContentSnapshotResponse.thread:type_name -> syntra.v1.Thread
+	15, // 17: syntra.v1.GetContentSnapshotResponse.current_prepared_message:type_name -> syntra.v1.PreparedMessage
+	16, // 18: syntra.v1.GetContentSnapshotResponse.published_message:type_name -> syntra.v1.PublishedMessage
+	1,  // 19: syntra.v1.AuthoredContentService.PrepareContent:input_type -> syntra.v1.PrepareContentRequest
+	3,  // 20: syntra.v1.AuthoredContentService.LinkContent:input_type -> syntra.v1.LinkContentRequest
+	5,  // 21: syntra.v1.AuthoredContentService.PublishContent:input_type -> syntra.v1.PublishContentRequest
+	9,  // 22: syntra.v1.AuthoredContentService.GetContentSnapshot:input_type -> syntra.v1.GetContentSnapshotRequest
+	2,  // 23: syntra.v1.AuthoredContentService.PrepareContent:output_type -> syntra.v1.PrepareContentResponse
+	4,  // 24: syntra.v1.AuthoredContentService.LinkContent:output_type -> syntra.v1.LinkContentResponse
+	6,  // 25: syntra.v1.AuthoredContentService.PublishContent:output_type -> syntra.v1.PublishContentResponse
+	10, // 26: syntra.v1.AuthoredContentService.GetContentSnapshot:output_type -> syntra.v1.GetContentSnapshotResponse
+	23, // [23:27] is the sub-list for method output_type
+	19, // [19:23] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_syntra_v1_content_service_proto_init() }
@@ -1058,20 +982,16 @@ func file_syntra_v1_content_service_proto_init() {
 	file_syntra_v1_collaboration_proto_init()
 	file_syntra_v1_content_service_proto_msgTypes[1].OneofWrappers = []any{}
 	file_syntra_v1_content_service_proto_msgTypes[7].OneofWrappers = []any{
-		(*AuthoredContentSnapshot_PrivateDraft)(nil),
+		(*AuthoredContentSnapshot_PreparedMessage)(nil),
 		(*AuthoredContentSnapshot_PublishedMessageId)(nil),
 	}
 	file_syntra_v1_content_service_proto_msgTypes[9].OneofWrappers = []any{
-		(*LegacyContentSnapshot_PrivateDraft)(nil),
-		(*LegacyContentSnapshot_PublishedMessage)(nil),
-	}
-	file_syntra_v1_content_service_proto_msgTypes[10].OneofWrappers = []any{
-		(*GetContentSnapshotRequest_PrivateDraft)(nil),
+		(*GetContentSnapshotRequest_PreparedMessage)(nil),
 		(*GetContentSnapshotRequest_PublishedMessageId)(nil),
 	}
-	file_syntra_v1_content_service_proto_msgTypes[11].OneofWrappers = []any{
-		(*GetContentSnapshotResponse_Authored)(nil),
-		(*GetContentSnapshotResponse_Legacy)(nil),
+	file_syntra_v1_content_service_proto_msgTypes[10].OneofWrappers = []any{
+		(*GetContentSnapshotResponse_CurrentPreparedMessage)(nil),
+		(*GetContentSnapshotResponse_PublishedMessage)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1079,7 +999,7 @@ func file_syntra_v1_content_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_content_service_proto_rawDesc), len(file_syntra_v1_content_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

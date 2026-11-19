@@ -59,7 +59,7 @@ func (e *ConnectionUnavailable) Error() string {
 	if e.renew {
 		return "Syntra connection is expired or unavailable. Run: syntra login --reauthorize" + profileFlag(e.dir) + " (approve in the browser)."
 	}
-	return "No Syntra connection. Run: syntra login" + profileFlag(e.dir) + " (choose permissions in the browser; use --prepare for drafts, --prepare --publish to send, or --mark-read for read receipts)."
+	return "No Syntra connection. Run: syntra login" + profileFlag(e.dir) + " (choose permissions in the browser; use --prepare for prepared_messages, --prepare --publish to send, or --mark-read for read receipts)."
 }
 
 // IsConnectionDiagnostic reports whether err contains shared human guidance.

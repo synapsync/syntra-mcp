@@ -26,18 +26,18 @@ type MemberDependencyType int32
 
 const (
 	MemberDependencyType_MEMBER_DEPENDENCY_TYPE_UNSPECIFIED MemberDependencyType = 0
-	MemberDependencyType_MEMBER_DEPENDENCY_TYPE_TICKET      MemberDependencyType = 2
+	MemberDependencyType_MEMBER_DEPENDENCY_TYPE_THREAD      MemberDependencyType = 2
 )
 
 // Enum value maps for MemberDependencyType.
 var (
 	MemberDependencyType_name = map[int32]string{
 		0: "MEMBER_DEPENDENCY_TYPE_UNSPECIFIED",
-		2: "MEMBER_DEPENDENCY_TYPE_TICKET",
+		2: "MEMBER_DEPENDENCY_TYPE_THREAD",
 	}
 	MemberDependencyType_value = map[string]int32{
 		"MEMBER_DEPENDENCY_TYPE_UNSPECIFIED": 0,
-		"MEMBER_DEPENDENCY_TYPE_TICKET":      2,
+		"MEMBER_DEPENDENCY_TYPE_THREAD":      2,
 	}
 )
 
@@ -766,13 +766,12 @@ func (x *MemberDependency) GetType() MemberDependencyType {
 }
 
 type GetMemberDependenciesResponse struct {
-	state                        protoimpl.MessageState `protogen:"open.v1"`
-	Dependencies                 []*MemberDependency    `protobuf:"bytes,1,rep,name=dependencies,proto3" json:"dependencies,omitempty"`
-	NextPageToken                string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
-	PrivateResponsibilityBlocked bool                   `protobuf:"varint,3,opt,name=private_responsibility_blocked,json=privateResponsibilityBlocked,proto3" json:"private_responsibility_blocked,omitempty"`
-	Member                       *MemberState           `protobuf:"bytes,4,opt,name=member,proto3" json:"member,omitempty"`
-	unknownFields                protoimpl.UnknownFields
-	sizeCache                    protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dependencies  []*MemberDependency    `protobuf:"bytes,1,rep,name=dependencies,proto3" json:"dependencies,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	Member        *MemberState           `protobuf:"bytes,4,opt,name=member,proto3" json:"member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetMemberDependenciesResponse) Reset() {
@@ -817,13 +816,6 @@ func (x *GetMemberDependenciesResponse) GetNextPageToken() string {
 		return x.NextPageToken
 	}
 	return ""
-}
-
-func (x *GetMemberDependenciesResponse) GetPrivateResponsibilityBlocked() bool {
-	if x != nil {
-		return x.PrivateResponsibilityBlocked
-	}
-	return false
 }
 
 func (x *GetMemberDependenciesResponse) GetMember() *MemberState {
@@ -1303,7 +1295,7 @@ func (x *ListAuditResponse) GetNextPageToken() string {
 }
 
 // Operator only. Existing admitted application account; no persisted email claim.
-// Missing confirmation fails closed after authorization; legacy subject is validated too.
+// Missing confirmation fails closed after authorization; subject confirmation is validated too.
 type SetCreationPermissionRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	ProviderSubject  string                 `protobuf:"bytes,1,opt,name=provider_subject,json=providerSubject,proto3" json:"provider_subject,omitempty"`
@@ -2987,18 +2979,17 @@ const file_syntra_v1_administration_proto_rawDesc = "" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1b\n" +
 	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\"\xaf\x01\n" +
+	"page_token\x18\x04 \x01(\tR\tpageToken\"\xa0\x01\n" +
 	"\x10MemberDependency\x12\x12\n" +
 	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x14\n" +
 	"\x05label\x18\x03 \x01(\tR\x05label\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x04 \x01(\tR\tprojectId\x123\n" +
-	"\x04type\x18\x06 \x01(\x0e2\x1f.syntra.v1.MemberDependencyTypeR\x04typeJ\x04\b\x05\x10\x06R\aarea_id\"\xfe\x01\n" +
+	"\x04type\x18\x06 \x01(\x0e2\x1f.syntra.v1.MemberDependencyTypeR\x04type\"\xb8\x01\n" +
 	"\x1dGetMemberDependenciesResponse\x12?\n" +
 	"\fdependencies\x18\x01 \x03(\v2\x1b.syntra.v1.MemberDependencyR\fdependencies\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12D\n" +
-	"\x1eprivate_responsibility_blocked\x18\x03 \x01(\bR\x1cprivateResponsibilityBlocked\x12.\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12.\n" +
 	"\x06member\x18\x04 \x01(\v2\x16.syntra.v1.MemberStateR\x06member\"z\n" +
 	"\x19AdministrationPageRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
@@ -3172,10 +3163,10 @@ const file_syntra_v1_administration_proto_rawDesc = "" +
 	"\fmember_count\x18\x04 \x01(\x05R\vmemberCount\x12\x1d\n" +
 	"\aallowed\x18\x05 \x01(\bH\x00R\aallowed\x88\x01\x01B\n" +
 	"\n" +
-	"\b_allowed*\x84\x01\n" +
+	"\b_allowed*a\n" +
 	"\x14MemberDependencyType\x12&\n" +
 	"\"MEMBER_DEPENDENCY_TYPE_UNSPECIFIED\x10\x00\x12!\n" +
-	"\x1dMEMBER_DEPENDENCY_TYPE_TICKET\x10\x02\"\x04\b\x01\x10\x01*\x1bMEMBER_DEPENDENCY_TYPE_AREA*\x94\x02\n" +
+	"\x1dMEMBER_DEPENDENCY_TYPE_THREAD\x10\x02*\x94\x02\n" +
 	"\x13MemberChangeFailure\x12%\n" +
 	"!MEMBER_CHANGE_FAILURE_UNSPECIFIED\x10\x00\x12%\n" +
 	"!MEMBER_CHANGE_FAILURE_STALE_STATE\x10\x01\x12,\n" +

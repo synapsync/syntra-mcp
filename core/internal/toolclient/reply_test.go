@@ -21,8 +21,8 @@ func fixtureReply() *v1.PrepareContentRequest {
 	r := request()
 	r.Content.ProjectId = ptr(projectID)
 	r.Content.Title = "Fixture title"
-	r.Content.ExistingTicketId = ptr(ticketID)
-	r.ExpectedTicketRevision = ptr(rev(88))
+	r.Content.ExistingThreadId = ptr(threadID)
+	r.ExpectedThreadRevision = ptr(rev(88))
 	return r
 }
 
@@ -31,46 +31,46 @@ func TestAuthoredRPCGuidance(t *testing.T) {
 		reason actionable.Reason
 		step   string
 	}{
-		{actionable.TicketClosed, "reopens the ticket in the Syntra web app"},
-		{actionable.TicketNotPublished, "Publish its initial message"},
-		{actionable.TicketTitleMismatch, "syntra prepare --template reply or syntra reply"},
+		{actionable.ThreadClosed, "reopens the thread in the Syntra web app"},
+		{actionable.ThreadNotPublished, "Publish its initial message"},
+		{actionable.ThreadTitleMismatch, "syntra prepare --template reply or syntra reply"},
 		{actionable.ProjectMismatch, "Copy the exact projectId"},
-		{actionable.StaleTicketRevision, "Re-read it with syntra ticket"},
-		{actionable.StaleDraftRevision, "read it with syntra snapshot"},
-		{actionable.NotAuthoredDraft, "create a new authored draft"},
+		{actionable.StaleThreadRevision, "Re-read it with syntra thread"},
+		{actionable.StalePreparedMessageRevision, "read it with syntra snapshot"},
+		{actionable.NotAuthoredPrepared, "create a new authored prepared"},
 		{actionable.RecipientNotEligible, "Check syntra members"},
 		{actionable.RecipientNotLinked, "syntra link"},
-		{actionable.InitialDraftAlreadyPublished, "prepare a reply"},
-		{actionable.DraftRoutingChange, "may change only the summary and Markdown"},
-		{actionable.DraftAlreadyLinked, "prepare a new draft for a different person"},
-		{actionable.LinkContentChange, "may change only the draft's destination"},
+		{actionable.InitialPreparedMessageAlreadyPublished, "prepare a reply"},
+		{actionable.PreparedRoutingChange, "may change only the summary and Markdown"},
+		{actionable.PreparedAlreadyLinked, "prepare a new prepared for a different person"},
+		{actionable.LinkContentChange, "may change only the prepared's destination"},
 		{actionable.RequestIDConflict, "use a fresh requestId"},
 	} {
 		t.Run(string(tc.reason), func(t *testing.T) {
 			public := actionable.New(tc.reason)
-			if tc.reason == actionable.TicketTitleMismatch {
+			if tc.reason == actionable.ThreadTitleMismatch {
 				public = actionable.TitleMismatch("Current\nTitle\x1b\u2028")
 			}
 			got := safeAuthoredRPCError(public.Connect()).Error()
 			if got != public.Error() || !strings.HasPrefix(got, "reason="+string(tc.reason)+"; ") || !strings.Contains(got, tc.step) || strings.ContainsAny(got, "\n\r\x1b\u2028") {
 				t.Fatalf("unexpected rendering: %q", got)
 			}
-			if tc.reason == actionable.TicketTitleMismatch && !strings.HasSuffix(got, `"Current\nTitle\x1b\u2028"`) {
+			if tc.reason == actionable.ThreadTitleMismatch && !strings.HasSuffix(got, `"Current\nTitle\x1b\u2028"`) {
 				t.Fatalf("title was lost or unsafely rendered: %q", got)
 			}
 		})
 	}
 	for _, msg := range []string{
 		"private upstream error",
-		"reason=TICKET_CLOSED; private upstream error",
+		"reason=THREAD_CLOSED; private upstream error",
 		"reason=UNKNOWN_REASON; private upstream error",
-		actionable.New(actionable.TicketClosed).Error() + "\nprivate upstream error",
+		actionable.New(actionable.ThreadClosed).Error() + "\nprivate upstream error",
 	} {
 		if got := safeAuthoredRPCError(connect.NewError(connect.CodeFailedPrecondition, errors.New(msg))).Error(); got != "API request failed (failed_precondition)" {
 			t.Fatalf("unexpected disclosure: %q", got)
 		}
 	}
-	if got := safeAuthoredRPCError(connect.NewError(connect.CodeNotFound, actionable.New(actionable.TicketClosed))).Error(); got != "API request failed (not_found)" {
+	if got := safeAuthoredRPCError(connect.NewError(connect.CodeNotFound, actionable.New(actionable.ThreadClosed))).Error(); got != "API request failed (not_found)" {
 		t.Fatalf("unrelated status accepted: %q", got)
 	}
 }
@@ -78,21 +78,24 @@ func TestAuthoredRPCGuidance(t *testing.T) {
 func TestPrepareReplyPreflight(t *testing.T) {
 	for _, tc := range []struct {
 		name  string
-		state v1.TicketState
+		state v1.ThreadState
 		edit  func(*v1.PrepareContentRequest)
 		want  error
 	}{
-		{"closed", v1.TicketState_TICKET_STATE_CLOSED, nil, actionable.New(actionable.TicketClosed)},
-		{"draft", v1.TicketState_TICKET_STATE_DRAFT, nil, actionable.New(actionable.TicketNotPublished)},
-		{"title", 0, func(r *v1.PrepareContentRequest) { r.Content.Title = "Respuesta: Fixture title" }, actionable.TitleMismatch("Fixture title")},
-		{"project", 0, func(r *v1.PrepareContentRequest) { r.Content.ProjectId = nil }, actionable.New(actionable.ProjectMismatch)},
-		{"stale", 0, func(r *v1.PrepareContentRequest) { r.ExpectedTicketRevision = ptr(rev(1)) }, actionable.New(actionable.StaleTicketRevision)},
-		{"happy", 0, nil, nil},
+		{"absent", v1.ThreadState_THREAD_STATE_UNSPECIFIED, nil, ErrProfile},
+		{"unknown", 99, nil, ErrProfile},
+		{"closed", v1.ThreadState_THREAD_STATE_CLOSED, nil, actionable.New(actionable.ThreadClosed)},
+		{"private", v1.ThreadState_THREAD_STATE_UNSPECIFIED, nil, actionable.New(actionable.ThreadNotPublished)},
+		{"title", v1.ThreadState_THREAD_STATE_OPEN, func(r *v1.PrepareContentRequest) { r.Content.Title = "Respuesta: Fixture title" }, actionable.TitleMismatch("Fixture title")},
+		{"project", v1.ThreadState_THREAD_STATE_OPEN, func(r *v1.PrepareContentRequest) { r.Content.ProjectId = nil }, actionable.New(actionable.ProjectMismatch)},
+		{"stale", v1.ThreadState_THREAD_STATE_OPEN, func(r *v1.PrepareContentRequest) { r.ExpectedThreadRevision = ptr(rev(1)) }, actionable.New(actionable.StaleThreadRevision)},
+		{"happy", v1.ThreadState_THREAD_STATE_OPEN, nil, nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a, f, _, _ := setupContent(t)
 			f.mu.Lock()
-			f.ticketState = tc.state
+			f.threadState = tc.state
+			f.threadPrivate = tc.name == "private"
 			f.mu.Unlock()
 			r := fixtureReply()
 			if tc.edit != nil {
@@ -100,10 +103,10 @@ func TestPrepareReplyPreflight(t *testing.T) {
 			}
 			s, err := a.Prepare(context.Background(), r, "")
 			f.mu.Lock()
-			reads, calls := f.ticketReads, f.calls
+			reads, calls := f.threadReads, f.calls
 			f.mu.Unlock()
 			if reads != 1 {
-				t.Fatalf("expected one ticket read, got %d", reads)
+				t.Fatalf("expected one thread read, got %d", reads)
 			}
 			if tc.want != nil {
 				if err == nil || err.Error() != tc.want.Error() || s != nil || calls != 0 {
@@ -118,7 +121,7 @@ func TestPrepareReplyPreflight(t *testing.T) {
 				t.Fatalf("prepare did not preserve happy path: %v (calls %d)", err, calls)
 			}
 			f.mu.Lock()
-			f.ticketState = v1.TicketState_TICKET_STATE_CLOSED
+			f.threadState = v1.ThreadState_THREAD_STATE_CLOSED
 			f.mu.Unlock()
 			for _, replay := range []func() (*v1.AuthoredContentSnapshot, error){
 				func() (*v1.AuthoredContentSnapshot, error) { return a.Retry(context.Background(), r.RequestId) },
@@ -131,8 +134,8 @@ func TestPrepareReplyPreflight(t *testing.T) {
 			}
 			f.mu.Lock()
 			defer f.mu.Unlock()
-			if f.ticketReads != 1 || f.calls != 3 {
-				t.Fatalf("retry sent %d ticket reads and %d mutations", f.ticketReads, f.calls)
+			if f.threadReads != 1 || f.calls != 3 {
+				t.Fatalf("retry sent %d thread reads and %d mutations", f.threadReads, f.calls)
 			}
 		})
 	}
@@ -144,7 +147,7 @@ func TestReplyPreflightKeepsPrepareCapabilityDenial(t *testing.T) {
 	a.profile.Config.Capabilities = readOnly
 	f.mu.Lock()
 	f.p.Config.Capabilities = readOnly
-	f.ticketState = v1.TicketState_TICKET_STATE_CLOSED
+	f.threadState = v1.ThreadState_THREAD_STATE_CLOSED
 	f.mu.Unlock()
 
 	_, err := a.Prepare(context.Background(), fixtureReply(), "")
@@ -154,8 +157,8 @@ func TestReplyPreflightKeepsPrepareCapabilityDenial(t *testing.T) {
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if f.ticketReads != 0 || f.calls != 0 {
-		t.Fatalf("denied operation sent %d ticket reads and %d mutations", f.ticketReads, f.calls)
+	if f.threadReads != 0 || f.calls != 0 {
+		t.Fatalf("denied operation sent %d thread reads and %d mutations", f.threadReads, f.calls)
 	}
 }
 
@@ -188,20 +191,34 @@ func TestCompiledCLIActionableReplyErrors(t *testing.T) {
 	}
 	check(actionable.TitleMismatch("Fixture title"), "prepare", "--file", input)
 	f.mu.Lock()
-	f.ticketState = v1.TicketState_TICKET_STATE_CLOSED
+	f.threadState = v1.ThreadState_THREAD_STATE_CLOSED
 	f.mu.Unlock()
-	closed := actionable.New(actionable.TicketClosed)
+	closed := actionable.New(actionable.ThreadClosed)
 	check(closed, "prepare", "--file", input)
-	check(closed, "prepare", "--template", "reply", "--workspace", workspaceID, "--ticket", ticketID)
-	check(closed, "reply", "--workspace", workspaceID, "--ticket", ticketID, "--summary", "Update", "--context-file", ctxPath)
+	check(closed, "prepare", "--template", "reply", "--workspace", workspaceID, "--thread", threadID)
+	check(closed, "reply", "--workspace", workspaceID, "--thread", threadID, "--summary", "Update", "--context-file", ctxPath)
 
-	out, err := cliCall(t, binary, "ticket", "--workspace", workspaceID, "--ticket", ticketID, "--profile-dir", profile)
-	if err != nil || !bytes.Contains(out, []byte("TICKET_STATE_CLOSED")) || !bytes.Contains(out, []byte("Closed tickets accept no replies")) {
-		t.Fatalf("closed ticket did not show state and restriction: %v %q", err, out)
+	out, err := cliCall(t, binary, "thread", "--workspace", workspaceID, "--thread", threadID, "--profile-dir", profile)
+	if err != nil || !bytes.Contains(out, []byte("THREAD_STATE_CLOSED")) || !bytes.Contains(out, []byte("Closed threads accept no replies")) {
+		t.Fatalf("closed thread did not show state and restriction: %v %q", err, out)
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if f.calls != 0 || f.ticketReads != 5 {
-		t.Fatalf("rejections sent %d mutations and %d ticket reads", f.calls, f.ticketReads)
+	if f.calls != 0 || f.threadReads != 5 {
+		t.Fatalf("rejections sent %d mutations and %d thread reads", f.calls, f.threadReads)
+	}
+}
+
+func TestReplyRequiresExplicitOpen(t *testing.T) {
+	for _, state := range []v1.ThreadState{v1.ThreadState_THREAD_STATE_PENDING, v1.ThreadState_THREAD_STATE_CLOSED, v1.ThreadState_THREAD_STATE_UNSPECIFIED, 99, -1} {
+		if CheckReplyState(&v1.Thread{State: state}) == nil {
+			t.Fatalf("non-open reply accepted: %v", state)
+		}
+	}
+	if CheckReplyState(nil) == nil {
+		t.Fatal("nil reply thread accepted")
+	}
+	if e := CheckReplyState(&v1.Thread{State: v1.ThreadState_THREAD_STATE_OPEN}); e != nil {
+		t.Fatal(e)
 	}
 }

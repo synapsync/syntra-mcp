@@ -177,7 +177,7 @@ func TestPendingBrowserAttemptSurvivesFailuresRestartAndCompetition(t *testing.T
 	assertBrowserStateUnchanged(t, dir, profileBefore, journalBefore, anchorBefore)
 	loaded, err := store.Load()
 	if err != nil || loaded.Method != "" || loaded.State != "active" {
-		t.Fatal("legacy active profile did not remain readable", err)
+		t.Fatal("previous active profile did not remain readable", err)
 	}
 	retainedJournal, err := store.retained("attempt", journalID)
 	if err != nil || !reflect.DeepEqual(retainedJournal, journal) {
@@ -339,8 +339,8 @@ func overwriteTestProfile(t *testing.T, store *Store, raw []byte) {
 }
 
 func TestBrowserV2ProfileLoadsThroughSharedIdentityEntryPoint(t *testing.T) {
-	client, store, fixture, legacyConfig := setupClient(t)
-	requested := browserConfig(legacyConfig.APIOrigin, []v1.ToolCapability{
+	client, store, fixture, otpConfig := setupClient(t)
+	requested := browserConfig(otpConfig.APIOrigin, []v1.ToolCapability{
 		v1.ToolCapability_TOOL_CAPABILITY_READ,
 		v1.ToolCapability_TOOL_CAPABILITY_PREPARE,
 	}, 600)
@@ -372,16 +372,16 @@ func TestBrowserV2ProfileLoadsThroughSharedIdentityEntryPoint(t *testing.T) {
 
 	before := readTestProfile(t, store)
 	if err = store.Save(pending(t)); err == nil {
-		t.Fatal("legacy save overwrote a browser profile")
+		t.Fatal("previous save overwrote a browser profile")
 	}
 	after := readTestProfile(t, store)
 	if !reflect.DeepEqual(before, after) {
-		t.Fatal("rejected legacy overwrite mutated browser profile", err)
+		t.Fatal("rejected previous overwrite mutated browser profile", err)
 	}
 
 	counter := &countingRoundTripper{}
 	client.http.Transport = counter
-	if _, err = client.CompleteLogin(context.Background(), store, legacyConfig, "human-session-only"); err == nil {
+	if _, err = client.CompleteLogin(context.Background(), store, otpConfig, "human-session-only"); err == nil {
 		t.Fatal("OTP login replaced browser profile")
 	}
 	if counter.calls != 0 {
@@ -399,6 +399,6 @@ func TestBrowserV2ProfileLoadsThroughSharedIdentityEntryPoint(t *testing.T) {
 	}
 	overwriteTestProfile(t, store, []byte(bad))
 	if _, err = store.Load(); err == nil {
-		t.Fatal("browser v2 parser accepted legacy provider metadata")
+		t.Fatal("browser v2 parser accepted previous provider metadata")
 	}
 }

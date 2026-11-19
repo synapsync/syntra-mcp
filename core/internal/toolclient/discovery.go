@@ -314,57 +314,57 @@ func rosterCandidates(teams []*v1.ProjectTeam) []Candidate {
 	return out
 }
 
-// Tickets returns complete authorized listing (private visibility remains server
+// Threads returns complete authorized listing (private visibility remains server
 // enforced). Mutation payloads never infer CAS from these mutable projections.
-func (a *App) Tickets(ctx context.Context, w string, view v1.TicketVisibility) ([]*v1.Ticket, error) {
-	if !validUUID(w) || (view != v1.TicketVisibility_TICKET_VISIBILITY_PUBLISHED && view != v1.TicketVisibility_TICKET_VISIBILITY_OWN_DRAFTS) {
+func (a *App) Threads(ctx context.Context, w string, view v1.ThreadVisibility) ([]*v1.Thread, error) {
+	if !validUUID(w) || (view != v1.ThreadVisibility_THREAD_VISIBILITY_PUBLISHED && view != v1.ThreadVisibility_THREAD_VISIBILITY_OWN_PREPARED) {
 		return nil, ciInput()
 	}
 	if e := a.authorize(ctx, v1.ToolCapability_TOOL_CAPABILITY_READ); e != nil {
 		return nil, e
 	}
-	c := syntrav1connect.NewTicketServiceClient(a.client, a.client.origin, RPCOptions()...)
-	return pages(ctx, a, func(ctx context.Context, t string) ([]*v1.Ticket, string, error) {
-		r, e := c.ListTickets(ctx, bearer(connect.NewRequest(&v1.ListTicketsRequest{WorkspaceId: w, Visibility: view, PageSize: 100, PageToken: t}), a.profile.Secret))
+	c := syntrav1connect.NewThreadServiceClient(a.client, a.client.origin, RPCOptions()...)
+	return pages(ctx, a, func(ctx context.Context, t string) ([]*v1.Thread, string, error) {
+		r, e := c.ListThreads(ctx, bearer(connect.NewRequest(&v1.ListThreadsRequest{WorkspaceId: w, Visibility: view, PageSize: 100, PageToken: t}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
 		}
-		for _, x := range r.Msg.Tickets {
+		for _, x := range r.Msg.Threads {
 			if x == nil || x.WorkspaceId != w {
 				return nil, "", ErrProfile
 			}
 		}
-		return r.Msg.Tickets, r.Msg.NextPageToken, nil
-	}, func(x *v1.Ticket) string { return x.Id })
+		return r.Msg.Threads, r.Msg.NextPageToken, nil
+	}, func(x *v1.Thread) string { return x.Id })
 }
-func (a *App) Ticket(ctx context.Context, w, t string) (*v1.Ticket, error) {
+func (a *App) Thread(ctx context.Context, w, t string) (*v1.Thread, error) {
 	if !validUUID(w) || !validUUID(t) {
 		return nil, ciInput()
 	}
 	if e := a.authorize(ctx, v1.ToolCapability_TOOL_CAPABILITY_READ); e != nil {
 		return nil, e
 	}
-	return a.readTicket(ctx, w, t)
+	return a.readThread(ctx, w, t)
 }
 
-// readTicket is also used after local reply validation. The server independently
+// readThread is also used after local reply validation. The server independently
 // authorizes the read, so preflight needs only this one additional RPC.
-func (a *App) readTicket(ctx context.Context, w, t string) (*v1.Ticket, error) {
-	c := syntrav1connect.NewTicketServiceClient(a.client, a.client.origin, RPCOptions()...)
-	r, e := c.GetTicket(ctx, bearer(connect.NewRequest(&v1.GetTicketRequest{WorkspaceId: w, TicketId: t}), a.profile.Secret))
+func (a *App) readThread(ctx context.Context, w, t string) (*v1.Thread, error) {
+	c := syntrav1connect.NewThreadServiceClient(a.client, a.client.origin, RPCOptions()...)
+	r, e := c.GetThread(ctx, bearer(connect.NewRequest(&v1.GetThreadRequest{WorkspaceId: w, ThreadId: t}), a.profile.Secret))
 	if e != nil {
 		return nil, a.authoredRPCError(e)
 	}
-	if r.Msg.Ticket == nil || r.Msg.Ticket.Id != t || r.Msg.Ticket.WorkspaceId != w {
+	if r.Msg.Thread == nil || r.Msg.Thread.Id != t || r.Msg.Thread.WorkspaceId != w {
 		return nil, ErrProfile
 	}
-	return r.Msg.Ticket, nil
+	return r.Msg.Thread, nil
 }
 
-// Messages exposes complete read-only published history OR own private drafts.
+// Messages exposes complete read-only published history OR own private prepared messages.
 // Selecting a view is explicit; neither view sets a read/review receipt.
 func (a *App) Messages(ctx context.Context, w, t string, view v1.MessageView) (*v1.ListMessagesResponse, error) {
-	if !validUUID(w) || !validUUID(t) || (view != v1.MessageView_MESSAGE_VIEW_PUBLISHED && view != v1.MessageView_MESSAGE_VIEW_OWN_DRAFTS) {
+	if !validUUID(w) || !validUUID(t) || (view != v1.MessageView_MESSAGE_VIEW_PUBLISHED && view != v1.MessageView_MESSAGE_VIEW_OWN_PREPARED) {
 		return nil, ciInput()
 	}
 	if e := a.authorize(ctx, v1.ToolCapability_TOOL_CAPABILITY_READ); e != nil {
@@ -372,19 +372,19 @@ func (a *App) Messages(ctx context.Context, w, t string, view v1.MessageView) (*
 	}
 	client := syntrav1connect.NewMessageServiceClient(a.client, a.client.origin, RPCOptions()...)
 	rows, e := pages[proto.Message](ctx, a, func(ctx context.Context, token string) ([]proto.Message, string, error) {
-		r, e := client.ListMessages(ctx, bearer(connect.NewRequest(&v1.ListMessagesRequest{WorkspaceId: w, TicketId: t, View: view, PageSize: 100, PageToken: token}), a.profile.Secret))
+		r, e := client.ListMessages(ctx, bearer(connect.NewRequest(&v1.ListMessagesRequest{WorkspaceId: w, ThreadId: t, View: view, PageSize: 100, PageToken: token}), a.profile.Secret))
 		if e != nil {
 			return nil, "", e
 		}
 		out := []proto.Message{}
 		for _, m := range r.Msg.Messages {
-			if m == nil || m.WorkspaceId != w || m.TicketId != t || view != v1.MessageView_MESSAGE_VIEW_PUBLISHED {
+			if m == nil || m.WorkspaceId != w || m.ThreadId != t || view != v1.MessageView_MESSAGE_VIEW_PUBLISHED {
 				return nil, "", ErrProfile
 			}
 			out = append(out, m)
 		}
-		for _, d := range r.Msg.Drafts {
-			if d == nil || d.WorkspaceId != w || d.TicketId != t || d.AuthorUserId != a.profile.AccountID || view != v1.MessageView_MESSAGE_VIEW_OWN_DRAFTS {
+		for _, d := range r.Msg.PreparedMessages {
+			if d == nil || d.WorkspaceId != w || d.ThreadId != t || d.AuthorUserId != a.profile.AccountID || view != v1.MessageView_MESSAGE_VIEW_OWN_PREPARED {
 				return nil, "", ErrProfile
 			}
 			out = append(out, d)
@@ -394,7 +394,7 @@ func (a *App) Messages(ctx context.Context, w, t string, view v1.MessageView) (*
 		switch x := m.(type) {
 		case *v1.PublishedMessage:
 			return x.Id
-		case *v1.MessageDraft:
+		case *v1.PreparedMessage:
 			return x.Id
 		}
 		return ""
@@ -407,8 +407,8 @@ func (a *App) Messages(ctx context.Context, w, t string, view v1.MessageView) (*
 		switch x := m.(type) {
 		case *v1.PublishedMessage:
 			out.Messages = append(out.Messages, x)
-		case *v1.MessageDraft:
-			out.Drafts = append(out.Drafts, x)
+		case *v1.PreparedMessage:
+			out.PreparedMessages = append(out.PreparedMessages, x)
 		}
 	}
 	return out, nil
