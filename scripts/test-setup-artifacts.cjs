@@ -43,6 +43,9 @@ function loadCandidate(args) {
 }
 function checkSetup(command, root, baseEnv, scratch, version) {
   const bundledSkill = path.join(root, 'node_modules', '@synapsync', 'syntra-mcp', 'skills', 'syntra');
+  const pin = `@synapsync/syntra-mcp@${version}`;
+  const latest = '@synapsync/syntra-mcp@latest';
+  const latestArgs = ['--yes', '--prefer-online', latest, 'mcp'];
   assert.ok(fs.statSync(path.join(bundledSkill, 'SKILL.md')).isFile(), 'bundled skill missing');
   function tree(directory, modes = false) {
     if (!fs.existsSync(directory)) return {};
@@ -114,7 +117,7 @@ function checkSetup(command, root, baseEnv, scratch, version) {
       assert.deepEqual(tree(defaults.skill), tree(bundledSkill), 'Claude default skill differs from package bytes');
       const defaultConfig = JSON.parse(fs.readFileSync(defaults.file, 'utf8'));
       assert.deepEqual([defaultConfig.mcpServers?.syntra?.command, ...(defaultConfig.mcpServers?.syntra?.args || [])],
-        ['npx', '-y', `@synapsync/syntra-mcp@${version}`, 'mcp'], 'Claude default registration differs');
+        ['npx', ...latestArgs], 'Claude default registration differs');
     }
     const f = fixture(host, 'success');
     const original = tree(f.home, true);
@@ -127,23 +130,22 @@ function checkSetup(command, root, baseEnv, scratch, version) {
     const config = fs.readFileSync(f.file, 'utf8');
     assert.ok(config.includes(host === 'codex' ? 'model = \"sentinel-model\"' : '\"sentinel\": {\"value\": 42}'), `${host} altered unrelated bytes`);
     if (host !== 'claude-code') assert.ok(config.includes('# preserved comment') || config.includes('// preserved comment'), `${host} discarded comment`);
-    const pin = `@synapsync/syntra-mcp@${version}`;
-    assert.equal(config.split(pin).length - 1, 1, `${host} must contain exactly one version pin`);
-    assert.ok(!config.includes('@synapsync/syntra-mcp@latest'), `${host} used mutable latest`);
+    assert.equal(config.split(latest).length - 1, 1, `${host} must contain exactly one latest registration`);
+    assert.ok(!config.includes(pin), `${host} froze the package version`);
     if (host === 'codex') {
       assert.equal((config.match(/^\s*\[mcp_servers\.syntra\]\s*$/gm) || []).length, 1, 'Codex registration count');
       const section = config.split(/^\s*\[mcp_servers\.syntra\]\s*$/m)[1].split(/^\s*\[/m)[0];
       assert.match(section, /\bcommand\s*=\s*["']npx["']/);
       const match = section.match(/^\s*args\s*=\s*(\[[^\]\r\n]*\])\s*$/m);
       assert.ok(match, 'Codex arguments missing');
-      assert.deepEqual(JSON.parse(match[1]), ['-y', pin, 'mcp']);
+      assert.deepEqual(JSON.parse(match[1]), latestArgs);
     } else {
       // Fixture contains only a known comment, so removing it is enough for JSON parsing here.
       const parsed = JSON.parse(config.replace(/^\s*\/\/ preserved comment\s*$/m, ''));
       const entry = host === 'claude-code' ? parsed.mcpServers?.syntra : parsed.mcp?.servers?.syntra;
       assert.ok(entry && typeof entry === 'object', `${host} registration missing`);
       const commandParts = host === 'claude-code' ? [entry.command, ...(entry.args || [])] : entry.command;
-      assert.deepEqual(commandParts, ['npx', '-y', pin, 'mcp'], `${host} registration command differs`);
+      assert.deepEqual(commandParts, ['npx', ...latestArgs], `${host} registration command differs`);
       if (host === 'opencode') assert.equal(entry.type, 'local');
     }
     assert.ok(fs.existsSync(path.join(f.skill, 'SKILL.md')), `${host} skill missing`);
@@ -155,6 +157,33 @@ function checkSetup(command, root, baseEnv, scratch, version) {
     const repeated = invoke(f, host);
     assert.equal(repeated.status, 0, `${host} repeat failed: ${repeated.stderr}`);
     assert.deepEqual(tree(f.home, true), once, `${host} repeat changed files`);
+
+    const legacy = fixture(host, 'legacy-pin');
+    const profile = 'fixture isolated profile';
+    const tail = ['--profile-dir', profile, '--call-timeout=1m'];
+    const argv = ['-y', pin, 'mcp', ...tail];
+    const legacyEntry = host === 'codex'
+      ? `[mcp_servers.syntra]\ncommand = "npx"\nargs = ${JSON.stringify(argv)}\nstartup_timeout_sec = 90\n`
+      : JSON.stringify(host === 'claude-code'
+        ? { mcpServers: { syntra: { type: 'stdio', command: 'npx', args: argv, env: { KEEP_SETTING: 'yes' } } } }
+        : { mcp: { syntra: { type: 'local', command: ['npx', ...argv], timeout: 90000 } } });
+    fs.writeFileSync(legacy.file, legacyEntry);
+    assert.equal(invoke(legacy, host).status, 0, `${host} legacy setup failed`);
+    assert.equal(fs.readFileSync(legacy.file, 'utf8'), legacyEntry, `${host} silently changed an existing pin`);
+    const migrate = (...args) => run(command, ['setup', '--agent', host, '--mode', 'latest', ...args], { cwd: root, env: legacy.env });
+    const migrationPreview = migrate('--dry-run');
+    assert.equal(migrationPreview.status, 0, migrationPreview.stderr);
+    assert.match(migrationPreview.stdout, /Current mode: pinned/);
+    assert.ok(!migrationPreview.stdout.includes(profile), `${host} exposed a custom directory in preview`);
+    assert.equal(fs.readFileSync(legacy.file, 'utf8'), legacyEntry);
+    rejected(migrate(), `${host} unconfirmed migration`);
+    assert.equal(migrate('--replace').status, 0, `${host} approved migration failed`);
+    const migrated = fs.readFileSync(legacy.file, 'utf8');
+    const expected = host === 'codex'
+      ? legacyEntry.replace(JSON.stringify(argv), `[${[...latestArgs, ...tail].map(value => JSON.stringify(value)).join(', ')}]`)
+      : legacyEntry.replace(JSON.stringify(host === 'opencode' ? ['npx', ...argv] : argv),
+        JSON.stringify(host === 'opencode' ? ['npx', ...latestArgs, ...tail] : [...latestArgs, ...tail]));
+    assert.equal(migrated, expected, `${host} changed fields outside the launch arguments`);
 
     const conflict = fixture(host, 'registration-conflict');
     const conflicting = host === 'codex' ? '[mcp_servers.syntra]\ncommand = "other-command"\n' :
@@ -175,6 +204,51 @@ function checkSetup(command, root, baseEnv, scratch, version) {
     assert.deepEqual(tree(custom.home, true), beforeCustom, `${host} skill conflict changed files`);
     console.log(`PASS installed setup ${host}: dry-run, apply, skill, repeat, registration and skill conflicts`);
   }
+}
+
+async function checkLocalLaunch({ scratch, installedRoot, installedTarget, version, root, env }) {
+  const windows = process.platform === 'win32';
+  const prefix = path.join(scratch, 'global prefix with spaces');
+  const scope = path.join(prefix, ...(windows ? [] : ['lib']), 'node_modules', '@synapsync');
+  fs.mkdirSync(scope, { recursive: true, mode: 0o700 });
+  const packageDir = path.join(scope, 'syntra-mcp');
+  fs.cpSync(installedRoot, packageDir, { recursive: true });
+  fs.cpSync(installedTarget, path.join(scope, path.basename(installedTarget)), { recursive: true });
+  const launcher = path.join(packageDir, 'bin', 'launcher.cjs');
+  const home = path.join(scratch, 'local-host-home');
+  fs.mkdirSync(home, { mode: 0o700 });
+  const fixtureEnv = { ...env, HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: path.join(home, 'xdg') };
+  const config = path.join(home, '.claude.json');
+  const setup = (...args) => run(process.execPath, [launcher, 'setup', '--agent', 'claude-code', ...args], { cwd: root, env: fixtureEnv });
+  assert.equal(setup().status, 0, 'latest setup failed');
+  const entry = () => JSON.parse(fs.readFileSync(config, 'utf8')).mcpServers.syntra;
+  const latest = entry();
+  const latestArgs = ['--yes', '--prefer-online', '@synapsync/syntra-mcp@latest', 'mcp'];
+  if (windows) {
+    assert.equal(latest.command, process.execPath);
+    assert.ok(path.isAbsolute(latest.args[0]) && path.basename(latest.args[0]) === 'npx-cli.js');
+    assert.deepEqual(latest.args.slice(1), latestArgs);
+  } else {
+    assert.equal(latest.command, 'npx');
+    assert.deepEqual(latest.args, latestArgs);
+  }
+
+  // Start the configured global package with a GUI-like empty PATH and an
+  // unreachable registry. The copied packages came from the smoke npm install.
+  const applied = setup('--mode', 'local', '--replace');
+  assert.equal(applied.status, 0, applied.stderr);
+  const local = entry();
+  assert.equal(local.command, process.execPath);
+  assert.deepEqual(local.args, [launcher, 'mcp']);
+  const bytes = fs.readFileSync(config);
+  assert.equal(setup('--mode', 'local').status, 0, 'local repeat failed');
+  assert.deepEqual(fs.readFileSync(config), bytes);
+  const result = await runMCP(local.command, local.args, {
+    cwd: root, env: { ...fixtureEnv, PATH: '' },
+  });
+  checkMCP(result);
+  assert.equal(result.frames[0].result.serverInfo.version, version);
+  console.log('PASS latest registration and migrated local MCP launch with empty PATH');
 }
 
 async function main() {
@@ -240,13 +314,17 @@ async function main() {
     }
     const result = await runMCP(command, [...launcherArgs, 'mcp', '--profile-dir', profile], {cwd:root, env});
     checkMCP(result);
+    assert.equal(result.frames[0].result.serverInfo.version, candidate.version, 'initialize must advertise the packaged MCP process version');
     const loginHint = result.frames[2].result.content.map(item => item.text || '').join(' ');
     assert.match(loginHint, /syntra login/);
     assert.match(loginHint, /syntra login --profile-dir /);
     const resolve = result.frames[1].result.tools.find(tool => tool.name === 'resolve');
     assert.ok(resolve.inputSchema.properties.team, 'MCP resolve must expose the project team selector');
     assert.deepEqual(fs.readdirSync(profile).sort(), ['.lock']);
-    if (!windows && !fromRegistry) checkSetup(command, root, env, scratch, candidate.version);
+    if (!fromRegistry) {
+      if (!windows) checkSetup(command, root, env, scratch, candidate.version);
+      await checkLocalLaunch({ scratch, installedRoot, installedTarget, version: candidate.version, root, env });
+    }
     console.log(`PASS target=${key} node=${process.version} npm=${npmVersion.stdout.trim()} manifest=${digest}`);
     console.log(`PASS ${fromRegistry ? 'public registry' : 'offline tarball'} install, direct/version-pinned npm exec and MCP; no Go, Git or Syntra credentials used`);
   } finally { fs.rmSync(scratch, { recursive:true, force:true }); }

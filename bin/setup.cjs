@@ -6,8 +6,8 @@ const { randomUUID } = require('node:crypto');
 const { isDeepStrictEqual, TextDecoder } = require('node:util');
 const jsonc = require('./vendor/jsonc-parser/lib/umd/main.js');
 const toml = require('./vendor/smol-toml/index.cjs');
-const packageManifest = require('../package.json');
 const readline = require('node:readline/promises');
+const { PACKAGE, STABLE, npmCall, npmCliCandidates, packagePrefix, verifyGlobal, realPath, samePath } = require('./npm-installation.cjs');
 
 const MAX_CONFIG_BYTES = 4 * 1024 * 1024;
 const SKILL_FILES = Object.freeze(['SKILL.md', 'references/tools.md']);
@@ -31,6 +31,7 @@ function parseSetupArgs(args) {
   let sawAgent = false;
   let sawDryRun = false;
   let replace = false;
+  let mode = null;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -45,17 +46,22 @@ function parseSetupArgs(args) {
       if (sawDryRun) fail('--dry-run may be supplied only once.');
       sawDryRun = true;
       dryRun = true;
+    } else if (argument === '--mode') {
+      if (mode) fail('--mode may be supplied only once.');
+      mode = args[++index];
+      if (!['latest', 'local'].includes(mode)) fail('--mode requires latest or local.');
     } else if (argument === '--replace') {
       if (replace) fail('--replace may be supplied only once.');
       replace = true;
     } else {
-      fail('Unknown setup option. Use --agent, --dry-run, and --replace only.');
+      fail('Unknown setup option. Use --agent, --mode, --dry-run, and --replace only.');
     }
   }
 
   if (!agent) fail('Choose a host with --agent codex, --agent claude-code, or --agent opencode.');
   if (!AGENT_NAMES.includes(agent)) fail('Supported setup hosts are codex, claude-code, and opencode.');
-  return { agent, dryRun, replace };
+  if (replace && !mode) fail('--replace requires an explicit --mode latest or local.');
+  return { agent, dryRun, replace, mode };
 }
 
 function pathApi(platform) {
@@ -81,25 +87,26 @@ function selectedDirectory(env, variable, fallback, pathModule, label) {
   return pathModule.normalize(value);
 }
 
-function shellCommand(platform) {
-  const version = packageManifest.version;
-  if (packageManifest.name !== '@synapsync/syntra-mcp' || typeof packageManifest.private !== 'boolean' ||
-      typeof version !== 'string' || !/^[0-9A-Za-z][0-9A-Za-z.+-]*$/.test(version)) {
-    fail('The Syntra package manifest has invalid setup metadata.');
+function shellCommand(platform, mode = 'latest', options = {}) {
+  const executable = options.node || process.execPath;
+  if (mode === 'local') {
+    const directory = options.packageDir || path.resolve(__dirname, '..');
+    const prefix = packagePrefix(directory);
+    const call = options.npm || npmCall(options.env || process.env, prefix);
+    const launcher = path.join(directory, 'bin', 'launcher.cjs');
+    if (!realPath(executable) || !realPath(launcher) || !verifyGlobal(directory, prefix, call)) {
+      fail(`Local mode requires running setup from the selected npm-global installation. Run: npm install -g ${PACKAGE}@latest`);
+    }
+    return { command: executable, args: [launcher, 'mcp'] };
   }
-  const pinnedPackage = `${packageManifest.name}@${version}`;
+  const args = ['--yes', '--prefer-online', `${PACKAGE}@latest`, 'mcp'];
   if (platform === 'win32') {
-    // npx is a Windows .cmd entry point. cmd /d /c is the documented MCP wrapper;
-    // every argument is a fixed token and no user input is interpolated.
-    return Object.freeze({
-      command: 'cmd.exe',
-      args: Object.freeze(['/d', '/c', 'npx', '-y', pinnedPackage, 'mcp']),
-    });
+    const npmCli = npmCliCandidates(null, options.env)[0];
+    const npxCli = options.npxCli || (npmCli && realPath(path.join(path.dirname(npmCli), 'npx-cli.js')));
+    if (!npxCli) fail('Windows latest mode requires an npm installation with npx-cli.js available.');
+    return { command: executable, args: [npxCli, ...args] };
   }
-  return Object.freeze({
-    command: 'npx',
-    args: Object.freeze(['-y', pinnedPackage, 'mcp']),
-  });
+  return { command: 'npx', args };
 }
 
 function tomlValue(value) {
@@ -110,7 +117,7 @@ function tomlValue(value) {
 function hostPlan(agent, env = process.env, platform = process.platform) {
   const paths = pathApi(platform);
   const home = homeDirectory(env, platform, paths);
-  const command = shellCommand(platform);
+
 
   if (agent === 'codex') {
     const configHome = selectedDirectory(
@@ -126,14 +133,7 @@ function hostPlan(agent, env = process.env, platform = process.platform) {
       format: 'toml',
       configPath: paths.join(configHome, 'config.toml'),
       skillPath: paths.join(home, '.agents', 'skills', 'syntra'),
-      registration: { command: command.command, args: command.args },
       registrationPath: ['mcp_servers', 'syntra'],
-      tomlSnippet: [
-        '[mcp_servers.syntra]',
-        `command = ${tomlValue(command.command)}`,
-        `args = ${tomlValue(command.args)}`,
-        '',
-      ].join('\n'),
     };
   }
 
@@ -150,7 +150,6 @@ function hostPlan(agent, env = process.env, platform = process.platform) {
         ? paths.join(configDirectory, '.claude.json')
         : paths.join(home, '.claude.json'),
       skillPath: paths.join(claudeDirectory, 'skills', 'syntra'),
-      registration: { type: 'stdio', command: command.command, args: command.args },
       registrationPath: ['mcpServers', 'syntra'],
     };
   }
@@ -182,9 +181,6 @@ function hostPlan(agent, env = process.env, platform = process.platform) {
       format: 'jsonc',
       configPath: jsoncInfo.exists ? jsoncPath : jsonPath,
       skillPath: paths.join(xdgConfigHome, 'opencode', 'skills', 'syntra'),
-      registration: { type: 'local', command: command.args
-        ? [command.command, ...command.args]
-        : [command.command] },
       registrationPath: ['mcp', 'servers', 'syntra'],
       openCodeConfigCandidates: [jsonPath, jsoncPath],
     };
@@ -630,48 +626,84 @@ function computeJsonCandidate(text, registrationPath, registration, format, exis
   }
 }
 
-// The entry name alone is insufficient. Recognize only the Syntra executable
-// or its exact npm package in a known launcher invocation.
-function identifyRegistration(registration) {
+// Recognize known argv layouts. Unknown wrappers and ambiguous host shapes
+// stay under operator control even when --replace is supplied.
+function identifyRegistration(registration, agent, platform) {
   if (!registration || typeof registration !== 'object') return null;
-  if (Object.hasOwn(registration, 'type') && !['stdio', 'local'].includes(registration.type)) return null;
-  let command = registration.command;
-  let args = registration.args ?? [];
-  if (Array.isArray(command)) [command, ...args] = command;
-  if (typeof command !== 'string' || !Array.isArray(args) || args.some(arg => typeof arg !== 'string')) return null;
-
-  const basename = value => path.win32.basename(value).toLowerCase();
-  let launcher = basename(command);
-  if (['cmd', 'cmd.exe'].includes(launcher)) {
-    if (args[0]?.toLowerCase() !== '/d' || args[1]?.toLowerCase() !== '/c') return null;
-    launcher = basename(args[2] ?? '');
-    args = args.slice(3);
-    if (!['npx', 'npx.cmd', 'npx.exe'].includes(launcher)) return null;
-  }
-  let pin = null;
-  if (['npx', 'npx.cmd', 'npx.exe'].includes(launcher)) {
-    const packageIndex = ['-y', '--yes'].includes(args[0]) ? 1 : 0;
-    const match = /^@synapsync\/syntra-mcp(?:@([0-9A-Za-z][0-9A-Za-z.+-]*))?$/.exec(args[packageIndex] ?? '');
-    if (!match || args[packageIndex + 1] !== 'mcp') return null;
-    pin = match[1] ?? null;
-    args = args.slice(packageIndex + 1);
-  } else if (!['syntra', 'syntra.exe', 'syntra-mcp', 'syntra-mcp.exe'].includes(launcher) || args[0] !== 'mcp') {
+  if (agent === 'opencode') {
+    if (registration.type !== 'local' || !Array.isArray(registration.command) || Object.hasOwn(registration, 'args')) return null;
+  } else if (Array.isArray(registration.command) || (Object.hasOwn(registration, 'type') && registration.type !== 'stdio')) {
     return null;
   }
-  return { launcher, pin, customProfile: args.some(arg => arg === '--profile-dir' || arg.startsWith('--profile-dir=')) };
+
+  let { command, args = [] } = registration;
+  if (Array.isArray(command)) [command, ...args] = command;
+  if (typeof command !== 'string' || !Array.isArray(args) ||
+      args.some(arg => typeof arg !== 'string' || arg.includes('\0'))) return null;
+
+  const paths = pathApi(platform);
+  const basename = value => paths.basename(value).toLowerCase();
+  let launcher = basename(command);
+  if (['cmd', 'cmd.exe'].includes(launcher)) {
+    if (args[0]?.toLowerCase() !== '/d' || args[1]?.toLowerCase() !== '/c' ||
+        !['npx', 'npx.cmd'].includes(args[2]?.toLowerCase())) return null;
+    launcher = 'npx';
+    args = args.slice(3);
+  }
+  if (['node', 'node.exe'].includes(launcher)) {
+    if (!paths.isAbsolute(command) || !paths.isAbsolute(args[0] ?? '')) return null;
+    const script = args[0];
+    args = args.slice(1);
+    if (basename(script) === 'npx-cli.js' && /[\\/]npm[\\/]bin[\\/]npx-cli\.js$/.test(script)) {
+      launcher = 'npx';
+    } else if (basename(script) === 'launcher.cjs' && args[0] === 'mcp' &&
+        /[\\/]node_modules[\\/]@synapsync[\\/]syntra-mcp[\\/]bin[\\/]launcher\.cjs$/.test(script)) {
+      return { mode: 'local', launcher: 'node', node: command, script, tail: args.slice(1) };
+    } else {
+      return null;
+    }
+  }
+  if (['npx', 'npx.cmd', 'npx.exe'].includes(launcher)) {
+    let index = ['-y', '--yes'].includes(args[0]) ? 1 : 0;
+    if (args[index] === '--prefer-online') index += 1;
+    const match = /^@synapsync\/syntra-mcp(?:@([0-9A-Za-z][0-9A-Za-z.+-]*))?$/.exec(args[index] ?? '');
+    if (!match || args[index + 1] !== 'mcp') return null;
+    const pin = match[1];
+    return { mode: pin === 'latest' ? 'latest' : pin ? 'pinned' : 'npm-unversioned',
+      launcher, pin, tail: args.slice(index + 2) };
+  }
+  if (['syntra', 'syntra-mcp', 'syntra.exe', 'syntra-mcp.exe'].includes(command) && args[0] === 'mcp') {
+    return { mode: 'direct', launcher, tail: args.slice(1) };
+  }
+  return null;
 }
 
-function staleRegistration(existing, plan) {
-  const identified = identifyRegistration(existing);
-  if (!identified) {
+function planRegistration(existing, plan) {
+  const identified = existing.exists && identifyRegistration(existing.value, plan.agent, plan.platform);
+  if (existing.exists && !identified) {
     fail('A different Syntra host registration already exists and could not be identified as Syntra. Rename or remove that entry before running setup.');
   }
-  return {
-    changed: true,
-    status: 'replace',
-    safeBefore: identified,
-    safeDelta: { path: plan.registrationPath.join('.'), value: plan.registration },
-  };
+  plan.mode = plan.requestedMode || identified?.mode || 'latest';
+  if (existing.exists && !plan.requestedMode) return { changed: false, status: 'matching' };
+  const launch = shellCommand(plan.platform, plan.mode, plan.options);
+  const tail = identified?.tail || [];
+  const args = [...launch.args, ...tail];
+  const fields = plan.agent === 'opencode' ? { command: [launch.command, ...args] } : { command: launch.command, args };
+  const defaults = plan.agent === 'opencode' ? { type: 'local' } : plan.agent === 'claude-code' ? { type: 'stdio' } : {};
+  plan.targetRegistration = { ...(existing.exists ? existing.value : defaults), ...fields };
+  // Keep environment values and operator-supplied arguments out of previews.
+  plan.previewCommand = [launch.command, ...launch.args];
+  plan.tomlSnippet = [
+    '[mcp_servers.syntra]',
+    `command = ${tomlValue(launch.command)}`,
+    `args = ${tomlValue(args)}`,
+    '',
+  ].join('\n');
+  if (existing.exists && isDeepStrictEqual(normalizeTomlValue(existing.value), normalizeTomlValue(plan.targetRegistration))) {
+    return { changed: false, status: 'matching' };
+  }
+  return { changed: true, status: existing.exists ? 'replace' : 'add',
+    before: identified };
 }
 
 function jsonRegistrationPath(plan, value) {
@@ -691,28 +723,30 @@ function previewJsonRegistration(config, plan, before) {
     ? getOwnPath(before.value, plan.registrationPath)
     : { exists: false, value: undefined };
 
-  if (existing.exists && isDeepStrictEqual(deepPlainCopy(existing.value), deepPlainCopy(plan.registration))) {
-    return { changed: false, status: 'matching', safeDelta: null };
-  }
-  const replacement = existing.exists ? staleRegistration(existing.value, plan) : null;
-  let proposedText;
-  if (replacement) {
-    const node = jsonc.findNodeAtLocation(before.tree, plan.registrationPath);
-    const indent = indentationAt(config.text, node.parent.offset);
-    const inline = !indent && !/[\r\n]/.test(config.text.slice(node.offset, node.offset + node.length));
-    const value = serializeJsonValue(plan.registration, inline, indent || '  '.repeat(plan.registrationPath.length),
-      jsonLineEnding(config.text));
-    proposedText = finishWithNewline(config.text.slice(0, node.offset) + value + config.text.slice(node.offset + node.length),
-      jsonLineEnding(config.text));
+  const registration = planRegistration(existing, plan);
+  if (!registration.changed) return registration;
+  let proposedText = config.text;
+  if (existing.exists) {
+    for (const key of plan.agent === 'opencode' ? ['command'] : ['command', 'args']) {
+      const tree = parseJsonDocument(proposedText, plan.format, allowComments).tree;
+      const node = jsonc.findNodeAtLocation(tree, [...plan.registrationPath, key]);
+      const value = plan.targetRegistration[key];
+      if (node) {
+        proposedText = proposedText.slice(0, node.offset) + JSON.stringify(value) + proposedText.slice(node.offset + node.length);
+      } else {
+        const parent = jsonc.findNodeAtLocation(tree, plan.registrationPath);
+        proposedText = insertJsonProperty(proposedText, parent, key, value);
+      }
+    }
   } else {
-    proposedText = computeJsonCandidate(config.text, plan.registrationPath, plan.registration, plan.format, before.tree);
+    proposedText = computeJsonCandidate(config.text, plan.registrationPath, plan.targetRegistration, plan.format, before.tree);
   }
 
   const after = parseJsonDocument(proposedText, plan.format, allowComments);
   const afterRegistration = getOwnPath(after.value, plan.registrationPath);
   if (!afterRegistration.exists || !isDeepStrictEqual(
     deepPlainCopy(afterRegistration.value),
-    deepPlainCopy(plan.registration),
+    deepPlainCopy(plan.targetRegistration),
   )) {
     fail('The proposed host registration could not be validated.');
   }
@@ -722,15 +756,7 @@ function previewJsonRegistration(config, plan, before) {
     fail('The proposed host edit would alter unrelated settings.');
   }
 
-  if (replacement) return { ...replacement, proposedText };
-  return {
-    changed: true,
-    status: 'add',
-    safeDelta: {
-      path: plan.registrationPath.join('.'),
-      value: plan.registration,
-    },
-  };
+  return { ...registration, proposedText };
 }
 
 function normalizeTomlValue(value) {
@@ -760,70 +786,32 @@ function computeTomlCandidate(text, snippet) {
 
 function replaceTomlRegistration(text, plan, statements, inlineValues) {
   const keys = plan.registrationPath;
-  const owned = statements.filter(statement =>
-    keys.every((segment, index) => statement.keys[index] === segment));
-  const value = `{ command = ${tomlValue(plan.registration.command)}, args = ${tomlValue(plan.registration.args)} }`;
-  const eol = tomlLineEnding(text);
-
-  // An inline table can share its line with other servers. Edit only its value.
-  const inline = owned.find(statement => statement.keys.length === keys.length && statement.valueStart !== undefined);
-  if (inline) {
-    return finishWithNewline(text.slice(0, inline.valueStart) + value + text.slice(inline.end), eol);
+  const sameKeys = (left, right) => isDeepStrictEqual(left, right);
+  const statementFor = field => statements.find(statement =>
+    statement.valueStart !== undefined && sameKeys(statement.keys, field));
+  let inlineStart = statementFor(keys)?.valueStart;
+  if (inlineStart === undefined) {
+    const parentStart = statementFor(keys.slice(0, -1))?.valueStart;
+    inlineStart = inlineValues.find(value => value.tableStart === parentStart &&
+      sameKeys(value.keys, keys.slice(-1)))?.start;
   }
-  if (!owned.length) {
-    const [parentKey, entryKey] = keys;
-    const parent = statements.find(statement => statement.keys.length === 1 && statement.keys[0] === parentKey);
-    const entry = inlineValues.find(({ tableStart, keys: inlineKeys }) =>
-      tableStart === parent?.valueStart && inlineKeys.length === 1 && inlineKeys[0] === entryKey);
-    if (!entry) fail('The Syntra registration is embedded in a TOML value. Move it to its own table before using --replace.');
-    return finishWithNewline(text.slice(0, entry.start) + value + text.slice(entry.end), eol);
-  }
-
-  const fields = owned.filter(statement => statement.valueStart !== undefined &&
-    statement.keys.length === keys.length + 1 && ['command', 'args'].includes(statement.keys.at(-1)));
-  const replaceInPlace = fields.length === 2;
-  const ownedSet = new Set(owned);
-  const keptFields = new Set(fields);
-  let candidate = '';
-  let previous;
-  let pendingGap = '';
-  let removed = false;
-  let cursor = 0;
-
-  for (const statement of statements) {
-    const isOwned = ownedSet.has(statement);
-    const isHeader = statement.valueStart === undefined;
-    const isRootHeader = isHeader && statement.keys.length === keys.length;
-    const keep = !isOwned || (replaceInPlace && (keptFields.has(statement) || isRootHeader));
-    let gap = pendingGap + text.slice(cursor, statement.start);
-
-    if (!keep) {
-      // Drop an entire statement line, preserving any trailing comment.
-      pendingGap = gap.replace(/(?:^|(?<=\n))[ \t]*$/, '');
-      const lineEnding = /^[ \t]*(\r?\n|$)/.exec(text.slice(statement.end));
-      cursor = statement.end + (lineEnding?.[0].length ?? 0);
-      removed = true;
-      continue;
+  const edits = [];
+  for (const key of ['command', 'args']) {
+    const value = tomlValue(plan.targetRegistration[key]);
+    if (inlineStart !== undefined) {
+      const field = inlineValues.find(entry => entry.tableStart === inlineStart && sameKeys(entry.keys, [key]));
+      if (field) edits.push({ start: field.start, end: field.end, value });
+      else edits.push({ start: inlineStart + 1, end: inlineStart + 1, value: ` ${key} = ${value},` });
+    } else {
+      const field = statementFor([...keys, key]);
+      if (!field) fail('The Syntra registration has an unsupported TOML launch field layout.');
+      edits.push({ start: field.valueStart, end: field.end, value });
     }
-    if (removed || isOwned || ownedSet.has(previous)) {
-      // Only edit whitespace between parsed statements, never inside values.
-      gap = gap.replace(/(?:\r?\n[ \t]*)+\r?\n/g, eol + eol);
-      if (!previous && removed) gap = gap.replace(/^(?:[ \t]*\r?\n)+/, '');
-      if (previous && isHeader && /^[ \t\r\n]*$/.test(gap)) {
-        gap = eol + eol + /[ \t]*$/.exec(gap)[0];
-      }
-    }
-    const contents = keptFields.has(statement)
-      ? text.slice(statement.start, statement.valueStart) + tomlValue(plan.registration[statement.keys.at(-1)])
-      : text.slice(statement.start, statement.end);
-    candidate += gap + contents;
-    previous = statement;
-    pendingGap = '';
-    removed = false;
-    cursor = statement.end;
   }
-  const edited = candidate + pendingGap + text.slice(cursor);
-  return replaceInPlace ? finishWithNewline(edited, eol) : computeTomlCandidate(edited, plan.tomlSnippet);
+  for (const edit of edits.sort((left, right) => right.start - left.start)) {
+    text = text.slice(0, edit.start) + edit.value + text.slice(edit.end);
+  }
+  return text;
 }
 
 function previewTomlRegistration(config, plan) {
@@ -841,14 +829,11 @@ function previewTomlRegistration(config, plan) {
     fail('The TOML host config is malformed.');
   }
   const existing = getOwnPath(before, plan.registrationPath);
-  if (existing.exists && isDeepStrictEqual(normalizeTomlValue(existing.value), normalizeTomlValue(plan.registration))) {
-    return { changed: false, status: 'matching', safeDelta: null };
-  }
-  const replacement = existing.exists ? staleRegistration(existing.value, plan) : null;
-  const snippet = plan.tomlSnippet;
-  const proposedText = replacement
+  const registration = planRegistration(existing, plan);
+  if (!registration.changed) return registration;
+  const proposedText = existing.exists
     ? replaceTomlRegistration(config.text, plan, statements, inlineValues)
-    : computeTomlCandidate(config.text, snippet);
+    : computeTomlCandidate(config.text, plan.tomlSnippet);
   let after;
   try {
     after = toml.parse(proposedText);
@@ -858,7 +843,7 @@ function previewTomlRegistration(config, plan) {
   const afterRegistration = getOwnPath(after, plan.registrationPath);
   if (!afterRegistration.exists || !isDeepStrictEqual(
     normalizeTomlValue(afterRegistration.value),
-    normalizeTomlValue(plan.registration),
+    normalizeTomlValue(plan.targetRegistration),
   )) {
     fail('The proposed TOML registration could not be validated.');
   }
@@ -868,18 +853,11 @@ function previewTomlRegistration(config, plan) {
   )) {
     fail('The proposed TOML edit would alter unrelated settings.');
   }
-  if (replacement) {
-    return { ...replacement, proposedText, safeDelta: { ...replacement.safeDelta, toml: snippet } };
-  }
-  return {
-    changed: true,
-    status: 'add',
-    safeDelta: { path: plan.registrationPath.join('.'), toml: snippet },
-  };
+  return { ...registration, proposedText };
 }
 
-function buildPlan(agent, env = process.env, platform = process.platform) {
-  const plan = hostPlan(agent, env, platform);
+function buildPlan(agent, env = process.env, platform = process.platform, options = {}) {
+  const plan = { ...hostPlan(agent, env, platform), requestedMode: options.mode, platform, options: { ...options, env } };
   inspectPath(plan.configPath, 'file', platform);
   inspectPath(plan.skillPath, 'directory', platform);
   const config = readConfig(plan.configPath, plan.format, platform);
@@ -916,22 +894,16 @@ function renderPlan(plan, dryRun = true) {
   ];
 
   if (plan.registration.status === 'matching') {
-    lines.push('MCP registration: the exact pinned Syntra entry is already present.');
+    lines.push(`MCP registration preserved (${plan.mode}).`);
   } else {
-    lines.push('Proposed Syntra-only config change (unrelated settings are omitted):');
+    lines.push(`Syntra MCP registration ${plan.registration.status === 'replace' ? 'migration' : 'addition'}: ${plan.registrationPath.join('.')}`);
     if (plan.registration.status === 'replace') {
-      const before = plan.registration.safeBefore;
-      const shownPin = before.pin && /^(?:latest|[0-9]+\.[0-9]+\.[0-9]+)$/.test(before.pin);
-      const version = before.pin ? (shownPin ? `@${before.pin}` : '@<custom tag>') : '';
-      const packageName = before.launcher.startsWith('npx') ? ` ${packageManifest.name}${version}` : '';
-      const profile = before.customProfile ? ' --profile-dir <custom directory>' : '';
-      lines.push(`- ${before.launcher}${packageName} mcp${profile} (other arguments or settings omitted)`);
+      const before = plan.registration.before;
+      const pin = before.pin && STABLE.test(before.pin) ? ` @${before.pin}` : '';
+      lines.push(`Current mode: ${before.mode}${pin}. Existing MCP arguments and host settings will be preserved.`);
     }
-    if (plan.registration.safeDelta.toml) {
-      for (const line of plan.registration.safeDelta.toml.trimEnd().split('\n')) lines.push(`+ ${line}`);
-    } else {
-      lines.push(`+ ${plan.registration.safeDelta.path} = ${JSON.stringify(plan.registration.safeDelta.value, null, 2)}`);
-    }
+    lines.push(`Proposed mode: ${plan.mode}`);
+    lines.push(`Launch command: ${JSON.stringify(plan.previewCommand)}`);
   }
 
   if (plan.skillStatus === 'matching') {
@@ -1238,17 +1210,7 @@ function createBackup(plan, token, platform) {
 }
 
 function configCandidate(plan) {
-  if (!plan.registration.changed) return null;
-  if (plan.registration.status === 'replace') return Buffer.from(plan.registration.proposedText, 'utf8');
-  const text = plan.format === 'toml'
-    ? computeTomlCandidate(plan.configSnapshot.exists ? new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(plan.configSnapshot.bytes) : '', plan.tomlSnippet)
-    : computeJsonCandidate(
-      plan.configSnapshot.exists ? new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(plan.configSnapshot.bytes) : '',
-      plan.registrationPath,
-      plan.registration.safeDelta.value,
-      plan.format,
-    );
-  return Buffer.from(text, 'utf8');
+  return plan.registration.changed ? Buffer.from(plan.registration.proposedText, 'utf8') : null;
 }
 
 function assertConfigUnchanged(plan, platform) {
@@ -1296,8 +1258,8 @@ function applySetup(agent, options = {}) {
   const env = options.env || process.env;
   const platform = options.platform || process.platform;
   const testHooks = options.testHooks || Object.create(null);
-  const initialPlan = options.preview || buildPlan(agent, env, platform);
-  if (initialPlan.registration.status === 'replace' && !options.replace) refuseReplacement(agent);
+  const initialPlan = options.preview || buildPlan(agent, env, platform, options);
+  if (initialPlan.registration.status === 'replace' && !options.replace) refuseReplacement(agent, initialPlan.requestedMode);
   const initiallyChanged = initialPlan.registration.changed || initialPlan.skillStatus === 'absent';
   if (!initiallyChanged) {
     return { plan: initialPlan, configChanged: false, skillInstalled: false, backupPath: null, unchanged: true };
@@ -1326,12 +1288,13 @@ function applySetup(agent, options = {}) {
     syncDirectory(paths.dirname(lockPath), platform);
     phase('lock-acquired', { lockPath });
 
-    const plan = buildPlan(agent, env, platform);
+    const plan = buildPlan(agent, env, platform, options);
     if ((initialPlan.registration.status === 'replace' || plan.registration.status === 'replace') &&
-        (plan.configPath !== initialPlan.configPath || !sameConfigSnapshot(initialPlan.configSnapshot, plan.configSnapshot))) {
+        (plan.configPath !== initialPlan.configPath || !sameConfigSnapshot(initialPlan.configSnapshot, plan.configSnapshot) ||
+         !isDeepStrictEqual(plan.targetRegistration, initialPlan.targetRegistration))) {
       fail('The host config changed after the setup preview. Run setup again to review the new entry.');
     }
-    if (plan.registration.status === 'replace' && !options.replace) refuseReplacement(agent);
+    if (plan.registration.status === 'replace' && !options.replace) refuseReplacement(agent, initialPlan.requestedMode);
     if (!plan.registration.changed && plan.skillStatus === 'matching') {
       result = { plan, configChanged: false, skillInstalled: false, backupPath: null, unchanged: true };
       return result;
@@ -1449,36 +1412,35 @@ function renderApplied(result) {
         ? `Existing skill preserved: ${result.plan.skillPath}`
         : `Bundled skill already matches: ${result.plan.skillPath}`);
   }
-  const packagePin = `${packageManifest.name}@${packageManifest.version}`;
-  lines.push(`First time on this machine? Run: npx -y ${packagePin} login`);
+  lines.push(`First time on this machine? Run: npx -y ${PACKAGE}@latest login`);
   lines.push('Approve the permissions you need in the browser. Agent sessions using the default Syntra profile share that login.');
-  lines.push(`To check permissions and expiration, run: npx -y ${packagePin} status`);
+  lines.push(`To check permissions and expiration, run: npx -y ${PACKAGE}@latest status`);
   lines.push('Start a new agent session to load this registration.');
   return `${lines.join('\n')}\n`;
 }
 
-function refuseReplacement(agent) {
-  fail(`A stale Syntra host registration already exists. Run: syntra setup --agent ${agent} --replace`);
+function refuseReplacement(agent, mode) {
+  fail(`Confirm the Syntra registration migration in a terminal, or run: syntra setup --agent ${agent} --mode ${mode} --replace`);
 }
 
 function runSetup(args, options = {}) {
   const parsed = parseSetupArgs(args);
-  const plan = buildPlan(parsed.agent, options.env, options.platform);
+  const plan = buildPlan(parsed.agent, options.env, options.platform, { ...options, mode: parsed.mode });
   if (parsed.dryRun) return renderPlan(plan);
-  if (plan.registration.status === 'replace' && !parsed.replace) refuseReplacement(parsed.agent);
-  const applied = applySetup(parsed.agent, { ...options, preview: plan, replace: parsed.replace });
+  if (plan.registration.status === 'replace' && !parsed.replace) refuseReplacement(parsed.agent, parsed.mode);
+  const applied = applySetup(parsed.agent, { ...options, mode: parsed.mode, preview: plan, replace: parsed.replace });
   return (plan.registration.status === 'replace' ? renderPlan(plan, false) : '') + renderApplied(applied);
 }
 
 async function setupCLI(args, options = {}) {
   const out = options.out || (message => process.stdout.write(message));
   if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
-    out('Usage: syntra setup --agent codex|claude-code|opencode [--dry-run] [--replace]\n' +
-      'Preview and confirm a recognized stale registration, or use --replace to apply without prompting.\n');
+    out('Usage: syntra setup --agent codex|claude-code|opencode [--mode latest|local] [--dry-run] [--replace]\n' +
+      'New registrations default to latest. Choose --mode to migrate an existing registration.\n');
     return;
   }
   const parsed = parseSetupArgs(args);
-  const plan = buildPlan(parsed.agent, options.env, options.platform);
+  const plan = buildPlan(parsed.agent, options.env, options.platform, { ...options, mode: parsed.mode });
   if (parsed.dryRun) {
     out(renderPlan(plan));
     return;
@@ -1487,7 +1449,7 @@ async function setupCLI(args, options = {}) {
     out(renderPlan(plan, false));
     if (!parsed.replace) {
       const tty = options.tty ?? Boolean(process.stdin.isTTY && process.stdout.isTTY);
-      if (!tty) refuseReplacement(parsed.agent);
+      if (!tty) refuseReplacement(parsed.agent, parsed.mode);
       const prompt = options.prompt || (async () => {
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         try { return await rl.question('Replace this Syntra registration? [y/N] '); } finally { rl.close(); }
@@ -1499,17 +1461,26 @@ async function setupCLI(args, options = {}) {
       }
     }
   }
-  out(renderApplied(applySetup(parsed.agent, { ...options, preview: plan, replace: true })));
+  out(renderApplied(applySetup(parsed.agent, { ...options, mode: parsed.mode, preview: plan, replace: true })));
 }
 
-function registrationPin(agent, env = process.env, platform = process.platform) {
+function registrationState(agent, env = process.env, platform = process.platform, executingPackage = null) {
   const plan = hostPlan(agent, env, platform);
   const config = readConfig(plan.configPath, plan.format, platform);
-  if (!config.exists) return null;
+  if (!config.exists) return { mode: 'absent' };
   const value = plan.format === 'toml'
     ? toml.parse(config.text)
     : parseJsonDocument(config.text, plan.format, plan.format === 'jsonc').value;
-  return identifyRegistration(getOwnPath(value, jsonRegistrationPath(plan, value)).value)?.pin ?? null;
+  const entry = getOwnPath(value, jsonRegistrationPath(plan, value));
+  if (!entry.exists) return { mode: 'absent' };
+  const state = identifyRegistration(entry.value, agent, platform);
+  if (!state) return { mode: 'unresolved' };
+  if (state.mode !== 'local') return { mode: state.mode, pin: state.pin };
+  const node = realPath(state.node);
+  const launcher = realPath(state.script);
+  const current = executingPackage && realPath(path.join(executingPackage, 'bin', 'launcher.cjs'));
+  if (!node || !launcher) return { mode: 'local', target: 'unresolved' };
+  return { mode: 'local', target: current && samePath(current, launcher) ? 'current' : 'other' };
 }
 
 if (require.main === module) {
@@ -1530,7 +1501,7 @@ module.exports = {
   hostPlan,
   inspectPath,
   parseSetupArgs,
-  registrationPin,
+  registrationState,
   renderPlan,
   runSetup,
   setupCLI,

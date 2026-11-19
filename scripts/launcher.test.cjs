@@ -232,13 +232,13 @@ const { update } = require('../bin/update.cjs');
 function updateFixture(t, options = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'syntra-update-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
-  const root = path.join(dir, 'lib', 'node_modules');
+  const root = path.join(dir, ...(process.platform === 'win32' ? [] : ['lib']), 'node_modules');
   const pkg = path.join(root, '@synapsync', 'syntra-mcp');
   fs.mkdirSync(pkg, { recursive: true });
   let version = options.installed || '1.0.0';
   const calls = [], output = [], errors = [];
   const deps = {
-    packageDir: pkg, env: options.env || {}, tty: options.tty || false,
+    packageDir: pkg, env: options.env || { HOME: dir, USERPROFILE: dir }, tty: options.tty || false,
     out: line => output.push(line), err: line => errors.push(line),
     readVersion: () => version,
     prompt: async () => options.answer || 'no',
@@ -268,13 +268,26 @@ test('update confirms or refuses non-interactive execution unless --yes', async 
   assert.equal(declined.calls.length, 2);
   const accepted = updateFixture(t, { tty: true, answer: 'yes' });
   assert.equal(await update([], accepted.deps), 0);
-  assert.deepEqual(accepted.calls.at(-1), ['install', '-g', '@synapsync/syntra-mcp@1.0.1']);
+  assert.deepEqual(accepted.calls.at(-1), ['install', '-g', '--prefix', accepted.dir, '@synapsync/syntra-mcp@1.0.1']);
   const noTTY = updateFixture(t);
   assert.equal(await update([], noTTY.deps), 1);
   assert.match(noTTY.errors.join(' '), /TTY/);
   const yes = updateFixture(t);
   assert.equal(await update(['--yes'], yes.deps), 0);
   assert.match(yes.output.join(' '), /Updated to 1\.0\.1/);
+});
+
+test('update does not install a previously confirmed version over a concurrently changed installation', async t => {
+  const f = updateFixture(t, { tty: true });
+  let observed = '1.0.0';
+  f.deps.readVersion = () => observed;
+  f.deps.prompt = async () => {
+    observed = '1.0.2';
+    return 'yes';
+  };
+  assert.equal(await update([], f.deps), 1);
+  assert.match(f.errors.join(' '), /installation changed during confirmation/);
+  assert.ok(f.calls.every(args => args[0] !== 'install'));
 });
 
 test('update handles npm failure, post-install mismatch, offline and unsafe versions', async t => {
@@ -304,26 +317,27 @@ test('update detects npx and local installations and never installs', async t =>
     fs.mkdirSync(f.deps.packageDir, { recursive: true });
     assert.equal(await update(['--yes'], f.deps), 1);
     assert.match(f.errors.join(' '), new RegExp(expected));
-    assert.equal(f.calls.length, 2);
+    assert.equal(f.calls.length, 1);
   }
 });
 
-test('launcher invokes PATH npm with fixed arguments and reports check exit status', t => {
-  if (process.platform === 'win32') return t.skip('POSIX fake npm fixture');
+test('launcher invokes installation npm with fixed arguments and reports check exit status', t => {
   const f = updateFixture(t);
-  const bin = path.join(f.dir, 'tools');
-  fs.mkdirSync(bin);
-  fs.mkdirSync(path.join(f.pkg, 'bin'));
-  fs.copyFileSync(launcherPath, path.join(f.pkg, 'bin', 'launcher.cjs'));
-  fs.copyFileSync(path.join(root, 'bin', 'update.cjs'), path.join(f.pkg, 'bin', 'update.cjs'));
+  fs.cpSync(path.join(root, 'bin'), path.join(f.pkg, 'bin'), { recursive: true });
   fs.writeFileSync(path.join(f.pkg, 'package.json'), JSON.stringify({ name: '@synapsync/syntra-mcp', version: '1.0.0' }));
-  fs.writeFileSync(path.join(bin, 'npm'), '#!/bin/sh\nprintf "%s\\n" "$@" > "$FAKE_NPM_ARGS"\nprintf "1.2.3\\n"\n', { mode: 0o755 });
+  const associatedNpm = path.join(f.root, 'npm', 'bin', 'npm-cli.js');
+  fs.mkdirSync(path.dirname(associatedNpm), { recursive: true });
+  fs.writeFileSync(associatedNpm, `
+    require('node:fs').writeFileSync(process.env.FAKE_NPM_ARGS, JSON.stringify(process.argv.slice(2)));
+    console.log('1.2.3');
+  `);
   const argsFile = path.join(f.dir, 'args');
   const result = spawnSync(process.execPath, [path.join(f.pkg, 'bin', 'launcher.cjs'), 'update', '--check'], {
-    encoding: 'utf8', env: { ...process.env, PATH: bin, FAKE_NPM_ARGS: argsFile, SYNTRA_UPDATE_OFFLINE: '' },
+    encoding: 'utf8', env: { HOME: f.dir, USERPROFILE: f.dir, PATH: '', FAKE_NPM_ARGS: argsFile },
   });
-  assert.equal(result.status, 10);
-  assert.deepEqual(fs.readFileSync(argsFile, 'utf8').trim().split('\n'), ['view', '@synapsync/syntra-mcp', 'version']);
+  assert.equal(result.status, 10, result.stderr);
+  assert.deepEqual(JSON.parse(fs.readFileSync(argsFile, 'utf8')), ['view', '@synapsync/syntra-mcp@latest', 'version', '--prefer-online']);
+  assert.match(result.stdout, /codex: absent in inspected config/);
 });
 
 test('launcher delegates both help forms to the native executable', { skip: process.platform === 'win32' }, t => {
@@ -339,7 +353,7 @@ test('launcher delegates both help forms to the native executable', { skip: proc
   }
 });
 
-test('successful global update reports only older Syntra host pins and leaves configs intact', t => {
+test('global update ignores an unrelated PATH npm and reports every configured mode without changing config', t => {
   if (process.platform === 'win32') return t.skip('POSIX fake npm fixture');
   const f = updateFixture(t);
   const tools = path.join(f.dir, 'tools');
@@ -361,29 +375,39 @@ test('successful global update reports only older Syntra host pins and leaves co
   ]);
   for (const [file, source] of configs) fs.writeFileSync(file, source);
 
-  fs.writeFileSync(path.join(tools, 'npm'), `#!/bin/sh
-case "$1" in
-  view) printf '%s\\n' '1.0.1' ;;
-  root) printf '%s\\n' "$FAKE_GLOBAL_ROOT" ;;
-  install)
-    [ "$*" = 'install -g @synapsync/syntra-mcp@1.0.1' ] || exit 2
-    printf '%s\\n' '{"name":"@synapsync/syntra-mcp","private":false,"version":"1.0.1"}' > "$FAKE_MANIFEST" ;;
-  *) exit 2 ;;
-esac
-`, { mode: 0o755 });
+  fs.writeFileSync(path.join(tools, 'npm'), '#!/bin/sh\nexit 99\n', { mode: 0o755 });
+  const npm = path.join(f.root, 'npm', 'bin', 'npm-cli.js');
+  fs.mkdirSync(path.dirname(npm), { recursive: true });
+  fs.writeFileSync(npm, `
+    const fs = require('node:fs');
+    const [command, ...args] = process.argv.slice(2);
+    const prefix = process.env.FAKE_PREFIX;
+    if (command === 'view') {
+      if (JSON.stringify(args) !== JSON.stringify(['@synapsync/syntra-mcp@latest', 'version', '--prefer-online'])) process.exit(2);
+      console.log('1.0.1');
+    } else if (command === 'root') {
+      if (JSON.stringify(args) !== JSON.stringify(['-g', '--prefix', prefix])) process.exit(2);
+      console.log(process.env.FAKE_GLOBAL_ROOT);
+    } else if (command === 'install') {
+      if (JSON.stringify(args) !== JSON.stringify(['-g', '--prefix', prefix, '@synapsync/syntra-mcp@1.0.1'])) process.exit(2);
+      fs.writeFileSync(process.env.FAKE_MANIFEST, '{"name":"@synapsync/syntra-mcp","private":false,"version":"1.0.1"}');
+    } else process.exit(2);
+  `);
   const env = { HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: xdg, PATH: tools,
-    FAKE_GLOBAL_ROOT: f.root, FAKE_MANIFEST: manifest };
+    FAKE_GLOBAL_ROOT: f.root, FAKE_PREFIX: f.dir, FAKE_MANIFEST: manifest };
   const invoke = (...args) => spawnSync(process.execPath, [path.join(f.pkg, 'bin', 'launcher.cjs'), 'update', ...args], {
     env, encoding: 'utf8', timeout: 10000,
   });
   const checked = invoke('--check');
   assert.equal(checked.status, 10, checked.stderr);
-  assert.doesNotMatch(checked.stdout, /setup --agent/);
+  assert.match(checked.stdout, /codex: pinned to 1\.0\.0; active process not verified/);
+  assert.match(checked.stdout, /claude-code: unresolved config or custom launcher/);
+  assert.match(checked.stdout, /opencode: pinned to 1\.0\.1; active process not verified/);
   const updated = invoke('--yes');
   assert.equal(updated.status, 0, updated.stderr);
   assert.match(updated.stdout, /Updated to 1\.0\.1\./);
-  assert.match(updated.stdout, /pinned to 1\.0\.0\. Run: syntra setup --agent codex --replace/);
-  assert.doesNotMatch(updated.stdout, /setup --agent (claude-code|opencode)/);
-  assert.match(invoke().stdout, /syntra setup --agent codex --replace/);
+  const current = invoke('--check');
+  assert.equal(current.status, 0, current.stderr);
+  assert.match(current.stdout, /codex: pinned to 1\.0\.0; active process not verified/);
   for (const [file, source] of configs) assert.equal(fs.readFileSync(file, 'utf8'), source);
 });

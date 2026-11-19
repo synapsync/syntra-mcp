@@ -52,7 +52,7 @@ func runMCP(ctx context.Context, args []string) error {
 	defer input.Close()
 	defer output.Close()
 	return toolmcp.Run(ctx, toolmcp.Config{
-		ProfileDir: *dir, APIOrigin: *api, CallTimeout: *timeout,
+		Version: version, ProfileDir: *dir, APIOrigin: *api, CallTimeout: *timeout,
 		WriteTimeout: 2 * time.Second,
 	}, input, output)
 }
