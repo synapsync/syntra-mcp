@@ -25,9 +25,8 @@ const (
 type ContentIntegrityOrigin int32
 
 const (
-	ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED            ContentIntegrityOrigin = 0
-	ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED        ContentIntegrityOrigin = 1
-	ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_LEGACY_SERVER_COMPUTED ContentIntegrityOrigin = 2
+	ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED     ContentIntegrityOrigin = 0
+	ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED ContentIntegrityOrigin = 1
 )
 
 // Enum value maps for ContentIntegrityOrigin.
@@ -35,12 +34,10 @@ var (
 	ContentIntegrityOrigin_name = map[int32]string{
 		0: "CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED",
 		1: "CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED",
-		2: "CONTENT_INTEGRITY_ORIGIN_LEGACY_SERVER_COMPUTED",
 	}
 	ContentIntegrityOrigin_value = map[string]int32{
-		"CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED":            0,
-		"CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED":        1,
-		"CONTENT_INTEGRITY_ORIGIN_LEGACY_SERVER_COMPUTED": 2,
+		"CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED":     0,
+		"CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED": 1,
 	}
 )
 
@@ -154,7 +151,7 @@ func (*ContentDestination_LinkedMemberId) isContentDestination_Target() {}
 
 func (*ContentDestination_UnlinkedLabel) isContentDestination_Target() {}
 
-// Standalone envelope, not a modification of released collaboration messages.
+// Authored envelope with exact client-supplied UTF-8 content.
 // Digest encoding is specified in CONTENT-INTEGRITY.md, never protobuf bytes.
 type AuthoredContent struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
@@ -162,7 +159,7 @@ type AuthoredContent struct {
 	ExpectedAuthorUserId      string                 `protobuf:"bytes,2,opt,name=expected_author_user_id,json=expectedAuthorUserId,proto3" json:"expected_author_user_id,omitempty"`
 	WorkspaceId               string                 `protobuf:"bytes,3,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
 	ProjectId                 *string                `protobuf:"bytes,4,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
-	ExistingTicketId          *string                `protobuf:"bytes,6,opt,name=existing_ticket_id,json=existingTicketId,proto3,oneof" json:"existing_ticket_id,omitempty"`
+	ExistingThreadId          *string                `protobuf:"bytes,6,opt,name=existing_thread_id,json=existingThreadId,proto3,oneof" json:"existing_thread_id,omitempty"`
 	Title                     string                 `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
 	OriginalDestinationIntent string                 `protobuf:"bytes,8,opt,name=original_destination_intent,json=originalDestinationIntent,proto3" json:"original_destination_intent,omitempty"`
 	Destination               *ContentDestination    `protobuf:"bytes,9,opt,name=destination,proto3" json:"destination,omitempty"`
@@ -230,9 +227,9 @@ func (x *AuthoredContent) GetProjectId() string {
 	return ""
 }
 
-func (x *AuthoredContent) GetExistingTicketId() string {
-	if x != nil && x.ExistingTicketId != nil {
-		return *x.ExistingTicketId
+func (x *AuthoredContent) GetExistingThreadId() string {
+	if x != nil && x.ExistingThreadId != nil {
+		return *x.ExistingThreadId
 	}
 	return ""
 }
@@ -349,7 +346,7 @@ type ContentProvenanceReceipt struct {
 	OwnerUserId     string                    `protobuf:"bytes,2,opt,name=owner_user_id,json=ownerUserId,proto3" json:"owner_user_id,omitempty"`
 	ConnectionId    *string                   `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3,oneof" json:"connection_id,omitempty"`
 	RequestId       string                    `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	TicketId        string                    `protobuf:"bytes,5,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId        string                    `protobuf:"bytes,5,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	MessageId       string                    `protobuf:"bytes,6,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 	RecordedAt      *timestamppb.Timestamp    `protobuf:"bytes,7,opt,name=recorded_at,json=recordedAt,proto3" json:"recorded_at,omitempty"`
 	ClientReported  *ClientReportedProvenance `protobuf:"bytes,8,opt,name=client_reported,json=clientReported,proto3" json:"client_reported,omitempty"`
@@ -416,9 +413,9 @@ func (x *ContentProvenanceReceipt) GetRequestId() string {
 	return ""
 }
 
-func (x *ContentProvenanceReceipt) GetTicketId() string {
+func (x *ContentProvenanceReceipt) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
@@ -459,14 +456,14 @@ const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	"\x12ContentDestination\x12*\n" +
 	"\x10linked_member_id\x18\x01 \x01(\tH\x00R\x0elinkedMemberId\x12'\n" +
 	"\x0eunlinked_label\x18\x02 \x01(\tH\x00R\runlinkedLabelB\b\n" +
-	"\x06target\"\xfa\x03\n" +
+	"\x06target\"\xeb\x03\n" +
 	"\x0fAuthoredContent\x12%\n" +
 	"\x0eformat_version\x18\x01 \x01(\rR\rformatVersion\x125\n" +
 	"\x17expected_author_user_id\x18\x02 \x01(\tR\x14expectedAuthorUserId\x12!\n" +
 	"\fworkspace_id\x18\x03 \x01(\tR\vworkspaceId\x12\"\n" +
 	"\n" +
 	"project_id\x18\x04 \x01(\tH\x00R\tprojectId\x88\x01\x01\x121\n" +
-	"\x12existing_ticket_id\x18\x06 \x01(\tH\x01R\x10existingTicketId\x88\x01\x01\x12\x14\n" +
+	"\x12existing_thread_id\x18\x06 \x01(\tH\x01R\x10existingThreadId\x88\x01\x01\x12\x14\n" +
 	"\x05title\x18\a \x01(\tR\x05title\x12>\n" +
 	"\x1boriginal_destination_intent\x18\b \x01(\tR\x19originalDestinationIntent\x12?\n" +
 	"\vdestination\x18\t \x01(\v2\x1d.syntra.v1.ContentDestinationR\vdestination\x12\x18\n" +
@@ -474,7 +471,7 @@ const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	" \x01(\tR\asummary\x12)\n" +
 	"\x10context_markdown\x18\v \x01(\tR\x0fcontextMarkdownB\r\n" +
 	"\v_project_idB\x15\n" +
-	"\x13_existing_ticket_idJ\x04\b\x05\x10\x06R\aarea_id\"\xae\x01\n" +
+	"\x13_existing_thread_id\"\xae\x01\n" +
 	"\x18ClientReportedProvenance\x12\x1f\n" +
 	"\bprovider\x18\x01 \x01(\tH\x00R\bprovider\x88\x01\x01\x12\x19\n" +
 	"\x05model\x18\x02 \x01(\tH\x01R\x05model\x88\x01\x01\x12\x17\n" +
@@ -490,18 +487,17 @@ const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	"\rconnection_id\x18\x03 \x01(\tH\x00R\fconnectionId\x88\x01\x01\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x04 \x01(\tR\trequestId\x12\x1b\n" +
-	"\tticket_id\x18\x05 \x01(\tR\bticketId\x12\x1d\n" +
+	"\tthread_id\x18\x05 \x01(\tR\bthreadId\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x06 \x01(\tR\tmessageId\x12;\n" +
 	"\vrecorded_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"recordedAt\x12L\n" +
 	"\x0fclient_reported\x18\b \x01(\v2#.syntra.v1.ClientReportedProvenanceR\x0eclientReported\x12L\n" +
 	"\x10integrity_origin\x18\t \x01(\x0e2!.syntra.v1.ContentIntegrityOriginR\x0fintegrityOriginB\x10\n" +
-	"\x0e_connection_id*\xa5\x01\n" +
+	"\x0e_connection_id*p\n" +
 	"\x16ContentIntegrityOrigin\x12(\n" +
 	"$CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED\x10\x00\x12,\n" +
-	"(CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED\x10\x01\x123\n" +
-	"/CONTENT_INTEGRITY_ORIGIN_LEGACY_SERVER_COMPUTED\x10\x02B)Z'syntra.local/mcp/gen/syntra/v1;syntrav1b\x06proto3"
+	"(CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED\x10\x01B)Z'syntra.local/mcp/gen/syntra/v1;syntrav1b\x06proto3"
 
 var (
 	file_syntra_v1_authored_content_proto_rawDescOnce sync.Once

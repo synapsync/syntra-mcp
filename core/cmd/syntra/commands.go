@@ -19,7 +19,7 @@ import (
 
 func isContentCommand(c string) bool {
 	switch c {
-	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "retry", "snapshot", "tickets", "ticket", "messages":
+	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "retry", "snapshot", "threads", "thread", "messages":
 		return true
 	}
 	return false
@@ -40,8 +40,8 @@ func runContent(parent context.Context, args []string) error {
 	project := f.String("project", "", "project ID or resolve name")
 	team := f.String("team", "", "project team name or ID for resolve")
 	recipient := f.String("recipient", "", "recipient name for resolve")
-	ticket := f.String("ticket", "", "ticket ID")
-	view := f.String("view", "published", "messages: published or own-drafts")
+	thread := f.String("thread", "", "thread ID")
+	view := f.String("view", "published", "messages: published or own-prepared")
 	if err := f.Parse(args[1:]); err != nil {
 		return optionError(args[0], err)
 	}
@@ -52,20 +52,20 @@ func runContent(parent context.Context, args []string) error {
 	switch args[0] {
 	case "workspaces":
 	// Account-wide listing accepts only common profile/origin/deadline options.
-	case "projects", "members", "tickets":
+	case "projects", "members", "threads":
 		allowed["workspace"] = true
-		if args[0] == "tickets" {
+		if args[0] == "threads" {
 			allowed["view"] = true
 		}
 	case "teams":
 		allowed["workspace"] = true
 		allowed["project"] = true
-	case "ticket", "messages":
+	case "thread", "messages":
 		if args[0] == "messages" {
 			allowed["view"] = true
 		}
 		allowed["workspace"] = true
-		allowed["ticket"] = true
+		allowed["thread"] = true
 	case "resolve":
 		for _, s := range []string{"workspace", "project", "team", "recipient"} {
 			allowed[s] = true
@@ -73,11 +73,11 @@ func runContent(parent context.Context, args []string) error {
 	case "retry":
 		allowed["request"] = true
 	case "reply":
-		for _, s := range []string{"workspace", "ticket", "summary", "context-file"} {
+		for _, s := range []string{"workspace", "thread", "summary", "context-file"} {
 			allowed[s] = true
 		}
 	case "prepare":
-		for _, s := range []string{"file", "base", "template", "workspace", "project", "ticket"} {
+		for _, s := range []string{"file", "base", "template", "workspace", "project", "thread"} {
 			allowed[s] = true
 		}
 	default:
@@ -102,7 +102,7 @@ func runContent(parent context.Context, args []string) error {
 			target = &v1.PrepareContentRequest{}
 		} else if *file != "" || *base != "" {
 			return errors.New("--template cannot be combined with --file or --base")
-		} else if err := toolclient.ValidateTemplateInput(*template, *workspace, *project, *ticket); err != nil {
+		} else if err := toolclient.ValidateTemplateInput(*template, *workspace, *project, *thread); err != nil {
 			return err
 		}
 	case "link":
@@ -128,12 +128,12 @@ func runContent(parent context.Context, args []string) error {
 			return err
 		}
 	}
-	replyOpts := replyOptions{Workspace: *workspace, TicketID: *ticket, Summary: *summary}
+	replyOpts := replyOptions{Workspace: *workspace, ThreadID: *thread, Summary: *summary}
 	if args[0] == "reply" {
 		if *contextFile == "" {
-			return errors.New("reply requires --workspace, --ticket, --summary and --context-file")
+			return errors.New("reply requires --workspace, --thread, --summary and --context-file")
 		}
-		if err := toolclient.ValidateReplyInput(*workspace, *ticket, *summary, ""); err != nil {
+		if err := toolclient.ValidateReplyInput(*workspace, *thread, *summary, ""); err != nil {
 			return err
 		}
 		data, err := readReplyContext(ctx, *contextFile)
@@ -141,7 +141,7 @@ func runContent(parent context.Context, args []string) error {
 			return err
 		}
 		replyOpts.ContextMarkdown = string(data)
-		if err = toolclient.ValidateReplyInput(*workspace, *ticket, *summary, replyOpts.ContextMarkdown); err != nil {
+		if err = toolclient.ValidateReplyInput(*workspace, *thread, *summary, replyOpts.ContextMarkdown); err != nil {
 			return err
 		}
 	}
@@ -182,7 +182,7 @@ func runContent(parent context.Context, args []string) error {
 			return errors.New("--template cannot be combined with --file or --base")
 		}
 		if *template == "reply" {
-			t, err := app.Ticket(ctx, *workspace, *ticket)
+			t, err := app.Thread(ctx, *workspace, *thread)
 			if err != nil {
 				return err
 			}
@@ -217,31 +217,31 @@ func runContent(parent context.Context, args []string) error {
 		if e == nil {
 			message = &v1.ListMembersResponse{Members: rows}
 		}
-	case "tickets":
-		v := v1.TicketVisibility_TICKET_VISIBILITY_PUBLISHED
-		if *view == "own-drafts" {
-			v = v1.TicketVisibility_TICKET_VISIBILITY_OWN_DRAFTS
+	case "threads":
+		v := v1.ThreadVisibility_THREAD_VISIBILITY_PUBLISHED
+		if *view == "own-prepared" {
+			v = v1.ThreadVisibility_THREAD_VISIBILITY_OWN_PREPARED
 		} else if *view != "published" {
-			return errors.New("invalid explicit ticket view")
+			return errors.New("invalid explicit thread view")
 		}
-		rows, err := app.Tickets(ctx, *workspace, v)
+		rows, err := app.Threads(ctx, *workspace, v)
 		e = err
 		if e == nil {
-			message = &v1.ListTicketsResponse{Tickets: rows}
+			message = &v1.ListThreadsResponse{Threads: rows}
 		}
 	case "messages":
 		v := v1.MessageView_MESSAGE_VIEW_PUBLISHED
-		if *view == "own-drafts" {
-			v = v1.MessageView_MESSAGE_VIEW_OWN_DRAFTS
+		if *view == "own-prepared" {
+			v = v1.MessageView_MESSAGE_VIEW_OWN_PREPARED
 		} else if *view != "published" {
 			return errors.New("invalid explicit message view")
 		}
-		message, e = app.Messages(ctx, *workspace, *ticket, v)
-	case "ticket":
-		var t *v1.Ticket
-		t, e = app.Ticket(ctx, *workspace, *ticket)
-		if e == nil && t.State == v1.TicketState_TICKET_STATE_CLOSED {
-			fmt.Fprintln(os.Stderr, "Closed tickets accept no replies until a person reopens the ticket in the Syntra web app.")
+		message, e = app.Messages(ctx, *workspace, *thread, v)
+	case "thread":
+		var t *v1.Thread
+		t, e = app.Thread(ctx, *workspace, *thread)
+		if e == nil && t.State == v1.ThreadState_THREAD_STATE_CLOSED {
+			fmt.Fprintln(os.Stderr, "Closed threads accept no replies until a person reopens the thread in the Syntra web app.")
 		}
 		message = t
 	case "resolve":
@@ -265,7 +265,7 @@ func runContent(parent context.Context, args []string) error {
 				if s.Snapshot != nil {
 					raw, e = protojson.Marshal(s.Snapshot)
 				} else {
-					raw, e = protojson.Marshal(s.Legacy)
+					raw, e = protojson.Marshal(s.Record)
 				}
 				if e == nil {
 					result = struct {

@@ -18,7 +18,7 @@ type Content struct {
 	ExpectedAuthorUserID      string      `json:"expectedAuthorUserId"`
 	WorkspaceID               string      `json:"workspaceId"`
 	ProjectID                 *string     `json:"projectId"`
-	ExistingTicketID          *string     `json:"existingTicketId,omitempty"`
+	ExistingThreadID          *string     `json:"existingThreadId,omitempty"`
 	Title                     string      `json:"title"`
 	OriginalDestinationIntent string      `json:"originalDestinationIntent"`
 	Destination               Destination `json:"destination"`
@@ -56,7 +56,7 @@ func Encode(c Content) ([]byte, error) {
 	optional(c.ProjectID)
 	// Slot 5 (formerly area_id) is frozen as the constant ABSENT marker: the v1 byte layout is positional.
 	out = append(out, 0)
-	optional(c.ExistingTicketID)
+	optional(c.ExistingThreadID)
 	field(c.Title, 1024, false)
 	field(c.OriginalDestinationIntent, 1024, false)
 	switch c.Destination.Kind {

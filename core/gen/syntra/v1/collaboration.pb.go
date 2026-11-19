@@ -22,116 +22,113 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type TicketState int32
+type ThreadState int32
 
 const (
-	TicketState_TICKET_STATE_UNSPECIFIED         TicketState = 0
-	TicketState_TICKET_STATE_DRAFT               TicketState = 1
-	TicketState_TICKET_STATE_OPEN                TicketState = 2
-	TicketState_TICKET_STATE_RESOLUTION_PROPOSED TicketState = 3
-	TicketState_TICKET_STATE_CLOSED              TicketState = 4
+	ThreadState_THREAD_STATE_UNSPECIFIED ThreadState = 0
+	ThreadState_THREAD_STATE_PENDING     ThreadState = 1
+	ThreadState_THREAD_STATE_OPEN        ThreadState = 2
+	ThreadState_THREAD_STATE_CLOSED      ThreadState = 3
 )
 
-// Enum value maps for TicketState.
+// Enum value maps for ThreadState.
 var (
-	TicketState_name = map[int32]string{
-		0: "TICKET_STATE_UNSPECIFIED",
-		1: "TICKET_STATE_DRAFT",
-		2: "TICKET_STATE_OPEN",
-		3: "TICKET_STATE_RESOLUTION_PROPOSED",
-		4: "TICKET_STATE_CLOSED",
+	ThreadState_name = map[int32]string{
+		0: "THREAD_STATE_UNSPECIFIED",
+		1: "THREAD_STATE_PENDING",
+		2: "THREAD_STATE_OPEN",
+		3: "THREAD_STATE_CLOSED",
 	}
-	TicketState_value = map[string]int32{
-		"TICKET_STATE_UNSPECIFIED":         0,
-		"TICKET_STATE_DRAFT":               1,
-		"TICKET_STATE_OPEN":                2,
-		"TICKET_STATE_RESOLUTION_PROPOSED": 3,
-		"TICKET_STATE_CLOSED":              4,
+	ThreadState_value = map[string]int32{
+		"THREAD_STATE_UNSPECIFIED": 0,
+		"THREAD_STATE_PENDING":     1,
+		"THREAD_STATE_OPEN":        2,
+		"THREAD_STATE_CLOSED":      3,
 	}
 )
 
-func (x TicketState) Enum() *TicketState {
-	p := new(TicketState)
+func (x ThreadState) Enum() *ThreadState {
+	p := new(ThreadState)
 	*p = x
 	return p
 }
 
-func (x TicketState) String() string {
+func (x ThreadState) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (TicketState) Descriptor() protoreflect.EnumDescriptor {
+func (ThreadState) Descriptor() protoreflect.EnumDescriptor {
 	return file_syntra_v1_collaboration_proto_enumTypes[0].Descriptor()
 }
 
-func (TicketState) Type() protoreflect.EnumType {
+func (ThreadState) Type() protoreflect.EnumType {
 	return &file_syntra_v1_collaboration_proto_enumTypes[0]
 }
 
-func (x TicketState) Number() protoreflect.EnumNumber {
+func (x ThreadState) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use TicketState.Descriptor instead.
-func (TicketState) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ThreadState.Descriptor instead.
+func (ThreadState) EnumDescriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{0}
 }
 
-type TicketVisibility int32
+type ThreadVisibility int32
 
 const (
-	TicketVisibility_TICKET_VISIBILITY_UNSPECIFIED TicketVisibility = 0
-	TicketVisibility_TICKET_VISIBILITY_PUBLISHED   TicketVisibility = 1
-	TicketVisibility_TICKET_VISIBILITY_OWN_DRAFTS  TicketVisibility = 2
+	ThreadVisibility_THREAD_VISIBILITY_UNSPECIFIED  ThreadVisibility = 0
+	ThreadVisibility_THREAD_VISIBILITY_PUBLISHED    ThreadVisibility = 1
+	ThreadVisibility_THREAD_VISIBILITY_OWN_PREPARED ThreadVisibility = 2
 )
 
-// Enum value maps for TicketVisibility.
+// Enum value maps for ThreadVisibility.
 var (
-	TicketVisibility_name = map[int32]string{
-		0: "TICKET_VISIBILITY_UNSPECIFIED",
-		1: "TICKET_VISIBILITY_PUBLISHED",
-		2: "TICKET_VISIBILITY_OWN_DRAFTS",
+	ThreadVisibility_name = map[int32]string{
+		0: "THREAD_VISIBILITY_UNSPECIFIED",
+		1: "THREAD_VISIBILITY_PUBLISHED",
+		2: "THREAD_VISIBILITY_OWN_PREPARED",
 	}
-	TicketVisibility_value = map[string]int32{
-		"TICKET_VISIBILITY_UNSPECIFIED": 0,
-		"TICKET_VISIBILITY_PUBLISHED":   1,
-		"TICKET_VISIBILITY_OWN_DRAFTS":  2,
+	ThreadVisibility_value = map[string]int32{
+		"THREAD_VISIBILITY_UNSPECIFIED":  0,
+		"THREAD_VISIBILITY_PUBLISHED":    1,
+		"THREAD_VISIBILITY_OWN_PREPARED": 2,
 	}
 )
 
-func (x TicketVisibility) Enum() *TicketVisibility {
-	p := new(TicketVisibility)
+func (x ThreadVisibility) Enum() *ThreadVisibility {
+	p := new(ThreadVisibility)
 	*p = x
 	return p
 }
 
-func (x TicketVisibility) String() string {
+func (x ThreadVisibility) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (TicketVisibility) Descriptor() protoreflect.EnumDescriptor {
+func (ThreadVisibility) Descriptor() protoreflect.EnumDescriptor {
 	return file_syntra_v1_collaboration_proto_enumTypes[1].Descriptor()
 }
 
-func (TicketVisibility) Type() protoreflect.EnumType {
+func (ThreadVisibility) Type() protoreflect.EnumType {
 	return &file_syntra_v1_collaboration_proto_enumTypes[1]
 }
 
-func (x TicketVisibility) Number() protoreflect.EnumNumber {
+func (x ThreadVisibility) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use TicketVisibility.Descriptor instead.
-func (TicketVisibility) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ThreadVisibility.Descriptor instead.
+func (ThreadVisibility) EnumDescriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{1}
 }
 
 type MessageView int32
 
 const (
-	MessageView_MESSAGE_VIEW_UNSPECIFIED MessageView = 0
-	MessageView_MESSAGE_VIEW_PUBLISHED   MessageView = 1
-	MessageView_MESSAGE_VIEW_OWN_DRAFTS  MessageView = 2
+	MessageView_MESSAGE_VIEW_UNSPECIFIED  MessageView = 0
+	MessageView_MESSAGE_VIEW_PUBLISHED    MessageView = 1
+	MessageView_MESSAGE_VIEW_OWN_PREPARED MessageView = 2
 )
 
 // Enum value maps for MessageView.
@@ -139,12 +136,12 @@ var (
 	MessageView_name = map[int32]string{
 		0: "MESSAGE_VIEW_UNSPECIFIED",
 		1: "MESSAGE_VIEW_PUBLISHED",
-		2: "MESSAGE_VIEW_OWN_DRAFTS",
+		2: "MESSAGE_VIEW_OWN_PREPARED",
 	}
 	MessageView_value = map[string]int32{
-		"MESSAGE_VIEW_UNSPECIFIED": 0,
-		"MESSAGE_VIEW_PUBLISHED":   1,
-		"MESSAGE_VIEW_OWN_DRAFTS":  2,
+		"MESSAGE_VIEW_UNSPECIFIED":  0,
+		"MESSAGE_VIEW_PUBLISHED":    1,
+		"MESSAGE_VIEW_OWN_PREPARED": 2,
 	}
 )
 
@@ -180,7 +177,7 @@ type InboxView int32
 
 const (
 	InboxView_INBOX_VIEW_UNSPECIFIED    InboxView = 0
-	InboxView_INBOX_VIEW_OWN_DRAFTS     InboxView = 1
+	InboxView_INBOX_VIEW_OWN_PREPARED   InboxView = 1
 	InboxView_INBOX_VIEW_AWAITING_REPLY InboxView = 2
 	InboxView_INBOX_VIEW_PENDING_REVIEW InboxView = 3
 )
@@ -189,13 +186,13 @@ const (
 var (
 	InboxView_name = map[int32]string{
 		0: "INBOX_VIEW_UNSPECIFIED",
-		1: "INBOX_VIEW_OWN_DRAFTS",
+		1: "INBOX_VIEW_OWN_PREPARED",
 		2: "INBOX_VIEW_AWAITING_REPLY",
 		3: "INBOX_VIEW_PENDING_REVIEW",
 	}
 	InboxView_value = map[string]int32{
 		"INBOX_VIEW_UNSPECIFIED":    0,
-		"INBOX_VIEW_OWN_DRAFTS":     1,
+		"INBOX_VIEW_OWN_PREPARED":   1,
 		"INBOX_VIEW_AWAITING_REPLY": 2,
 		"INBOX_VIEW_PENDING_REVIEW": 3,
 	}
@@ -277,73 +274,70 @@ func (ClosureKind) EnumDescriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{4}
 }
 
-type TicketEventKind int32
+type ThreadEventKind int32
 
 const (
-	TicketEventKind_TICKET_EVENT_KIND_UNSPECIFIED         TicketEventKind = 0
-	TicketEventKind_TICKET_EVENT_KIND_TICKET_PUBLISHED    TicketEventKind = 1
-	TicketEventKind_TICKET_EVENT_KIND_TICKET_UPDATED      TicketEventKind = 2
-	TicketEventKind_TICKET_EVENT_KIND_TICKET_ASSIGNED     TicketEventKind = 3
-	TicketEventKind_TICKET_EVENT_KIND_MESSAGE_PUBLISHED   TicketEventKind = 4
-	TicketEventKind_TICKET_EVENT_KIND_MESSAGE_READ        TicketEventKind = 5
-	TicketEventKind_TICKET_EVENT_KIND_MESSAGE_REVIEWED    TicketEventKind = 6
-	TicketEventKind_TICKET_EVENT_KIND_RESOLUTION_PROPOSED TicketEventKind = 7
-	TicketEventKind_TICKET_EVENT_KIND_TICKET_CLOSED       TicketEventKind = 8
-	TicketEventKind_TICKET_EVENT_KIND_TICKET_REOPENED     TicketEventKind = 9
+	ThreadEventKind_THREAD_EVENT_KIND_UNSPECIFIED       ThreadEventKind = 0
+	ThreadEventKind_THREAD_EVENT_KIND_THREAD_PUBLISHED  ThreadEventKind = 1
+	ThreadEventKind_THREAD_EVENT_KIND_THREAD_UPDATED    ThreadEventKind = 2
+	ThreadEventKind_THREAD_EVENT_KIND_THREAD_ASSIGNED   ThreadEventKind = 3
+	ThreadEventKind_THREAD_EVENT_KIND_MESSAGE_PUBLISHED ThreadEventKind = 4
+	ThreadEventKind_THREAD_EVENT_KIND_MESSAGE_READ      ThreadEventKind = 5
+	ThreadEventKind_THREAD_EVENT_KIND_MESSAGE_REVIEWED  ThreadEventKind = 6
+	ThreadEventKind_THREAD_EVENT_KIND_THREAD_CLOSED     ThreadEventKind = 8
+	ThreadEventKind_THREAD_EVENT_KIND_THREAD_REOPENED   ThreadEventKind = 9
 )
 
-// Enum value maps for TicketEventKind.
+// Enum value maps for ThreadEventKind.
 var (
-	TicketEventKind_name = map[int32]string{
-		0: "TICKET_EVENT_KIND_UNSPECIFIED",
-		1: "TICKET_EVENT_KIND_TICKET_PUBLISHED",
-		2: "TICKET_EVENT_KIND_TICKET_UPDATED",
-		3: "TICKET_EVENT_KIND_TICKET_ASSIGNED",
-		4: "TICKET_EVENT_KIND_MESSAGE_PUBLISHED",
-		5: "TICKET_EVENT_KIND_MESSAGE_READ",
-		6: "TICKET_EVENT_KIND_MESSAGE_REVIEWED",
-		7: "TICKET_EVENT_KIND_RESOLUTION_PROPOSED",
-		8: "TICKET_EVENT_KIND_TICKET_CLOSED",
-		9: "TICKET_EVENT_KIND_TICKET_REOPENED",
+	ThreadEventKind_name = map[int32]string{
+		0: "THREAD_EVENT_KIND_UNSPECIFIED",
+		1: "THREAD_EVENT_KIND_THREAD_PUBLISHED",
+		2: "THREAD_EVENT_KIND_THREAD_UPDATED",
+		3: "THREAD_EVENT_KIND_THREAD_ASSIGNED",
+		4: "THREAD_EVENT_KIND_MESSAGE_PUBLISHED",
+		5: "THREAD_EVENT_KIND_MESSAGE_READ",
+		6: "THREAD_EVENT_KIND_MESSAGE_REVIEWED",
+		8: "THREAD_EVENT_KIND_THREAD_CLOSED",
+		9: "THREAD_EVENT_KIND_THREAD_REOPENED",
 	}
-	TicketEventKind_value = map[string]int32{
-		"TICKET_EVENT_KIND_UNSPECIFIED":         0,
-		"TICKET_EVENT_KIND_TICKET_PUBLISHED":    1,
-		"TICKET_EVENT_KIND_TICKET_UPDATED":      2,
-		"TICKET_EVENT_KIND_TICKET_ASSIGNED":     3,
-		"TICKET_EVENT_KIND_MESSAGE_PUBLISHED":   4,
-		"TICKET_EVENT_KIND_MESSAGE_READ":        5,
-		"TICKET_EVENT_KIND_MESSAGE_REVIEWED":    6,
-		"TICKET_EVENT_KIND_RESOLUTION_PROPOSED": 7,
-		"TICKET_EVENT_KIND_TICKET_CLOSED":       8,
-		"TICKET_EVENT_KIND_TICKET_REOPENED":     9,
+	ThreadEventKind_value = map[string]int32{
+		"THREAD_EVENT_KIND_UNSPECIFIED":       0,
+		"THREAD_EVENT_KIND_THREAD_PUBLISHED":  1,
+		"THREAD_EVENT_KIND_THREAD_UPDATED":    2,
+		"THREAD_EVENT_KIND_THREAD_ASSIGNED":   3,
+		"THREAD_EVENT_KIND_MESSAGE_PUBLISHED": 4,
+		"THREAD_EVENT_KIND_MESSAGE_READ":      5,
+		"THREAD_EVENT_KIND_MESSAGE_REVIEWED":  6,
+		"THREAD_EVENT_KIND_THREAD_CLOSED":     8,
+		"THREAD_EVENT_KIND_THREAD_REOPENED":   9,
 	}
 )
 
-func (x TicketEventKind) Enum() *TicketEventKind {
-	p := new(TicketEventKind)
+func (x ThreadEventKind) Enum() *ThreadEventKind {
+	p := new(ThreadEventKind)
 	*p = x
 	return p
 }
 
-func (x TicketEventKind) String() string {
+func (x ThreadEventKind) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (TicketEventKind) Descriptor() protoreflect.EnumDescriptor {
+func (ThreadEventKind) Descriptor() protoreflect.EnumDescriptor {
 	return file_syntra_v1_collaboration_proto_enumTypes[5].Descriptor()
 }
 
-func (TicketEventKind) Type() protoreflect.EnumType {
+func (ThreadEventKind) Type() protoreflect.EnumType {
 	return &file_syntra_v1_collaboration_proto_enumTypes[5]
 }
 
-func (x TicketEventKind) Number() protoreflect.EnumNumber {
+func (x ThreadEventKind) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use TicketEventKind.Descriptor instead.
-func (TicketEventKind) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ThreadEventKind.Descriptor instead.
+func (ThreadEventKind) EnumDescriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{5}
 }
 
@@ -359,14 +353,13 @@ type Project struct {
 	UpdatedAt   *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
 	Revision string `protobuf:"bytes,7,opt,name=revision,proto3" json:"revision,omitempty"`
-	// Computed authorized counts exclude every private draft; not revision inputs.
-	TeamCount                     uint64 `protobuf:"varint,8,opt,name=team_count,json=teamCount,proto3" json:"team_count,omitempty"`
-	PublishedTicketCount          uint64 `protobuf:"varint,9,opt,name=published_ticket_count,json=publishedTicketCount,proto3" json:"published_ticket_count,omitempty"`
-	OpenTicketCount               uint64 `protobuf:"varint,10,opt,name=open_ticket_count,json=openTicketCount,proto3" json:"open_ticket_count,omitempty"`
-	ResolutionProposedTicketCount uint64 `protobuf:"varint,11,opt,name=resolution_proposed_ticket_count,json=resolutionProposedTicketCount,proto3" json:"resolution_proposed_ticket_count,omitempty"`
-	ClosedTicketCount             uint64 `protobuf:"varint,12,opt,name=closed_ticket_count,json=closedTicketCount,proto3" json:"closed_ticket_count,omitempty"`
-	unknownFields                 protoimpl.UnknownFields
-	sizeCache                     protoimpl.SizeCache
+	// Computed authorized counts exclude every pending thread; not revision inputs.
+	TeamCount            uint64 `protobuf:"varint,8,opt,name=team_count,json=teamCount,proto3" json:"team_count,omitempty"`
+	PublishedThreadCount uint64 `protobuf:"varint,9,opt,name=published_thread_count,json=publishedThreadCount,proto3" json:"published_thread_count,omitempty"`
+	OpenThreadCount      uint64 `protobuf:"varint,10,opt,name=open_thread_count,json=openThreadCount,proto3" json:"open_thread_count,omitempty"`
+	ClosedThreadCount    uint64 `protobuf:"varint,12,opt,name=closed_thread_count,json=closedThreadCount,proto3" json:"closed_thread_count,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *Project) Reset() {
@@ -455,30 +448,23 @@ func (x *Project) GetTeamCount() uint64 {
 	return 0
 }
 
-func (x *Project) GetPublishedTicketCount() uint64 {
+func (x *Project) GetPublishedThreadCount() uint64 {
 	if x != nil {
-		return x.PublishedTicketCount
+		return x.PublishedThreadCount
 	}
 	return 0
 }
 
-func (x *Project) GetOpenTicketCount() uint64 {
+func (x *Project) GetOpenThreadCount() uint64 {
 	if x != nil {
-		return x.OpenTicketCount
+		return x.OpenThreadCount
 	}
 	return 0
 }
 
-func (x *Project) GetResolutionProposedTicketCount() uint64 {
+func (x *Project) GetClosedThreadCount() uint64 {
 	if x != nil {
-		return x.ResolutionProposedTicketCount
-	}
-	return 0
-}
-
-func (x *Project) GetClosedTicketCount() uint64 {
-	if x != nil {
-		return x.ClosedTicketCount
+		return x.ClosedThreadCount
 	}
 	return 0
 }
@@ -665,50 +651,49 @@ func (x *ProjectTeamMember) GetActive() bool {
 	return false
 }
 
-// Private to creator while DRAFT, workspace-visible after atomic first publication. The opaque revision is internal concurrency data, never a public version label.
-type Ticket struct {
+// Private to creator while private, workspace-visible after atomic first publication. The opaque revision is internal concurrency data, never a public version label.
+type Thread struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
-	WorkspaceId    string                 `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	ProjectId      string                 `protobuf:"bytes,3,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	WorkspaceId string `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ProjectId   string `protobuf:"bytes,3,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	// The former catalog entry (module, then area) was removed: a thread belongs to its project.
 	CreatorUserId  string                 `protobuf:"bytes,5,opt,name=creator_user_id,json=creatorUserId,proto3" json:"creator_user_id,omitempty"`
 	AssigneeUserId string                 `protobuf:"bytes,6,opt,name=assignee_user_id,json=assigneeUserId,proto3" json:"assignee_user_id,omitempty"`
 	Title          string                 `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
-	State          TicketState            `protobuf:"varint,9,opt,name=state,proto3,enum=syntra.v1.TicketState" json:"state,omitempty"`
+	State          ThreadState            `protobuf:"varint,9,opt,name=state,proto3,enum=syntra.v1.ThreadState" json:"state,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	PublishedAt    *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=published_at,json=publishedAt,proto3" json:"published_at,omitempty"`
 	// Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
-	Revision                   string                 `protobuf:"bytes,13,opt,name=revision,proto3" json:"revision,omitempty"`
-	ResolutionProposedByUserId *string                `protobuf:"bytes,14,opt,name=resolution_proposed_by_user_id,json=resolutionProposedByUserId,proto3,oneof" json:"resolution_proposed_by_user_id,omitempty"`
-	ResolutionProposedAt       *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=resolution_proposed_at,json=resolutionProposedAt,proto3" json:"resolution_proposed_at,omitempty"`
-	ClosureKind                ClosureKind            `protobuf:"varint,16,opt,name=closure_kind,json=closureKind,proto3,enum=syntra.v1.ClosureKind" json:"closure_kind,omitempty"`
-	ClosedByUserId             *string                `protobuf:"bytes,17,opt,name=closed_by_user_id,json=closedByUserId,proto3,oneof" json:"closed_by_user_id,omitempty"`
-	ClosedAt                   *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=closed_at,json=closedAt,proto3" json:"closed_at,omitempty"`
-	ClosureReason              string                 `protobuf:"bytes,19,opt,name=closure_reason,json=closureReason,proto3" json:"closure_reason,omitempty"`
-	// Display-only preview, filled by ListTickets only (empty everywhere else): the first 240 Unicode scalar values of the
-	// summary of the latest published message (published visibility) or of the caller's own current draft (own-drafts
+	Revision       string                 `protobuf:"bytes,13,opt,name=revision,proto3" json:"revision,omitempty"`
+	ClosureKind    ClosureKind            `protobuf:"varint,16,opt,name=closure_kind,json=closureKind,proto3,enum=syntra.v1.ClosureKind" json:"closure_kind,omitempty"`
+	ClosedByUserId *string                `protobuf:"bytes,17,opt,name=closed_by_user_id,json=closedByUserId,proto3,oneof" json:"closed_by_user_id,omitempty"`
+	ClosedAt       *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=closed_at,json=closedAt,proto3" json:"closed_at,omitempty"`
+	ClosureReason  string                 `protobuf:"bytes,19,opt,name=closure_reason,json=closureReason,proto3" json:"closure_reason,omitempty"`
+	// Display-only preview, filled by ListThreads only (empty everywhere else): the first 240 Unicode scalar values of the
+	// summary of the latest published message (published visibility) or of the caller's own current prepared message (own-prepared
 	// visibility). It carries no more authority than the message itself and is never a substitute for reading the message.
 	SummaryPreview string `protobuf:"bytes,20,opt,name=summary_preview,json=summaryPreview,proto3" json:"summary_preview,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *Ticket) Reset() {
-	*x = Ticket{}
+func (x *Thread) Reset() {
+	*x = Thread{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Ticket) String() string {
+func (x *Thread) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Ticket) ProtoMessage() {}
+func (*Thread) ProtoMessage() {}
 
-func (x *Ticket) ProtoReflect() protoreflect.Message {
+func (x *Thread) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -720,151 +705,137 @@ func (x *Ticket) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Ticket.ProtoReflect.Descriptor instead.
-func (*Ticket) Descriptor() ([]byte, []int) {
+// Deprecated: Use Thread.ProtoReflect.Descriptor instead.
+func (*Thread) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Ticket) GetId() string {
+func (x *Thread) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *Ticket) GetWorkspaceId() string {
+func (x *Thread) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *Ticket) GetProjectId() string {
+func (x *Thread) GetProjectId() string {
 	if x != nil {
 		return x.ProjectId
 	}
 	return ""
 }
 
-func (x *Ticket) GetCreatorUserId() string {
+func (x *Thread) GetCreatorUserId() string {
 	if x != nil {
 		return x.CreatorUserId
 	}
 	return ""
 }
 
-func (x *Ticket) GetAssigneeUserId() string {
+func (x *Thread) GetAssigneeUserId() string {
 	if x != nil {
 		return x.AssigneeUserId
 	}
 	return ""
 }
 
-func (x *Ticket) GetTitle() string {
+func (x *Thread) GetTitle() string {
 	if x != nil {
 		return x.Title
 	}
 	return ""
 }
 
-func (x *Ticket) GetState() TicketState {
+func (x *Thread) GetState() ThreadState {
 	if x != nil {
 		return x.State
 	}
-	return TicketState_TICKET_STATE_UNSPECIFIED
+	return ThreadState_THREAD_STATE_UNSPECIFIED
 }
 
-func (x *Ticket) GetCreatedAt() *timestamppb.Timestamp {
+func (x *Thread) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *Ticket) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *Thread) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
 	return nil
 }
 
-func (x *Ticket) GetPublishedAt() *timestamppb.Timestamp {
+func (x *Thread) GetPublishedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.PublishedAt
 	}
 	return nil
 }
 
-func (x *Ticket) GetRevision() string {
+func (x *Thread) GetRevision() string {
 	if x != nil {
 		return x.Revision
 	}
 	return ""
 }
 
-func (x *Ticket) GetResolutionProposedByUserId() string {
-	if x != nil && x.ResolutionProposedByUserId != nil {
-		return *x.ResolutionProposedByUserId
-	}
-	return ""
-}
-
-func (x *Ticket) GetResolutionProposedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ResolutionProposedAt
-	}
-	return nil
-}
-
-func (x *Ticket) GetClosureKind() ClosureKind {
+func (x *Thread) GetClosureKind() ClosureKind {
 	if x != nil {
 		return x.ClosureKind
 	}
 	return ClosureKind_CLOSURE_KIND_UNSPECIFIED
 }
 
-func (x *Ticket) GetClosedByUserId() string {
+func (x *Thread) GetClosedByUserId() string {
 	if x != nil && x.ClosedByUserId != nil {
 		return *x.ClosedByUserId
 	}
 	return ""
 }
 
-func (x *Ticket) GetClosedAt() *timestamppb.Timestamp {
+func (x *Thread) GetClosedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ClosedAt
 	}
 	return nil
 }
 
-func (x *Ticket) GetClosureReason() string {
+func (x *Thread) GetClosureReason() string {
 	if x != nil {
 		return x.ClosureReason
 	}
 	return ""
 }
 
-func (x *Ticket) GetSummaryPreview() string {
+func (x *Thread) GetSummaryPreview() string {
 	if x != nil {
 		return x.SummaryPreview
 	}
 	return ""
 }
 
-// Author-private editable content, including against shared tickets. Draft existence/content is hidden from everyone else, including admins.
-type MessageDraft struct {
+// Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.
+type PreparedMessage struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,3,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,3,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	// Server-derived application user UUID. Never accepted from a client request.
 	AuthorUserId string `protobuf:"bytes,4,opt,name=author_user_id,json=authorUserId,proto3" json:"author_user_id,omitempty"`
 	// Exactly one explicit application user UUID; must be an active enabled member at save/publication.
 	RecipientUserId string `protobuf:"bytes,5,opt,name=recipient_user_id,json=recipientUserId,proto3" json:"recipient_user_id,omitempty"`
-	// UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+	// UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
-	// Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+	// Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
 	ContextMarkdown string                 `protobuf:"bytes,7,opt,name=context_markdown,json=contextMarkdown,proto3" json:"context_markdown,omitempty"`
 	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt       *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -875,20 +846,20 @@ type MessageDraft struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *MessageDraft) Reset() {
-	*x = MessageDraft{}
+func (x *PreparedMessage) Reset() {
+	*x = PreparedMessage{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *MessageDraft) String() string {
+func (x *PreparedMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MessageDraft) ProtoMessage() {}
+func (*PreparedMessage) ProtoMessage() {}
 
-func (x *MessageDraft) ProtoReflect() protoreflect.Message {
+func (x *PreparedMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -900,82 +871,82 @@ func (x *MessageDraft) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use MessageDraft.ProtoReflect.Descriptor instead.
-func (*MessageDraft) Descriptor() ([]byte, []int) {
+// Deprecated: Use PreparedMessage.ProtoReflect.Descriptor instead.
+func (*PreparedMessage) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *MessageDraft) GetId() string {
+func (x *PreparedMessage) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetWorkspaceId() string {
+func (x *PreparedMessage) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetTicketId() string {
+func (x *PreparedMessage) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetAuthorUserId() string {
+func (x *PreparedMessage) GetAuthorUserId() string {
 	if x != nil {
 		return x.AuthorUserId
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetRecipientUserId() string {
+func (x *PreparedMessage) GetRecipientUserId() string {
 	if x != nil {
 		return x.RecipientUserId
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetSummary() string {
+func (x *PreparedMessage) GetSummary() string {
 	if x != nil {
 		return x.Summary
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetContextMarkdown() string {
+func (x *PreparedMessage) GetContextMarkdown() string {
 	if x != nil {
 		return x.ContextMarkdown
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetCreatedAt() *timestamppb.Timestamp {
+func (x *PreparedMessage) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *MessageDraft) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *PreparedMessage) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
 	return nil
 }
 
-func (x *MessageDraft) GetRevision() string {
+func (x *PreparedMessage) GetRevision() string {
 	if x != nil {
 		return x.Revision
 	}
 	return ""
 }
 
-func (x *MessageDraft) GetInitial() bool {
+func (x *PreparedMessage) GetInitial() bool {
 	if x != nil {
 		return x.Initial
 	}
@@ -988,14 +959,14 @@ type PublishedMessage struct {
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,3,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,3,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	// Server-derived application user UUID. Never accepted from a client request.
 	AuthorUserId string `protobuf:"bytes,4,opt,name=author_user_id,json=authorUserId,proto3" json:"author_user_id,omitempty"`
 	// Exactly one explicit application user UUID; must be an active enabled member at save/publication.
 	RecipientUserId string `protobuf:"bytes,5,opt,name=recipient_user_id,json=recipientUserId,proto3" json:"recipient_user_id,omitempty"`
-	// UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+	// UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
-	// Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+	// Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
 	ContextMarkdown string                 `protobuf:"bytes,7,opt,name=context_markdown,json=contextMarkdown,proto3" json:"context_markdown,omitempty"`
 	PublishedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=published_at,json=publishedAt,proto3" json:"published_at,omitempty"`
 	Receipt         *RecipientReceipt      `protobuf:"bytes,9,opt,name=receipt,proto3" json:"receipt,omitempty"`
@@ -1047,9 +1018,9 @@ func (x *PublishedMessage) GetWorkspaceId() string {
 	return ""
 }
 
-func (x *PublishedMessage) GetTicketId() string {
+func (x *PublishedMessage) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
@@ -1166,42 +1137,44 @@ func (x *RecipientReceipt) GetReviewedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Immutable server-attributed shared history; no private drafts or their changes. Absent/nonapplicable fields remain defaults.
-type TicketEvent struct {
+// Immutable server-attributed shared history; no private prepared messages or their changes. Absent/nonapplicable fields remain defaults.
+type ThreadEvent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId            string                 `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId               string                 `protobuf:"bytes,3,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId               string                 `protobuf:"bytes,3,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	ActorUserId            string                 `protobuf:"bytes,4,opt,name=actor_user_id,json=actorUserId,proto3" json:"actor_user_id,omitempty"`
-	Kind                   TicketEventKind        `protobuf:"varint,5,opt,name=kind,proto3,enum=syntra.v1.TicketEventKind" json:"kind,omitempty"`
+	Kind                   ThreadEventKind        `protobuf:"varint,5,opt,name=kind,proto3,enum=syntra.v1.ThreadEventKind" json:"kind,omitempty"`
 	OccurredAt             *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	MessageId              *string                `protobuf:"bytes,7,opt,name=message_id,json=messageId,proto3,oneof" json:"message_id,omitempty"`
 	PreviousAssigneeUserId *string                `protobuf:"bytes,8,opt,name=previous_assignee_user_id,json=previousAssigneeUserId,proto3,oneof" json:"previous_assignee_user_id,omitempty"`
 	AssigneeUserId         *string                `protobuf:"bytes,9,opt,name=assignee_user_id,json=assigneeUserId,proto3,oneof" json:"assignee_user_id,omitempty"`
-	PreviousState          TicketState            `protobuf:"varint,10,opt,name=previous_state,json=previousState,proto3,enum=syntra.v1.TicketState" json:"previous_state,omitempty"`
-	State                  TicketState            `protobuf:"varint,11,opt,name=state,proto3,enum=syntra.v1.TicketState" json:"state,omitempty"`
+	PreviousState          ThreadState            `protobuf:"varint,10,opt,name=previous_state,json=previousState,proto3,enum=syntra.v1.ThreadState" json:"previous_state,omitempty"`
+	State                  ThreadState            `protobuf:"varint,11,opt,name=state,proto3,enum=syntra.v1.ThreadState" json:"state,omitempty"`
 	ClosureKind            ClosureKind            `protobuf:"varint,12,opt,name=closure_kind,json=closureKind,proto3,enum=syntra.v1.ClosureKind" json:"closure_kind,omitempty"`
 	// Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
-	Reason        string `protobuf:"bytes,13,opt,name=reason,proto3" json:"reason,omitempty"`
+	Reason string `protobuf:"bytes,13,opt,name=reason,proto3" json:"reason,omitempty"`
+	// Monotonic per-thread causal order; independent of wall-clock time and UUIDs.
+	Sequence      int64 `protobuf:"varint,14,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TicketEvent) Reset() {
-	*x = TicketEvent{}
+func (x *ThreadEvent) Reset() {
+	*x = ThreadEvent{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TicketEvent) String() string {
+func (x *ThreadEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TicketEvent) ProtoMessage() {}
+func (*ThreadEvent) ProtoMessage() {}
 
-func (x *TicketEvent) ProtoReflect() protoreflect.Message {
+func (x *ThreadEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1213,111 +1186,118 @@ func (x *TicketEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TicketEvent.ProtoReflect.Descriptor instead.
-func (*TicketEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use ThreadEvent.ProtoReflect.Descriptor instead.
+func (*ThreadEvent) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *TicketEvent) GetId() string {
+func (x *ThreadEvent) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *TicketEvent) GetWorkspaceId() string {
+func (x *ThreadEvent) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *TicketEvent) GetTicketId() string {
+func (x *ThreadEvent) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *TicketEvent) GetActorUserId() string {
+func (x *ThreadEvent) GetActorUserId() string {
 	if x != nil {
 		return x.ActorUserId
 	}
 	return ""
 }
 
-func (x *TicketEvent) GetKind() TicketEventKind {
+func (x *ThreadEvent) GetKind() ThreadEventKind {
 	if x != nil {
 		return x.Kind
 	}
-	return TicketEventKind_TICKET_EVENT_KIND_UNSPECIFIED
+	return ThreadEventKind_THREAD_EVENT_KIND_UNSPECIFIED
 }
 
-func (x *TicketEvent) GetOccurredAt() *timestamppb.Timestamp {
+func (x *ThreadEvent) GetOccurredAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.OccurredAt
 	}
 	return nil
 }
 
-func (x *TicketEvent) GetMessageId() string {
+func (x *ThreadEvent) GetMessageId() string {
 	if x != nil && x.MessageId != nil {
 		return *x.MessageId
 	}
 	return ""
 }
 
-func (x *TicketEvent) GetPreviousAssigneeUserId() string {
+func (x *ThreadEvent) GetPreviousAssigneeUserId() string {
 	if x != nil && x.PreviousAssigneeUserId != nil {
 		return *x.PreviousAssigneeUserId
 	}
 	return ""
 }
 
-func (x *TicketEvent) GetAssigneeUserId() string {
+func (x *ThreadEvent) GetAssigneeUserId() string {
 	if x != nil && x.AssigneeUserId != nil {
 		return *x.AssigneeUserId
 	}
 	return ""
 }
 
-func (x *TicketEvent) GetPreviousState() TicketState {
+func (x *ThreadEvent) GetPreviousState() ThreadState {
 	if x != nil {
 		return x.PreviousState
 	}
-	return TicketState_TICKET_STATE_UNSPECIFIED
+	return ThreadState_THREAD_STATE_UNSPECIFIED
 }
 
-func (x *TicketEvent) GetState() TicketState {
+func (x *ThreadEvent) GetState() ThreadState {
 	if x != nil {
 		return x.State
 	}
-	return TicketState_TICKET_STATE_UNSPECIFIED
+	return ThreadState_THREAD_STATE_UNSPECIFIED
 }
 
-func (x *TicketEvent) GetClosureKind() ClosureKind {
+func (x *ThreadEvent) GetClosureKind() ClosureKind {
 	if x != nil {
 		return x.ClosureKind
 	}
 	return ClosureKind_CLOSURE_KIND_UNSPECIFIED
 }
 
-func (x *TicketEvent) GetReason() string {
+func (x *ThreadEvent) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-// Exactly one message OR own draft, selected by the required inbox view.
+func (x *ThreadEvent) GetSequence() int64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+// Exactly one published message OR own prepared message, selected by the required inbox view.
 // Waiting is chronological per directed user pair, never a semantic reply verdict.
 type InboxItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       *PublishedMessage      `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	Ticket        *Ticket                `protobuf:"bytes,2,opt,name=ticket,proto3" json:"ticket,omitempty"`
-	Draft         *MessageDraft          `protobuf:"bytes,3,opt,name=draft,proto3" json:"draft,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Message         *PublishedMessage      `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Thread          *Thread                `protobuf:"bytes,2,opt,name=thread,proto3" json:"thread,omitempty"`
+	PreparedMessage *PreparedMessage       `protobuf:"bytes,3,opt,name=prepared_message,json=preparedMessage,proto3" json:"prepared_message,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *InboxItem) Reset() {
@@ -1357,40 +1337,39 @@ func (x *InboxItem) GetMessage() *PublishedMessage {
 	return nil
 }
 
-func (x *InboxItem) GetTicket() *Ticket {
+func (x *InboxItem) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
-func (x *InboxItem) GetDraft() *MessageDraft {
+func (x *InboxItem) GetPreparedMessage() *PreparedMessage {
 	if x != nil {
-		return x.Draft
+		return x.PreparedMessage
 	}
 	return nil
 }
 
-// Current authorized workspace aggregates; only own draft count is private. No simulated metrics or unbounded project arrays.
+// Current authorized workspace aggregates; only own pending/prepared counts are private. No simulated metrics or unbounded project arrays.
 type Overview struct {
-	state                         protoimpl.MessageState `protogen:"open.v1"`
-	PublishedTicketCount          uint64                 `protobuf:"varint,1,opt,name=published_ticket_count,json=publishedTicketCount,proto3" json:"published_ticket_count,omitempty"`
-	OpenTicketCount               uint64                 `protobuf:"varint,2,opt,name=open_ticket_count,json=openTicketCount,proto3" json:"open_ticket_count,omitempty"`
-	ResolutionProposedTicketCount uint64                 `protobuf:"varint,3,opt,name=resolution_proposed_ticket_count,json=resolutionProposedTicketCount,proto3" json:"resolution_proposed_ticket_count,omitempty"`
-	ClosedTicketCount             uint64                 `protobuf:"varint,4,opt,name=closed_ticket_count,json=closedTicketCount,proto3" json:"closed_ticket_count,omitempty"`
-	AssignedActiveTicketCount     uint64                 `protobuf:"varint,5,opt,name=assigned_active_ticket_count,json=assignedActiveTicketCount,proto3" json:"assigned_active_ticket_count,omitempty"`
-	PendingReviewMessageCount     uint64                 `protobuf:"varint,6,opt,name=pending_review_message_count,json=pendingReviewMessageCount,proto3" json:"pending_review_message_count,omitempty"`
-	UnreadMessageCount            uint64                 `protobuf:"varint,7,opt,name=unread_message_count,json=unreadMessageCount,proto3" json:"unread_message_count,omitempty"`
-	OwnDraftTicketCount           uint64                 `protobuf:"varint,8,opt,name=own_draft_ticket_count,json=ownDraftTicketCount,proto3" json:"own_draft_ticket_count,omitempty"`
-	AsOf                          *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=as_of,json=asOf,proto3" json:"as_of,omitempty"`
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	PublishedThreadCount      uint64                 `protobuf:"varint,1,opt,name=published_thread_count,json=publishedThreadCount,proto3" json:"published_thread_count,omitempty"`
+	OpenThreadCount           uint64                 `protobuf:"varint,2,opt,name=open_thread_count,json=openThreadCount,proto3" json:"open_thread_count,omitempty"`
+	ClosedThreadCount         uint64                 `protobuf:"varint,4,opt,name=closed_thread_count,json=closedThreadCount,proto3" json:"closed_thread_count,omitempty"`
+	AssignedActiveThreadCount uint64                 `protobuf:"varint,5,opt,name=assigned_active_thread_count,json=assignedActiveThreadCount,proto3" json:"assigned_active_thread_count,omitempty"`
+	PendingReviewMessageCount uint64                 `protobuf:"varint,6,opt,name=pending_review_message_count,json=pendingReviewMessageCount,proto3" json:"pending_review_message_count,omitempty"`
+	UnreadMessageCount        uint64                 `protobuf:"varint,7,opt,name=unread_message_count,json=unreadMessageCount,proto3" json:"unread_message_count,omitempty"`
+	OwnPendingThreadCount     uint64                 `protobuf:"varint,8,opt,name=own_pending_thread_count,json=ownPendingThreadCount,proto3" json:"own_pending_thread_count,omitempty"`
+	AsOf                      *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=as_of,json=asOf,proto3" json:"as_of,omitempty"`
 	// Current visible workspace projects, from the same overview snapshot.
 	ProjectCount uint64 `protobuf:"varint,10,opt,name=project_count,json=projectCount,proto3" json:"project_count,omitempty"`
 	// Exact count of caller InboxView AWAITING_REPLY items.
 	AwaitingReplyMessageCount uint64 `protobuf:"varint,11,opt,name=awaiting_reply_message_count,json=awaitingReplyMessageCount,proto3" json:"awaiting_reply_message_count,omitempty"`
-	// Exact count of caller InboxView OWN_DRAFTS, including later reply drafts.
-	OwnDraftMessageCount uint64 `protobuf:"varint,12,opt,name=own_draft_message_count,json=ownDraftMessageCount,proto3" json:"own_draft_message_count,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// Exact count of caller InboxView OWN_PREPARED, including later reply prepared messages.
+	OwnPreparedMessageCount uint64 `protobuf:"varint,12,opt,name=own_prepared_message_count,json=ownPreparedMessageCount,proto3" json:"own_prepared_message_count,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *Overview) Reset() {
@@ -1423,37 +1402,30 @@ func (*Overview) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *Overview) GetPublishedTicketCount() uint64 {
+func (x *Overview) GetPublishedThreadCount() uint64 {
 	if x != nil {
-		return x.PublishedTicketCount
+		return x.PublishedThreadCount
 	}
 	return 0
 }
 
-func (x *Overview) GetOpenTicketCount() uint64 {
+func (x *Overview) GetOpenThreadCount() uint64 {
 	if x != nil {
-		return x.OpenTicketCount
+		return x.OpenThreadCount
 	}
 	return 0
 }
 
-func (x *Overview) GetResolutionProposedTicketCount() uint64 {
+func (x *Overview) GetClosedThreadCount() uint64 {
 	if x != nil {
-		return x.ResolutionProposedTicketCount
+		return x.ClosedThreadCount
 	}
 	return 0
 }
 
-func (x *Overview) GetClosedTicketCount() uint64 {
+func (x *Overview) GetAssignedActiveThreadCount() uint64 {
 	if x != nil {
-		return x.ClosedTicketCount
-	}
-	return 0
-}
-
-func (x *Overview) GetAssignedActiveTicketCount() uint64 {
-	if x != nil {
-		return x.AssignedActiveTicketCount
+		return x.AssignedActiveThreadCount
 	}
 	return 0
 }
@@ -1472,9 +1444,9 @@ func (x *Overview) GetUnreadMessageCount() uint64 {
 	return 0
 }
 
-func (x *Overview) GetOwnDraftTicketCount() uint64 {
+func (x *Overview) GetOwnPendingThreadCount() uint64 {
 	if x != nil {
-		return x.OwnDraftTicketCount
+		return x.OwnPendingThreadCount
 	}
 	return 0
 }
@@ -1500,9 +1472,9 @@ func (x *Overview) GetAwaitingReplyMessageCount() uint64 {
 	return 0
 }
 
-func (x *Overview) GetOwnDraftMessageCount() uint64 {
+func (x *Overview) GetOwnPreparedMessageCount() uint64 {
 	if x != nil {
-		return x.OwnDraftMessageCount
+		return x.OwnPreparedMessageCount
 	}
 	return 0
 }
@@ -1974,7 +1946,7 @@ func (x *UpdateProjectResponse) GetProject() *Project {
 	return nil
 }
 
-// Admin-only. Projects with any tickets or team assignments cannot be deleted.
+// Admin-only. Projects with any threads or team assignments cannot be deleted.
 type DeleteProjectRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	WorkspaceId      string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
@@ -2346,7 +2318,7 @@ func (x *SetProjectTeamResponse) GetProjectTeam() *ProjectTeam {
 	return nil
 }
 
-// Removes the team from the project (current ADMIN only). Tickets and messages are untouched.
+// Removes the team from the project (current ADMIN only). Threads and messages are untouched.
 type RemoveProjectTeamRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	WorkspaceId      string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
@@ -2459,17 +2431,17 @@ func (*RemoveProjectTeamResponse) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{25}
 }
 
-// Explicit visibility required; PUBLISHED never includes drafts. OWN_DRAFTS is creator-only. Empty query means no title search; state zero means any in that view.
-type ListTicketsRequest struct {
+// Explicit visibility required; PUBLISHED never includes prepared messages. OWN_PREPARED is creator-only. Empty query means no title search; state zero means any in that view.
+type ListThreadsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId    string      `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
 	ProjectId      *string     `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
-	State          TicketState `protobuf:"varint,4,opt,name=state,proto3,enum=syntra.v1.TicketState" json:"state,omitempty"`
+	State          ThreadState `protobuf:"varint,4,opt,name=state,proto3,enum=syntra.v1.ThreadState" json:"state,omitempty"`
 	AssigneeUserId *string     `protobuf:"bytes,5,opt,name=assignee_user_id,json=assigneeUserId,proto3,oneof" json:"assignee_user_id,omitempty"`
 	// Exact literal case-sensitive substring of title, 0..120 scalars/480 bytes. No wildcards, ranking or Markdown search.
 	Query      string           `protobuf:"bytes,6,opt,name=query,proto3" json:"query,omitempty"`
-	Visibility TicketVisibility `protobuf:"varint,7,opt,name=visibility,proto3,enum=syntra.v1.TicketVisibility" json:"visibility,omitempty"`
+	Visibility ThreadVisibility `protobuf:"varint,7,opt,name=visibility,proto3,enum=syntra.v1.ThreadVisibility" json:"visibility,omitempty"`
 	// Zero defaults to 25; explicit 1..100 only.
 	PageSize int32 `protobuf:"varint,8,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
@@ -2478,20 +2450,20 @@ type ListTicketsRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListTicketsRequest) Reset() {
-	*x = ListTicketsRequest{}
+func (x *ListThreadsRequest) Reset() {
+	*x = ListThreadsRequest{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListTicketsRequest) String() string {
+func (x *ListThreadsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListTicketsRequest) ProtoMessage() {}
+func (*ListThreadsRequest) ProtoMessage() {}
 
-func (x *ListTicketsRequest) ProtoReflect() protoreflect.Message {
+func (x *ListThreadsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2503,90 +2475,90 @@ func (x *ListTicketsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListTicketsRequest.ProtoReflect.Descriptor instead.
-func (*ListTicketsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListThreadsRequest.ProtoReflect.Descriptor instead.
+func (*ListThreadsRequest) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{26}
 }
 
-func (x *ListTicketsRequest) GetWorkspaceId() string {
+func (x *ListThreadsRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *ListTicketsRequest) GetProjectId() string {
+func (x *ListThreadsRequest) GetProjectId() string {
 	if x != nil && x.ProjectId != nil {
 		return *x.ProjectId
 	}
 	return ""
 }
 
-func (x *ListTicketsRequest) GetState() TicketState {
+func (x *ListThreadsRequest) GetState() ThreadState {
 	if x != nil {
 		return x.State
 	}
-	return TicketState_TICKET_STATE_UNSPECIFIED
+	return ThreadState_THREAD_STATE_UNSPECIFIED
 }
 
-func (x *ListTicketsRequest) GetAssigneeUserId() string {
+func (x *ListThreadsRequest) GetAssigneeUserId() string {
 	if x != nil && x.AssigneeUserId != nil {
 		return *x.AssigneeUserId
 	}
 	return ""
 }
 
-func (x *ListTicketsRequest) GetQuery() string {
+func (x *ListThreadsRequest) GetQuery() string {
 	if x != nil {
 		return x.Query
 	}
 	return ""
 }
 
-func (x *ListTicketsRequest) GetVisibility() TicketVisibility {
+func (x *ListThreadsRequest) GetVisibility() ThreadVisibility {
 	if x != nil {
 		return x.Visibility
 	}
-	return TicketVisibility_TICKET_VISIBILITY_UNSPECIFIED
+	return ThreadVisibility_THREAD_VISIBILITY_UNSPECIFIED
 }
 
-func (x *ListTicketsRequest) GetPageSize() int32 {
+func (x *ListThreadsRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
 	}
 	return 0
 }
 
-func (x *ListTicketsRequest) GetPageToken() string {
+func (x *ListThreadsRequest) GetPageToken() string {
 	if x != nil {
 		return x.PageToken
 	}
 	return ""
 }
 
-type ListTicketsResponse struct {
+type ListThreadsResponse struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
-	Tickets []*Ticket              `protobuf:"bytes,1,rep,name=tickets,proto3" json:"tickets,omitempty"`
+	Threads []*Thread              `protobuf:"bytes,1,rep,name=threads,proto3" json:"threads,omitempty"`
 	// Empty at end; same opaque cursor policy as the request.
 	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListTicketsResponse) Reset() {
-	*x = ListTicketsResponse{}
+func (x *ListThreadsResponse) Reset() {
+	*x = ListThreadsResponse{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListTicketsResponse) String() string {
+func (x *ListThreadsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListTicketsResponse) ProtoMessage() {}
+func (*ListThreadsResponse) ProtoMessage() {}
 
-func (x *ListTicketsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListThreadsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2598,48 +2570,48 @@ func (x *ListTicketsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListTicketsResponse.ProtoReflect.Descriptor instead.
-func (*ListTicketsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListThreadsResponse.ProtoReflect.Descriptor instead.
+func (*ListThreadsResponse) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{27}
 }
 
-func (x *ListTicketsResponse) GetTickets() []*Ticket {
+func (x *ListThreadsResponse) GetThreads() []*Thread {
 	if x != nil {
-		return x.Tickets
+		return x.Threads
 	}
 	return nil
 }
 
-func (x *ListTicketsResponse) GetNextPageToken() string {
+func (x *ListThreadsResponse) GetNextPageToken() string {
 	if x != nil {
 		return x.NextPageToken
 	}
 	return ""
 }
 
-type GetTicketRequest struct {
+type GetThreadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId   string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId      string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId      string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetTicketRequest) Reset() {
-	*x = GetTicketRequest{}
+func (x *GetThreadRequest) Reset() {
+	*x = GetThreadRequest{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetTicketRequest) String() string {
+func (x *GetThreadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetTicketRequest) ProtoMessage() {}
+func (*GetThreadRequest) ProtoMessage() {}
 
-func (x *GetTicketRequest) ProtoReflect() protoreflect.Message {
+func (x *GetThreadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2651,46 +2623,46 @@ func (x *GetTicketRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetTicketRequest.ProtoReflect.Descriptor instead.
-func (*GetTicketRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetThreadRequest.ProtoReflect.Descriptor instead.
+func (*GetThreadRequest) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{28}
 }
 
-func (x *GetTicketRequest) GetWorkspaceId() string {
+func (x *GetThreadRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *GetTicketRequest) GetTicketId() string {
+func (x *GetThreadRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-type GetTicketResponse struct {
+type GetThreadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
+	Thread        *Thread                `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetTicketResponse) Reset() {
-	*x = GetTicketResponse{}
+func (x *GetThreadResponse) Reset() {
+	*x = GetThreadResponse{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetTicketResponse) String() string {
+func (x *GetThreadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetTicketResponse) ProtoMessage() {}
+func (*GetThreadResponse) ProtoMessage() {}
 
-func (x *GetTicketResponse) ProtoReflect() protoreflect.Message {
+func (x *GetThreadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2702,20 +2674,20 @@ func (x *GetTicketResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetTicketResponse.ProtoReflect.Descriptor instead.
-func (*GetTicketResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetThreadResponse.ProtoReflect.Descriptor instead.
+func (*GetThreadResponse) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *GetTicketResponse) GetTicket() *Ticket {
+func (x *GetThreadResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
-// Creates a private ticket and its single initial draft atomically. Required recipient is explicit; the recipient is never inferred from a project team.
-type CreateTicketRequest struct {
+// Creates a private thread and its single initial prepared message atomically. Required recipient is explicit; the recipient is never inferred from a project team.
+type CreateThreadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
@@ -2723,9 +2695,9 @@ type CreateTicketRequest struct {
 	Title       string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
 	// Exactly one explicit application user UUID; must be an active enabled member at save/publication.
 	RecipientUserId string `protobuf:"bytes,6,opt,name=recipient_user_id,json=recipientUserId,proto3" json:"recipient_user_id,omitempty"`
-	// UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+	// UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
 	Summary string `protobuf:"bytes,7,opt,name=summary,proto3" json:"summary,omitempty"`
-	// Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+	// Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
 	ContextMarkdown string `protobuf:"bytes,8,opt,name=context_markdown,json=contextMarkdown,proto3" json:"context_markdown,omitempty"`
 	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
 	RequestId     string `protobuf:"bytes,9,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
@@ -2733,20 +2705,20 @@ type CreateTicketRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateTicketRequest) Reset() {
-	*x = CreateTicketRequest{}
+func (x *CreateThreadRequest) Reset() {
+	*x = CreateThreadRequest{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateTicketRequest) String() string {
+func (x *CreateThreadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateTicketRequest) ProtoMessage() {}
+func (*CreateThreadRequest) ProtoMessage() {}
 
-func (x *CreateTicketRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateThreadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2758,54 +2730,54 @@ func (x *CreateTicketRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateTicketRequest.ProtoReflect.Descriptor instead.
-func (*CreateTicketRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateThreadRequest.ProtoReflect.Descriptor instead.
+func (*CreateThreadRequest) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *CreateTicketRequest) GetWorkspaceId() string {
+func (x *CreateThreadRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *CreateTicketRequest) GetProjectId() string {
+func (x *CreateThreadRequest) GetProjectId() string {
 	if x != nil {
 		return x.ProjectId
 	}
 	return ""
 }
 
-func (x *CreateTicketRequest) GetTitle() string {
+func (x *CreateThreadRequest) GetTitle() string {
 	if x != nil {
 		return x.Title
 	}
 	return ""
 }
 
-func (x *CreateTicketRequest) GetRecipientUserId() string {
+func (x *CreateThreadRequest) GetRecipientUserId() string {
 	if x != nil {
 		return x.RecipientUserId
 	}
 	return ""
 }
 
-func (x *CreateTicketRequest) GetSummary() string {
+func (x *CreateThreadRequest) GetSummary() string {
 	if x != nil {
 		return x.Summary
 	}
 	return ""
 }
 
-func (x *CreateTicketRequest) GetContextMarkdown() string {
+func (x *CreateThreadRequest) GetContextMarkdown() string {
 	if x != nil {
 		return x.ContextMarkdown
 	}
 	return ""
 }
 
-func (x *CreateTicketRequest) GetRequestId() string {
+func (x *CreateThreadRequest) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
@@ -2813,28 +2785,28 @@ func (x *CreateTicketRequest) GetRequestId() string {
 }
 
 // Author-private even on retry. After publication/discard, creation retry fails FailedPrecondition rather than returning consumed private content.
-type CreateTicketResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
-	InitialDraft  *MessageDraft          `protobuf:"bytes,2,opt,name=initial_draft,json=initialDraft,proto3" json:"initial_draft,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+type CreateThreadResponse struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	Thread                 *Thread                `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
+	InitialPreparedMessage *PreparedMessage       `protobuf:"bytes,2,opt,name=initial_prepared_message,json=initialPreparedMessage,proto3" json:"initial_prepared_message,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
-func (x *CreateTicketResponse) Reset() {
-	*x = CreateTicketResponse{}
+func (x *CreateThreadResponse) Reset() {
+	*x = CreateThreadResponse{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateTicketResponse) String() string {
+func (x *CreateThreadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateTicketResponse) ProtoMessage() {}
+func (*CreateThreadResponse) ProtoMessage() {}
 
-func (x *CreateTicketResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateThreadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2846,31 +2818,31 @@ func (x *CreateTicketResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateTicketResponse.ProtoReflect.Descriptor instead.
-func (*CreateTicketResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateThreadResponse.ProtoReflect.Descriptor instead.
+func (*CreateThreadResponse) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{31}
 }
 
-func (x *CreateTicketResponse) GetTicket() *Ticket {
+func (x *CreateThreadResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
-func (x *CreateTicketResponse) GetInitialDraft() *MessageDraft {
+func (x *CreateThreadResponse) GetInitialPreparedMessage() *PreparedMessage {
 	if x != nil {
-		return x.InitialDraft
+		return x.InitialPreparedMessage
 	}
 	return nil
 }
 
-// Full replacement of title only. The project is immutable; DRAFT creator-only, shared nonclosed creator/admin.
-type UpdateTicketRequest struct {
+// Full replacement of title only. The project is immutable; Pending creator-only; open creator/admin.
+type UpdateThreadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	Title       string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	// Required exact current resource revision; stale values fail Aborted without overwriting.
 	ExpectedRevision string `protobuf:"bytes,5,opt,name=expected_revision,json=expectedRevision,proto3" json:"expected_revision,omitempty"`
@@ -2880,20 +2852,20 @@ type UpdateTicketRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdateTicketRequest) Reset() {
-	*x = UpdateTicketRequest{}
+func (x *UpdateThreadRequest) Reset() {
+	*x = UpdateThreadRequest{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateTicketRequest) String() string {
+func (x *UpdateThreadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateTicketRequest) ProtoMessage() {}
+func (*UpdateThreadRequest) ProtoMessage() {}
 
-func (x *UpdateTicketRequest) ProtoReflect() protoreflect.Message {
+func (x *UpdateThreadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2905,67 +2877,67 @@ func (x *UpdateTicketRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateTicketRequest.ProtoReflect.Descriptor instead.
-func (*UpdateTicketRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdateThreadRequest.ProtoReflect.Descriptor instead.
+func (*UpdateThreadRequest) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{32}
 }
 
-func (x *UpdateTicketRequest) GetWorkspaceId() string {
+func (x *UpdateThreadRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *UpdateTicketRequest) GetTicketId() string {
+func (x *UpdateThreadRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *UpdateTicketRequest) GetTitle() string {
+func (x *UpdateThreadRequest) GetTitle() string {
 	if x != nil {
 		return x.Title
 	}
 	return ""
 }
 
-func (x *UpdateTicketRequest) GetExpectedRevision() string {
+func (x *UpdateThreadRequest) GetExpectedRevision() string {
 	if x != nil {
 		return x.ExpectedRevision
 	}
 	return ""
 }
 
-func (x *UpdateTicketRequest) GetRequestId() string {
+func (x *UpdateThreadRequest) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
 	return ""
 }
 
-type UpdateTicketResponse struct {
+type UpdateThreadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
+	Thread        *Thread                `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdateTicketResponse) Reset() {
-	*x = UpdateTicketResponse{}
+func (x *UpdateThreadResponse) Reset() {
+	*x = UpdateThreadResponse{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateTicketResponse) String() string {
+func (x *UpdateThreadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateTicketResponse) ProtoMessage() {}
+func (*UpdateThreadResponse) ProtoMessage() {}
 
-func (x *UpdateTicketResponse) ProtoReflect() protoreflect.Message {
+func (x *UpdateThreadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2977,24 +2949,24 @@ func (x *UpdateTicketResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateTicketResponse.ProtoReflect.Descriptor instead.
-func (*UpdateTicketResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdateThreadResponse.ProtoReflect.Descriptor instead.
+func (*UpdateThreadResponse) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{33}
 }
 
-func (x *UpdateTicketResponse) GetTicket() *Ticket {
+func (x *UpdateThreadResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
-// Explicit assignment of a published nonclosed ticket by creator/admin. Does not rewrite any message recipient.
-type AssignTicketRequest struct {
+// Explicit assignment of a published nonclosed thread by creator/admin. Does not rewrite any message recipient.
+type AssignThreadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId    string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId       string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId       string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	AssigneeUserId string `protobuf:"bytes,3,opt,name=assignee_user_id,json=assigneeUserId,proto3" json:"assignee_user_id,omitempty"`
 	// Required exact current resource revision; stale values fail Aborted without overwriting.
 	ExpectedRevision string `protobuf:"bytes,4,opt,name=expected_revision,json=expectedRevision,proto3" json:"expected_revision,omitempty"`
@@ -3004,20 +2976,20 @@ type AssignTicketRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AssignTicketRequest) Reset() {
-	*x = AssignTicketRequest{}
+func (x *AssignThreadRequest) Reset() {
+	*x = AssignThreadRequest{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AssignTicketRequest) String() string {
+func (x *AssignThreadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AssignTicketRequest) ProtoMessage() {}
+func (*AssignThreadRequest) ProtoMessage() {}
 
-func (x *AssignTicketRequest) ProtoReflect() protoreflect.Message {
+func (x *AssignThreadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3029,67 +3001,67 @@ func (x *AssignTicketRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AssignTicketRequest.ProtoReflect.Descriptor instead.
-func (*AssignTicketRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AssignThreadRequest.ProtoReflect.Descriptor instead.
+func (*AssignThreadRequest) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{34}
 }
 
-func (x *AssignTicketRequest) GetWorkspaceId() string {
+func (x *AssignThreadRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *AssignTicketRequest) GetTicketId() string {
+func (x *AssignThreadRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *AssignTicketRequest) GetAssigneeUserId() string {
+func (x *AssignThreadRequest) GetAssigneeUserId() string {
 	if x != nil {
 		return x.AssigneeUserId
 	}
 	return ""
 }
 
-func (x *AssignTicketRequest) GetExpectedRevision() string {
+func (x *AssignThreadRequest) GetExpectedRevision() string {
 	if x != nil {
 		return x.ExpectedRevision
 	}
 	return ""
 }
 
-func (x *AssignTicketRequest) GetRequestId() string {
+func (x *AssignThreadRequest) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
 	return ""
 }
 
-type AssignTicketResponse struct {
+type AssignThreadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
+	Thread        *Thread                `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AssignTicketResponse) Reset() {
-	*x = AssignTicketResponse{}
+func (x *AssignThreadResponse) Reset() {
+	*x = AssignThreadResponse{}
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AssignTicketResponse) String() string {
+func (x *AssignThreadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AssignTicketResponse) ProtoMessage() {}
+func (*AssignThreadResponse) ProtoMessage() {}
 
-func (x *AssignTicketResponse) ProtoReflect() protoreflect.Message {
+func (x *AssignThreadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_syntra_v1_collaboration_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3101,140 +3073,24 @@ func (x *AssignTicketResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AssignTicketResponse.ProtoReflect.Descriptor instead.
-func (*AssignTicketResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use AssignThreadResponse.ProtoReflect.Descriptor instead.
+func (*AssignThreadResponse) Descriptor() ([]byte, []int) {
 	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *AssignTicketResponse) GetTicket() *Ticket {
+func (x *AssignThreadResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
-// OPEN to RESOLUTION_PROPOSED by current assignee/admin. Does not mark any message read/reviewed.
-type ProposeResolutionRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
-	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
-	// Required exact current resource revision; stale values fail Aborted without overwriting.
-	ExpectedRevision string `protobuf:"bytes,3,opt,name=expected_revision,json=expectedRevision,proto3" json:"expected_revision,omitempty"`
-	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
-	RequestId     string `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ProposeResolutionRequest) Reset() {
-	*x = ProposeResolutionRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ProposeResolutionRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ProposeResolutionRequest) ProtoMessage() {}
-
-func (x *ProposeResolutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ProposeResolutionRequest.ProtoReflect.Descriptor instead.
-func (*ProposeResolutionRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{36}
-}
-
-func (x *ProposeResolutionRequest) GetWorkspaceId() string {
-	if x != nil {
-		return x.WorkspaceId
-	}
-	return ""
-}
-
-func (x *ProposeResolutionRequest) GetTicketId() string {
-	if x != nil {
-		return x.TicketId
-	}
-	return ""
-}
-
-func (x *ProposeResolutionRequest) GetExpectedRevision() string {
-	if x != nil {
-		return x.ExpectedRevision
-	}
-	return ""
-}
-
-func (x *ProposeResolutionRequest) GetRequestId() string {
-	if x != nil {
-		return x.RequestId
-	}
-	return ""
-}
-
-type ProposeResolutionResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ProposeResolutionResponse) Reset() {
-	*x = ProposeResolutionResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ProposeResolutionResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ProposeResolutionResponse) ProtoMessage() {}
-
-func (x *ProposeResolutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ProposeResolutionResponse.ProtoReflect.Descriptor instead.
-func (*ProposeResolutionResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{37}
-}
-
-func (x *ProposeResolutionResponse) GetTicket() *Ticket {
-	if x != nil {
-		return x.Ticket
-	}
-	return nil
-}
-
-// Creator/admin only. VALIDATED requires RESOLUTION_PROPOSED; WITHOUT_VALIDATION requires a reason. Always requires current ticket revision.
-type CloseTicketRequest struct {
+// Creator/admin only. WITHOUT_VALIDATION requires a reason. Always requires current thread revision.
+type CloseThreadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string      `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string      `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string      `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	Kind        ClosureKind `protobuf:"varint,3,opt,name=kind,proto3,enum=syntra.v1.ClosureKind" json:"kind,omitempty"`
 	// Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
 	Reason string `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
@@ -3246,21 +3102,21 @@ type CloseTicketRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CloseTicketRequest) Reset() {
-	*x = CloseTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
+func (x *CloseThreadRequest) Reset() {
+	*x = CloseThreadRequest{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CloseTicketRequest) String() string {
+func (x *CloseThreadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CloseTicketRequest) ProtoMessage() {}
+func (*CloseThreadRequest) ProtoMessage() {}
 
-func (x *CloseTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
+func (x *CloseThreadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3271,75 +3127,75 @@ func (x *CloseTicketRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CloseTicketRequest.ProtoReflect.Descriptor instead.
-func (*CloseTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{38}
+// Deprecated: Use CloseThreadRequest.ProtoReflect.Descriptor instead.
+func (*CloseThreadRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{36}
 }
 
-func (x *CloseTicketRequest) GetWorkspaceId() string {
+func (x *CloseThreadRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *CloseTicketRequest) GetTicketId() string {
+func (x *CloseThreadRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *CloseTicketRequest) GetKind() ClosureKind {
+func (x *CloseThreadRequest) GetKind() ClosureKind {
 	if x != nil {
 		return x.Kind
 	}
 	return ClosureKind_CLOSURE_KIND_UNSPECIFIED
 }
 
-func (x *CloseTicketRequest) GetReason() string {
+func (x *CloseThreadRequest) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-func (x *CloseTicketRequest) GetExpectedRevision() string {
+func (x *CloseThreadRequest) GetExpectedRevision() string {
 	if x != nil {
 		return x.ExpectedRevision
 	}
 	return ""
 }
 
-func (x *CloseTicketRequest) GetRequestId() string {
+func (x *CloseThreadRequest) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
 	return ""
 }
 
-type CloseTicketResponse struct {
+type CloseThreadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
+	Thread        *Thread                `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CloseTicketResponse) Reset() {
-	*x = CloseTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
+func (x *CloseThreadResponse) Reset() {
+	*x = CloseThreadResponse{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CloseTicketResponse) String() string {
+func (x *CloseThreadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CloseTicketResponse) ProtoMessage() {}
+func (*CloseThreadResponse) ProtoMessage() {}
 
-func (x *CloseTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
+func (x *CloseThreadResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3350,24 +3206,24 @@ func (x *CloseTicketResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CloseTicketResponse.ProtoReflect.Descriptor instead.
-func (*CloseTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{39}
+// Deprecated: Use CloseThreadResponse.ProtoReflect.Descriptor instead.
+func (*CloseThreadResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{37}
 }
 
-func (x *CloseTicketResponse) GetTicket() *Ticket {
+func (x *CloseThreadResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
 // CLOSED to OPEN by creator/admin, with nonblank reason; clears current proposal/closure projection, preserves events.
-type ReopenTicketRequest struct {
+type ReopenThreadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	// Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
 	Reason string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
 	// Required exact current resource revision; stale values fail Aborted without overwriting.
@@ -3378,21 +3234,21 @@ type ReopenTicketRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ReopenTicketRequest) Reset() {
-	*x = ReopenTicketRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+func (x *ReopenThreadRequest) Reset() {
+	*x = ReopenThreadRequest{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ReopenTicketRequest) String() string {
+func (x *ReopenThreadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ReopenTicketRequest) ProtoMessage() {}
+func (*ReopenThreadRequest) ProtoMessage() {}
 
-func (x *ReopenTicketRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+func (x *ReopenThreadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3403,68 +3259,68 @@ func (x *ReopenTicketRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ReopenTicketRequest.ProtoReflect.Descriptor instead.
-func (*ReopenTicketRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{40}
+// Deprecated: Use ReopenThreadRequest.ProtoReflect.Descriptor instead.
+func (*ReopenThreadRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{38}
 }
 
-func (x *ReopenTicketRequest) GetWorkspaceId() string {
+func (x *ReopenThreadRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *ReopenTicketRequest) GetTicketId() string {
+func (x *ReopenThreadRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *ReopenTicketRequest) GetReason() string {
+func (x *ReopenThreadRequest) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-func (x *ReopenTicketRequest) GetExpectedRevision() string {
+func (x *ReopenThreadRequest) GetExpectedRevision() string {
 	if x != nil {
 		return x.ExpectedRevision
 	}
 	return ""
 }
 
-func (x *ReopenTicketRequest) GetRequestId() string {
+func (x *ReopenThreadRequest) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
 	return ""
 }
 
-type ReopenTicketResponse struct {
+type ReopenThreadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
+	Thread        *Thread                `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ReopenTicketResponse) Reset() {
-	*x = ReopenTicketResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+func (x *ReopenThreadResponse) Reset() {
+	*x = ReopenThreadResponse{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ReopenTicketResponse) String() string {
+func (x *ReopenThreadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ReopenTicketResponse) ProtoMessage() {}
+func (*ReopenThreadResponse) ProtoMessage() {}
 
-func (x *ReopenTicketResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+func (x *ReopenThreadResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3475,24 +3331,24 @@ func (x *ReopenTicketResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ReopenTicketResponse.ProtoReflect.Descriptor instead.
-func (*ReopenTicketResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{41}
+// Deprecated: Use ReopenThreadResponse.ProtoReflect.Descriptor instead.
+func (*ReopenThreadResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{39}
 }
 
-func (x *ReopenTicketResponse) GetTicket() *Ticket {
+func (x *ReopenThreadResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
-// Explicit view required. PUBLISHED returns only messages; OWN_DRAFTS only caller drafts. No mixed visibility pages.
+// Explicit view required. PUBLISHED returns only messages; OWN_PREPARED only caller prepared messages. No mixed visibility pages.
 type ListMessagesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string      `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string      `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string      `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	View        MessageView `protobuf:"varint,3,opt,name=view,proto3,enum=syntra.v1.MessageView" json:"view,omitempty"`
 	// Zero defaults to 25; explicit 1..100 only.
 	PageSize int32 `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
@@ -3506,7 +3362,7 @@ type ListMessagesRequest struct {
 
 func (x *ListMessagesRequest) Reset() {
 	*x = ListMessagesRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3518,7 +3374,7 @@ func (x *ListMessagesRequest) String() string {
 func (*ListMessagesRequest) ProtoMessage() {}
 
 func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3531,7 +3387,7 @@ func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesRequest.ProtoReflect.Descriptor instead.
 func (*ListMessagesRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{42}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *ListMessagesRequest) GetWorkspaceId() string {
@@ -3541,9 +3397,9 @@ func (x *ListMessagesRequest) GetWorkspaceId() string {
 	return ""
 }
 
-func (x *ListMessagesRequest) GetTicketId() string {
+func (x *ListMessagesRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
@@ -3577,9 +3433,9 @@ func (x *ListMessagesRequest) GetNewestFirst() bool {
 }
 
 type ListMessagesResponse struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	Messages []*PublishedMessage    `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
-	Drafts   []*MessageDraft        `protobuf:"bytes,2,rep,name=drafts,proto3" json:"drafts,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Messages         []*PublishedMessage    `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	PreparedMessages []*PreparedMessage     `protobuf:"bytes,2,rep,name=prepared_messages,json=preparedMessages,proto3" json:"prepared_messages,omitempty"`
 	// Empty at end; same opaque cursor policy as the request.
 	NextPageToken string `protobuf:"bytes,3,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -3588,7 +3444,7 @@ type ListMessagesResponse struct {
 
 func (x *ListMessagesResponse) Reset() {
 	*x = ListMessagesResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3600,7 +3456,7 @@ func (x *ListMessagesResponse) String() string {
 func (*ListMessagesResponse) ProtoMessage() {}
 
 func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3613,7 +3469,7 @@ func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesResponse.ProtoReflect.Descriptor instead.
 func (*ListMessagesResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{43}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ListMessagesResponse) GetMessages() []*PublishedMessage {
@@ -3623,9 +3479,9 @@ func (x *ListMessagesResponse) GetMessages() []*PublishedMessage {
 	return nil
 }
 
-func (x *ListMessagesResponse) GetDrafts() []*MessageDraft {
+func (x *ListMessagesResponse) GetPreparedMessages() []*PreparedMessage {
 	if x != nil {
-		return x.Drafts
+		return x.PreparedMessages
 	}
 	return nil
 }
@@ -3637,44 +3493,44 @@ func (x *ListMessagesResponse) GetNextPageToken() string {
 	return ""
 }
 
-// Absent draft_id and expected_draft_revision creates a new draft on a shared nonclosed ticket; both present updates own draft. Tokens bind exact content.
-type SaveDraftRequest struct {
+// Absent prepared_message_id and expected_prepared_message_revision creates a new prepared message on an open thread; both present updates the author's prepared message. Tokens bind exact content.
+type SavePreparedMessageRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
-	WorkspaceId string  `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string  `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
-	DraftId     *string `protobuf:"bytes,3,opt,name=draft_id,json=draftId,proto3,oneof" json:"draft_id,omitempty"`
+	WorkspaceId       string  `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ThreadId          string  `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	PreparedMessageId *string `protobuf:"bytes,3,opt,name=prepared_message_id,json=preparedMessageId,proto3,oneof" json:"prepared_message_id,omitempty"`
 	// Exactly one explicit application user UUID; must be an active enabled member at save/publication.
 	RecipientUserId string `protobuf:"bytes,4,opt,name=recipient_user_id,json=recipientUserId,proto3" json:"recipient_user_id,omitempty"`
-	// UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+	// UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
 	Summary string `protobuf:"bytes,5,opt,name=summary,proto3" json:"summary,omitempty"`
-	// Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+	// Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
 	ContextMarkdown string `protobuf:"bytes,6,opt,name=context_markdown,json=contextMarkdown,proto3" json:"context_markdown,omitempty"`
-	// Exact draft revision; absent only on draft creation.
-	ExpectedDraftRevision *string `protobuf:"bytes,7,opt,name=expected_draft_revision,json=expectedDraftRevision,proto3,oneof" json:"expected_draft_revision,omitempty"`
-	// Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
-	ExpectedTicketRevision string `protobuf:"bytes,8,opt,name=expected_ticket_revision,json=expectedTicketRevision,proto3" json:"expected_ticket_revision,omitempty"`
+	// Exact prepared message revision; absent only on prepared-message creation.
+	ExpectedPreparedMessageRevision *string `protobuf:"bytes,7,opt,name=expected_prepared_message_revision,json=expectedPreparedMessageRevision,proto3,oneof" json:"expected_prepared_message_revision,omitempty"`
+	// Required exact thread revision; a new publication invalidates stale lifecycle/publication operations.
+	ExpectedThreadRevision string `protobuf:"bytes,8,opt,name=expected_thread_revision,json=expectedThreadRevision,proto3" json:"expected_thread_revision,omitempty"`
 	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
 	RequestId     string `protobuf:"bytes,9,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SaveDraftRequest) Reset() {
-	*x = SaveDraftRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
+func (x *SavePreparedMessageRequest) Reset() {
+	*x = SavePreparedMessageRequest{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SaveDraftRequest) String() string {
+func (x *SavePreparedMessageRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SaveDraftRequest) ProtoMessage() {}
+func (*SavePreparedMessageRequest) ProtoMessage() {}
 
-func (x *SaveDraftRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
+func (x *SavePreparedMessageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3685,98 +3541,98 @@ func (x *SaveDraftRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SaveDraftRequest.ProtoReflect.Descriptor instead.
-func (*SaveDraftRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{44}
+// Deprecated: Use SavePreparedMessageRequest.ProtoReflect.Descriptor instead.
+func (*SavePreparedMessageRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{42}
 }
 
-func (x *SaveDraftRequest) GetWorkspaceId() string {
+func (x *SavePreparedMessageRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetTicketId() string {
+func (x *SavePreparedMessageRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetDraftId() string {
-	if x != nil && x.DraftId != nil {
-		return *x.DraftId
+func (x *SavePreparedMessageRequest) GetPreparedMessageId() string {
+	if x != nil && x.PreparedMessageId != nil {
+		return *x.PreparedMessageId
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetRecipientUserId() string {
+func (x *SavePreparedMessageRequest) GetRecipientUserId() string {
 	if x != nil {
 		return x.RecipientUserId
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetSummary() string {
+func (x *SavePreparedMessageRequest) GetSummary() string {
 	if x != nil {
 		return x.Summary
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetContextMarkdown() string {
+func (x *SavePreparedMessageRequest) GetContextMarkdown() string {
 	if x != nil {
 		return x.ContextMarkdown
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetExpectedDraftRevision() string {
-	if x != nil && x.ExpectedDraftRevision != nil {
-		return *x.ExpectedDraftRevision
+func (x *SavePreparedMessageRequest) GetExpectedPreparedMessageRevision() string {
+	if x != nil && x.ExpectedPreparedMessageRevision != nil {
+		return *x.ExpectedPreparedMessageRevision
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetExpectedTicketRevision() string {
+func (x *SavePreparedMessageRequest) GetExpectedThreadRevision() string {
 	if x != nil {
-		return x.ExpectedTicketRevision
+		return x.ExpectedThreadRevision
 	}
 	return ""
 }
 
-func (x *SaveDraftRequest) GetRequestId() string {
+func (x *SavePreparedMessageRequest) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
 	return ""
 }
 
-type SaveDraftResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Draft *MessageDraft          `protobuf:"bytes,1,opt,name=draft,proto3" json:"draft,omitempty"`
-	// Current ticket token; changing the initial recipient advances it atomically.
-	Ticket        *Ticket `protobuf:"bytes,2,opt,name=ticket,proto3" json:"ticket,omitempty"`
+type SavePreparedMessageResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	PreparedMessage *PreparedMessage       `protobuf:"bytes,1,opt,name=prepared_message,json=preparedMessage,proto3" json:"prepared_message,omitempty"`
+	// Current thread token; changing the initial recipient advances it atomically.
+	Thread        *Thread `protobuf:"bytes,2,opt,name=thread,proto3" json:"thread,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SaveDraftResponse) Reset() {
-	*x = SaveDraftResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
+func (x *SavePreparedMessageResponse) Reset() {
+	*x = SavePreparedMessageResponse{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SaveDraftResponse) String() string {
+func (x *SavePreparedMessageResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SaveDraftResponse) ProtoMessage() {}
+func (*SavePreparedMessageResponse) ProtoMessage() {}
 
-func (x *SaveDraftResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
+func (x *SavePreparedMessageResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3787,36 +3643,36 @@ func (x *SaveDraftResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SaveDraftResponse.ProtoReflect.Descriptor instead.
-func (*SaveDraftResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{45}
+// Deprecated: Use SavePreparedMessageResponse.ProtoReflect.Descriptor instead.
+func (*SavePreparedMessageResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{43}
 }
 
-func (x *SaveDraftResponse) GetDraft() *MessageDraft {
+func (x *SavePreparedMessageResponse) GetPreparedMessage() *PreparedMessage {
 	if x != nil {
-		return x.Draft
+		return x.PreparedMessage
 	}
 	return nil
 }
 
-func (x *SaveDraftResponse) GetTicket() *Ticket {
+func (x *SavePreparedMessageResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
 
-// Publishes the persisted exact draft using both opaque revisions. First publication shares ticket+message atomically and assigns its exact recipient.
+// Publishes the persisted exact prepared message using both opaque revisions. First publication opens the pending thread and publishes its message atomically and assigns its exact recipient.
 type PublishMessageRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
-	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
-	DraftId     string `protobuf:"bytes,3,opt,name=draft_id,json=draftId,proto3" json:"draft_id,omitempty"`
-	// Exact draft revision; absent only on draft creation.
-	ExpectedDraftRevision string `protobuf:"bytes,4,opt,name=expected_draft_revision,json=expectedDraftRevision,proto3" json:"expected_draft_revision,omitempty"`
-	// Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
-	ExpectedTicketRevision string `protobuf:"bytes,5,opt,name=expected_ticket_revision,json=expectedTicketRevision,proto3" json:"expected_ticket_revision,omitempty"`
+	WorkspaceId       string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ThreadId          string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	PreparedMessageId string `protobuf:"bytes,3,opt,name=prepared_message_id,json=preparedMessageId,proto3" json:"prepared_message_id,omitempty"`
+	// Exact prepared message revision; absent only on prepared-message creation.
+	ExpectedPreparedMessageRevision string `protobuf:"bytes,4,opt,name=expected_prepared_message_revision,json=expectedPreparedMessageRevision,proto3" json:"expected_prepared_message_revision,omitempty"`
+	// Required exact thread revision; a new publication invalidates stale lifecycle/publication operations.
+	ExpectedThreadRevision string `protobuf:"bytes,5,opt,name=expected_thread_revision,json=expectedThreadRevision,proto3" json:"expected_thread_revision,omitempty"`
 	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
 	RequestId     string `protobuf:"bytes,6,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -3825,7 +3681,7 @@ type PublishMessageRequest struct {
 
 func (x *PublishMessageRequest) Reset() {
 	*x = PublishMessageRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3837,7 +3693,7 @@ func (x *PublishMessageRequest) String() string {
 func (*PublishMessageRequest) ProtoMessage() {}
 
 func (x *PublishMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3850,7 +3706,7 @@ func (x *PublishMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishMessageRequest.ProtoReflect.Descriptor instead.
 func (*PublishMessageRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{46}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *PublishMessageRequest) GetWorkspaceId() string {
@@ -3860,30 +3716,30 @@ func (x *PublishMessageRequest) GetWorkspaceId() string {
 	return ""
 }
 
-func (x *PublishMessageRequest) GetTicketId() string {
+func (x *PublishMessageRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *PublishMessageRequest) GetDraftId() string {
+func (x *PublishMessageRequest) GetPreparedMessageId() string {
 	if x != nil {
-		return x.DraftId
+		return x.PreparedMessageId
 	}
 	return ""
 }
 
-func (x *PublishMessageRequest) GetExpectedDraftRevision() string {
+func (x *PublishMessageRequest) GetExpectedPreparedMessageRevision() string {
 	if x != nil {
-		return x.ExpectedDraftRevision
+		return x.ExpectedPreparedMessageRevision
 	}
 	return ""
 }
 
-func (x *PublishMessageRequest) GetExpectedTicketRevision() string {
+func (x *PublishMessageRequest) GetExpectedThreadRevision() string {
 	if x != nil {
-		return x.ExpectedTicketRevision
+		return x.ExpectedThreadRevision
 	}
 	return ""
 }
@@ -3895,10 +3751,10 @@ func (x *PublishMessageRequest) GetRequestId() string {
 	return ""
 }
 
-// Published content is immutable; later publication preserves nonclosed lifecycle state and advances ticket revision.
+// Published content is immutable; later publication preserves nonclosed lifecycle state and advances thread revision.
 type PublishMessageResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ticket        *Ticket                `protobuf:"bytes,1,opt,name=ticket,proto3" json:"ticket,omitempty"`
+	Thread        *Thread                `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
 	Message       *PublishedMessage      `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3906,7 +3762,7 @@ type PublishMessageResponse struct {
 
 func (x *PublishMessageResponse) Reset() {
 	*x = PublishMessageResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3918,7 +3774,7 @@ func (x *PublishMessageResponse) String() string {
 func (*PublishMessageResponse) ProtoMessage() {}
 
 func (x *PublishMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3931,12 +3787,12 @@ func (x *PublishMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishMessageResponse.ProtoReflect.Descriptor instead.
 func (*PublishMessageResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{47}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{45}
 }
 
-func (x *PublishMessageResponse) GetTicket() *Ticket {
+func (x *PublishMessageResponse) GetThread() *Thread {
 	if x != nil {
-		return x.Ticket
+		return x.Thread
 	}
 	return nil
 }
@@ -3948,38 +3804,38 @@ func (x *PublishMessageResponse) GetMessage() *PublishedMessage {
 	return nil
 }
 
-// Author-only. Discarding the initial draft also discards its still-private ticket atomically. Never deletes published content.
-type DiscardDraftRequest struct {
+// Author-only. Discarding the initial prepared message also discards its still-private thread atomically. Never deletes published content.
+type DiscardPreparedMessageRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
-	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
-	DraftId     string `protobuf:"bytes,3,opt,name=draft_id,json=draftId,proto3" json:"draft_id,omitempty"`
-	// Exact draft revision; absent only on draft creation.
-	ExpectedDraftRevision string `protobuf:"bytes,4,opt,name=expected_draft_revision,json=expectedDraftRevision,proto3" json:"expected_draft_revision,omitempty"`
-	// Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
-	ExpectedTicketRevision string `protobuf:"bytes,5,opt,name=expected_ticket_revision,json=expectedTicketRevision,proto3" json:"expected_ticket_revision,omitempty"`
+	WorkspaceId       string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ThreadId          string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	PreparedMessageId string `protobuf:"bytes,3,opt,name=prepared_message_id,json=preparedMessageId,proto3" json:"prepared_message_id,omitempty"`
+	// Exact prepared message revision; absent only on prepared-message creation.
+	ExpectedPreparedMessageRevision string `protobuf:"bytes,4,opt,name=expected_prepared_message_revision,json=expectedPreparedMessageRevision,proto3" json:"expected_prepared_message_revision,omitempty"`
+	// Required exact thread revision; a new publication invalidates stale lifecycle/publication operations.
+	ExpectedThreadRevision string `protobuf:"bytes,5,opt,name=expected_thread_revision,json=expectedThreadRevision,proto3" json:"expected_thread_revision,omitempty"`
 	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
 	RequestId     string `protobuf:"bytes,6,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DiscardDraftRequest) Reset() {
-	*x = DiscardDraftRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
+func (x *DiscardPreparedMessageRequest) Reset() {
+	*x = DiscardPreparedMessageRequest{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DiscardDraftRequest) String() string {
+func (x *DiscardPreparedMessageRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DiscardDraftRequest) ProtoMessage() {}
+func (*DiscardPreparedMessageRequest) ProtoMessage() {}
 
-func (x *DiscardDraftRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
+func (x *DiscardPreparedMessageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3990,76 +3846,76 @@ func (x *DiscardDraftRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DiscardDraftRequest.ProtoReflect.Descriptor instead.
-func (*DiscardDraftRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{48}
+// Deprecated: Use DiscardPreparedMessageRequest.ProtoReflect.Descriptor instead.
+func (*DiscardPreparedMessageRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{46}
 }
 
-func (x *DiscardDraftRequest) GetWorkspaceId() string {
+func (x *DiscardPreparedMessageRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *DiscardDraftRequest) GetTicketId() string {
+func (x *DiscardPreparedMessageRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *DiscardDraftRequest) GetDraftId() string {
+func (x *DiscardPreparedMessageRequest) GetPreparedMessageId() string {
 	if x != nil {
-		return x.DraftId
+		return x.PreparedMessageId
 	}
 	return ""
 }
 
-func (x *DiscardDraftRequest) GetExpectedDraftRevision() string {
+func (x *DiscardPreparedMessageRequest) GetExpectedPreparedMessageRevision() string {
 	if x != nil {
-		return x.ExpectedDraftRevision
+		return x.ExpectedPreparedMessageRevision
 	}
 	return ""
 }
 
-func (x *DiscardDraftRequest) GetExpectedTicketRevision() string {
+func (x *DiscardPreparedMessageRequest) GetExpectedThreadRevision() string {
 	if x != nil {
-		return x.ExpectedTicketRevision
+		return x.ExpectedThreadRevision
 	}
 	return ""
 }
 
-func (x *DiscardDraftRequest) GetRequestId() string {
+func (x *DiscardPreparedMessageRequest) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
 	return ""
 }
 
-type DiscardDraftResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	DraftId         string                 `protobuf:"bytes,1,opt,name=draft_id,json=draftId,proto3" json:"draft_id,omitempty"`
-	TicketDiscarded bool                   `protobuf:"varint,2,opt,name=ticket_discarded,json=ticketDiscarded,proto3" json:"ticket_discarded,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+type DiscardPreparedMessageResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	PreparedMessageId string                 `protobuf:"bytes,1,opt,name=prepared_message_id,json=preparedMessageId,proto3" json:"prepared_message_id,omitempty"`
+	ThreadDiscarded   bool                   `protobuf:"varint,2,opt,name=thread_discarded,json=threadDiscarded,proto3" json:"thread_discarded,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
-func (x *DiscardDraftResponse) Reset() {
-	*x = DiscardDraftResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
+func (x *DiscardPreparedMessageResponse) Reset() {
+	*x = DiscardPreparedMessageResponse{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DiscardDraftResponse) String() string {
+func (x *DiscardPreparedMessageResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DiscardDraftResponse) ProtoMessage() {}
+func (*DiscardPreparedMessageResponse) ProtoMessage() {}
 
-func (x *DiscardDraftResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
+func (x *DiscardPreparedMessageResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4070,21 +3926,21 @@ func (x *DiscardDraftResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DiscardDraftResponse.ProtoReflect.Descriptor instead.
-func (*DiscardDraftResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{49}
+// Deprecated: Use DiscardPreparedMessageResponse.ProtoReflect.Descriptor instead.
+func (*DiscardPreparedMessageResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{47}
 }
 
-func (x *DiscardDraftResponse) GetDraftId() string {
+func (x *DiscardPreparedMessageResponse) GetPreparedMessageId() string {
 	if x != nil {
-		return x.DraftId
+		return x.PreparedMessageId
 	}
 	return ""
 }
 
-func (x *DiscardDraftResponse) GetTicketDiscarded() bool {
+func (x *DiscardPreparedMessageResponse) GetThreadDiscarded() bool {
 	if x != nil {
-		return x.TicketDiscarded
+		return x.ThreadDiscarded
 	}
 	return false
 }
@@ -4094,7 +3950,7 @@ type MarkReadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	MessageId   string `protobuf:"bytes,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
 	RequestId     string `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
@@ -4104,7 +3960,7 @@ type MarkReadRequest struct {
 
 func (x *MarkReadRequest) Reset() {
 	*x = MarkReadRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4116,7 +3972,7 @@ func (x *MarkReadRequest) String() string {
 func (*MarkReadRequest) ProtoMessage() {}
 
 func (x *MarkReadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4129,7 +3985,7 @@ func (x *MarkReadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReadRequest.ProtoReflect.Descriptor instead.
 func (*MarkReadRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{50}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *MarkReadRequest) GetWorkspaceId() string {
@@ -4139,9 +3995,9 @@ func (x *MarkReadRequest) GetWorkspaceId() string {
 	return ""
 }
 
-func (x *MarkReadRequest) GetTicketId() string {
+func (x *MarkReadRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
@@ -4169,7 +4025,7 @@ type MarkReadResponse struct {
 
 func (x *MarkReadResponse) Reset() {
 	*x = MarkReadResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4181,7 +4037,7 @@ func (x *MarkReadResponse) String() string {
 func (*MarkReadResponse) ProtoMessage() {}
 
 func (x *MarkReadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4194,7 +4050,7 @@ func (x *MarkReadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReadResponse.ProtoReflect.Descriptor instead.
 func (*MarkReadResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{51}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *MarkReadResponse) GetReceipt() *RecipientReceipt {
@@ -4204,12 +4060,12 @@ func (x *MarkReadResponse) GetReceipt() *RecipientReceipt {
 	return nil
 }
 
-// Only exact authenticated message recipient with existing read; cannot affect another message, ticket lifecycle or recipient.
+// Only exact authenticated message recipient with existing read; cannot affect another message, thread lifecycle or recipient.
 type MarkReviewedRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	MessageId   string `protobuf:"bytes,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
 	RequestId     string `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
@@ -4219,7 +4075,7 @@ type MarkReviewedRequest struct {
 
 func (x *MarkReviewedRequest) Reset() {
 	*x = MarkReviewedRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4231,7 +4087,7 @@ func (x *MarkReviewedRequest) String() string {
 func (*MarkReviewedRequest) ProtoMessage() {}
 
 func (x *MarkReviewedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4244,7 +4100,7 @@ func (x *MarkReviewedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReviewedRequest.ProtoReflect.Descriptor instead.
 func (*MarkReviewedRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{52}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *MarkReviewedRequest) GetWorkspaceId() string {
@@ -4254,9 +4110,9 @@ func (x *MarkReviewedRequest) GetWorkspaceId() string {
 	return ""
 }
 
-func (x *MarkReviewedRequest) GetTicketId() string {
+func (x *MarkReviewedRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
@@ -4284,7 +4140,7 @@ type MarkReviewedResponse struct {
 
 func (x *MarkReviewedResponse) Reset() {
 	*x = MarkReviewedResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4296,7 +4152,7 @@ func (x *MarkReviewedResponse) String() string {
 func (*MarkReviewedResponse) ProtoMessage() {}
 
 func (x *MarkReviewedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4309,7 +4165,7 @@ func (x *MarkReviewedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReviewedResponse.ProtoReflect.Descriptor instead.
 func (*MarkReviewedResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{53}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *MarkReviewedResponse) GetReceipt() *RecipientReceipt {
@@ -4335,7 +4191,7 @@ type ListInboxItemsRequest struct {
 
 func (x *ListInboxItemsRequest) Reset() {
 	*x = ListInboxItemsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4347,7 +4203,7 @@ func (x *ListInboxItemsRequest) String() string {
 func (*ListInboxItemsRequest) ProtoMessage() {}
 
 func (x *ListInboxItemsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4360,7 +4216,7 @@ func (x *ListInboxItemsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInboxItemsRequest.ProtoReflect.Descriptor instead.
 func (*ListInboxItemsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{54}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *ListInboxItemsRequest) GetWorkspaceId() string {
@@ -4402,7 +4258,7 @@ type ListInboxItemsResponse struct {
 
 func (x *ListInboxItemsResponse) Reset() {
 	*x = ListInboxItemsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4414,7 +4270,7 @@ func (x *ListInboxItemsResponse) String() string {
 func (*ListInboxItemsResponse) ProtoMessage() {}
 
 func (x *ListInboxItemsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4427,7 +4283,7 @@ func (x *ListInboxItemsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInboxItemsResponse.ProtoReflect.Descriptor instead.
 func (*ListInboxItemsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{55}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *ListInboxItemsResponse) GetItems() []*InboxItem {
@@ -4444,12 +4300,12 @@ func (x *ListInboxItemsResponse) GetNextPageToken() string {
 	return ""
 }
 
-// Published history only; owner of a private draft gets an empty page. Other actors receive NotFound.
-type ListTicketEventsRequest struct {
+// Published history only; owner of a pending thread gets an empty page. Other actors receive NotFound.
+type ListThreadEventsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
 	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	TicketId    string `protobuf:"bytes,2,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
 	// Zero defaults to 25; explicit 1..100 only.
 	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
@@ -4460,21 +4316,21 @@ type ListTicketEventsRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListTicketEventsRequest) Reset() {
-	*x = ListTicketEventsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
+func (x *ListThreadEventsRequest) Reset() {
+	*x = ListThreadEventsRequest{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListTicketEventsRequest) String() string {
+func (x *ListThreadEventsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListTicketEventsRequest) ProtoMessage() {}
+func (*ListThreadEventsRequest) ProtoMessage() {}
 
-func (x *ListTicketEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
+func (x *ListThreadEventsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4485,70 +4341,70 @@ func (x *ListTicketEventsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListTicketEventsRequest.ProtoReflect.Descriptor instead.
-func (*ListTicketEventsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{56}
+// Deprecated: Use ListThreadEventsRequest.ProtoReflect.Descriptor instead.
+func (*ListThreadEventsRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{54}
 }
 
-func (x *ListTicketEventsRequest) GetWorkspaceId() string {
+func (x *ListThreadEventsRequest) GetWorkspaceId() string {
 	if x != nil {
 		return x.WorkspaceId
 	}
 	return ""
 }
 
-func (x *ListTicketEventsRequest) GetTicketId() string {
+func (x *ListThreadEventsRequest) GetThreadId() string {
 	if x != nil {
-		return x.TicketId
+		return x.ThreadId
 	}
 	return ""
 }
 
-func (x *ListTicketEventsRequest) GetPageSize() int32 {
+func (x *ListThreadEventsRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
 	}
 	return 0
 }
 
-func (x *ListTicketEventsRequest) GetPageToken() string {
+func (x *ListThreadEventsRequest) GetPageToken() string {
 	if x != nil {
 		return x.PageToken
 	}
 	return ""
 }
 
-func (x *ListTicketEventsRequest) GetNewestFirst() bool {
+func (x *ListThreadEventsRequest) GetNewestFirst() bool {
 	if x != nil {
 		return x.NewestFirst
 	}
 	return false
 }
 
-type ListTicketEventsResponse struct {
+type ListThreadEventsResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
-	Events []*TicketEvent         `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
+	Events []*ThreadEvent         `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
 	// Empty at end; same opaque cursor policy as the request.
 	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListTicketEventsResponse) Reset() {
-	*x = ListTicketEventsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
+func (x *ListThreadEventsResponse) Reset() {
+	*x = ListThreadEventsResponse{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListTicketEventsResponse) String() string {
+func (x *ListThreadEventsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListTicketEventsResponse) ProtoMessage() {}
+func (*ListThreadEventsResponse) ProtoMessage() {}
 
-func (x *ListTicketEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
+func (x *ListThreadEventsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4559,19 +4415,19 @@ func (x *ListTicketEventsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListTicketEventsResponse.ProtoReflect.Descriptor instead.
-func (*ListTicketEventsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{57}
+// Deprecated: Use ListThreadEventsResponse.ProtoReflect.Descriptor instead.
+func (*ListThreadEventsResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{55}
 }
 
-func (x *ListTicketEventsResponse) GetEvents() []*TicketEvent {
+func (x *ListThreadEventsResponse) GetEvents() []*ThreadEvent {
 	if x != nil {
 		return x.Events
 	}
 	return nil
 }
 
-func (x *ListTicketEventsResponse) GetNextPageToken() string {
+func (x *ListThreadEventsResponse) GetNextPageToken() string {
 	if x != nil {
 		return x.NextPageToken
 	}
@@ -4588,7 +4444,7 @@ type GetOverviewRequest struct {
 
 func (x *GetOverviewRequest) Reset() {
 	*x = GetOverviewRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[58]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4600,7 +4456,7 @@ func (x *GetOverviewRequest) String() string {
 func (*GetOverviewRequest) ProtoMessage() {}
 
 func (x *GetOverviewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[58]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4613,7 +4469,7 @@ func (x *GetOverviewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewRequest.ProtoReflect.Descriptor instead.
 func (*GetOverviewRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{58}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *GetOverviewRequest) GetWorkspaceId() string {
@@ -4632,7 +4488,7 @@ type GetOverviewResponse struct {
 
 func (x *GetOverviewResponse) Reset() {
 	*x = GetOverviewResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[59]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4644,7 +4500,7 @@ func (x *GetOverviewResponse) String() string {
 func (*GetOverviewResponse) ProtoMessage() {}
 
 func (x *GetOverviewResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[59]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4657,7 +4513,7 @@ func (x *GetOverviewResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewResponse.ProtoReflect.Descriptor instead.
 func (*GetOverviewResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{59}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *GetOverviewResponse) GetOverview() *Overview {
@@ -4671,7 +4527,7 @@ var File_syntra_v1_collaboration_proto protoreflect.FileDescriptor
 
 const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\n" +
-	"\x1dsyntra/v1/collaboration.proto\x12\tsyntra.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xfe\x03\n" +
+	"\x1dsyntra/v1/collaboration.proto\x12\tsyntra.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb5\x03\n" +
 	"\aProject\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x12\n" +
@@ -4684,11 +4540,10 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\brevision\x18\a \x01(\tR\brevision\x12\x1d\n" +
 	"\n" +
 	"team_count\x18\b \x01(\x04R\tteamCount\x124\n" +
-	"\x16published_ticket_count\x18\t \x01(\x04R\x14publishedTicketCount\x12*\n" +
-	"\x11open_ticket_count\x18\n" +
-	" \x01(\x04R\x0fopenTicketCount\x12G\n" +
-	" resolution_proposed_ticket_count\x18\v \x01(\x04R\x1dresolutionProposedTicketCount\x12.\n" +
-	"\x13closed_ticket_count\x18\f \x01(\x04R\x11closedTicketCount\"\xa0\x03\n" +
+	"\x16published_thread_count\x18\t \x01(\x04R\x14publishedThreadCount\x12*\n" +
+	"\x11open_thread_count\x18\n" +
+	" \x01(\x04R\x0fopenThreadCount\x12.\n" +
+	"\x13closed_thread_count\x18\f \x01(\x04R\x11closedThreadCount\"\xa0\x03\n" +
 	"\vProjectTeam\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1d\n" +
 	"\n" +
@@ -4707,8 +4562,8 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x11ProjectTeamMember\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x16\n" +
-	"\x06active\x18\x03 \x01(\bR\x06active\"\xa8\a\n" +
-	"\x06Ticket\x12\x0e\n" +
+	"\x06active\x18\x03 \x01(\bR\x06active\"\xcb\x05\n" +
+	"\x06Thread\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1d\n" +
 	"\n" +
@@ -4716,27 +4571,24 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x0fcreator_user_id\x18\x05 \x01(\tR\rcreatorUserId\x12(\n" +
 	"\x10assignee_user_id\x18\x06 \x01(\tR\x0eassigneeUserId\x12\x14\n" +
 	"\x05title\x18\a \x01(\tR\x05title\x12,\n" +
-	"\x05state\x18\t \x01(\x0e2\x16.syntra.v1.TicketStateR\x05state\x129\n" +
+	"\x05state\x18\t \x01(\x0e2\x16.syntra.v1.ThreadStateR\x05state\x129\n" +
 	"\n" +
 	"created_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12=\n" +
 	"\fpublished_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\vpublishedAt\x12\x1a\n" +
-	"\brevision\x18\r \x01(\tR\brevision\x12G\n" +
-	"\x1eresolution_proposed_by_user_id\x18\x0e \x01(\tH\x00R\x1aresolutionProposedByUserId\x88\x01\x01\x12P\n" +
-	"\x16resolution_proposed_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\x14resolutionProposedAt\x129\n" +
+	"\brevision\x18\r \x01(\tR\brevision\x129\n" +
 	"\fclosure_kind\x18\x10 \x01(\x0e2\x16.syntra.v1.ClosureKindR\vclosureKind\x12.\n" +
-	"\x11closed_by_user_id\x18\x11 \x01(\tH\x01R\x0eclosedByUserId\x88\x01\x01\x127\n" +
+	"\x11closed_by_user_id\x18\x11 \x01(\tH\x00R\x0eclosedByUserId\x88\x01\x01\x127\n" +
 	"\tclosed_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\bclosedAt\x12%\n" +
 	"\x0eclosure_reason\x18\x13 \x01(\tR\rclosureReason\x12'\n" +
-	"\x0fsummary_preview\x18\x14 \x01(\tR\x0esummaryPreviewB!\n" +
-	"\x1f_resolution_proposed_by_user_idB\x14\n" +
-	"\x12_closed_by_user_idJ\x04\b\x04\x10\x05J\x04\b\b\x10\tR\aarea_idR\bpriority\"\xa1\x03\n" +
-	"\fMessageDraft\x12\x0e\n" +
+	"\x0fsummary_preview\x18\x14 \x01(\tR\x0esummaryPreviewB\x14\n" +
+	"\x12_closed_by_user_id\"\xa4\x03\n" +
+	"\x0fPreparedMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x03 \x01(\tR\bticketId\x12$\n" +
+	"\tthread_id\x18\x03 \x01(\tR\bthreadId\x12$\n" +
 	"\x0eauthor_user_id\x18\x04 \x01(\tR\fauthorUserId\x12*\n" +
 	"\x11recipient_user_id\x18\x05 \x01(\tR\x0frecipientUserId\x12\x18\n" +
 	"\asummary\x18\x06 \x01(\tR\asummary\x12)\n" +
@@ -4751,7 +4603,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x10PublishedMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x03 \x01(\tR\bticketId\x12$\n" +
+	"\tthread_id\x18\x03 \x01(\tR\bthreadId\x12$\n" +
 	"\x0eauthor_user_id\x18\x04 \x01(\tR\fauthorUserId\x12*\n" +
 	"\x11recipient_user_id\x18\x05 \x01(\tR\x0frecipientUserId\x12\x18\n" +
 	"\asummary\x18\x06 \x01(\tR\asummary\x12)\n" +
@@ -4764,13 +4616,13 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x11recipient_user_id\x18\x02 \x01(\tR\x0frecipientUserId\x123\n" +
 	"\aread_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06readAt\x12;\n" +
 	"\vreviewed_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"reviewedAt\"\x83\x05\n" +
-	"\vTicketEvent\x12\x0e\n" +
+	"reviewedAt\"\x9f\x05\n" +
+	"\vThreadEvent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x03 \x01(\tR\bticketId\x12\"\n" +
+	"\tthread_id\x18\x03 \x01(\tR\bthreadId\x12\"\n" +
 	"\ractor_user_id\x18\x04 \x01(\tR\vactorUserId\x12.\n" +
-	"\x04kind\x18\x05 \x01(\x0e2\x1a.syntra.v1.TicketEventKindR\x04kind\x12;\n" +
+	"\x04kind\x18\x05 \x01(\x0e2\x1a.syntra.v1.ThreadEventKindR\x04kind\x12;\n" +
 	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"occurredAt\x12\"\n" +
 	"\n" +
@@ -4778,31 +4630,31 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x19previous_assignee_user_id\x18\b \x01(\tH\x01R\x16previousAssigneeUserId\x88\x01\x01\x12-\n" +
 	"\x10assignee_user_id\x18\t \x01(\tH\x02R\x0eassigneeUserId\x88\x01\x01\x12=\n" +
 	"\x0eprevious_state\x18\n" +
-	" \x01(\x0e2\x16.syntra.v1.TicketStateR\rpreviousState\x12,\n" +
-	"\x05state\x18\v \x01(\x0e2\x16.syntra.v1.TicketStateR\x05state\x129\n" +
+	" \x01(\x0e2\x16.syntra.v1.ThreadStateR\rpreviousState\x12,\n" +
+	"\x05state\x18\v \x01(\x0e2\x16.syntra.v1.ThreadStateR\x05state\x129\n" +
 	"\fclosure_kind\x18\f \x01(\x0e2\x16.syntra.v1.ClosureKindR\vclosureKind\x12\x16\n" +
-	"\x06reason\x18\r \x01(\tR\x06reasonB\r\n" +
+	"\x06reason\x18\r \x01(\tR\x06reason\x12\x1a\n" +
+	"\bsequence\x18\x0e \x01(\x03R\bsequenceB\r\n" +
 	"\v_message_idB\x1c\n" +
 	"\x1a_previous_assignee_user_idB\x13\n" +
-	"\x11_assignee_user_id\"\x9c\x01\n" +
+	"\x11_assignee_user_id\"\xb4\x01\n" +
 	"\tInboxItem\x125\n" +
 	"\amessage\x18\x01 \x01(\v2\x1b.syntra.v1.PublishedMessageR\amessage\x12)\n" +
-	"\x06ticket\x18\x02 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\x12-\n" +
-	"\x05draft\x18\x03 \x01(\v2\x17.syntra.v1.MessageDraftR\x05draft\"\x9c\x05\n" +
+	"\x06thread\x18\x02 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\x12E\n" +
+	"\x10prepared_message\x18\x03 \x01(\v2\x1a.syntra.v1.PreparedMessageR\x0fpreparedMessage\"\xdd\x04\n" +
 	"\bOverview\x124\n" +
-	"\x16published_ticket_count\x18\x01 \x01(\x04R\x14publishedTicketCount\x12*\n" +
-	"\x11open_ticket_count\x18\x02 \x01(\x04R\x0fopenTicketCount\x12G\n" +
-	" resolution_proposed_ticket_count\x18\x03 \x01(\x04R\x1dresolutionProposedTicketCount\x12.\n" +
-	"\x13closed_ticket_count\x18\x04 \x01(\x04R\x11closedTicketCount\x12?\n" +
-	"\x1cassigned_active_ticket_count\x18\x05 \x01(\x04R\x19assignedActiveTicketCount\x12?\n" +
+	"\x16published_thread_count\x18\x01 \x01(\x04R\x14publishedThreadCount\x12*\n" +
+	"\x11open_thread_count\x18\x02 \x01(\x04R\x0fopenThreadCount\x12.\n" +
+	"\x13closed_thread_count\x18\x04 \x01(\x04R\x11closedThreadCount\x12?\n" +
+	"\x1cassigned_active_thread_count\x18\x05 \x01(\x04R\x19assignedActiveThreadCount\x12?\n" +
 	"\x1cpending_review_message_count\x18\x06 \x01(\x04R\x19pendingReviewMessageCount\x120\n" +
-	"\x14unread_message_count\x18\a \x01(\x04R\x12unreadMessageCount\x123\n" +
-	"\x16own_draft_ticket_count\x18\b \x01(\x04R\x13ownDraftTicketCount\x12/\n" +
+	"\x14unread_message_count\x18\a \x01(\x04R\x12unreadMessageCount\x127\n" +
+	"\x18own_pending_thread_count\x18\b \x01(\x04R\x15ownPendingThreadCount\x12/\n" +
 	"\x05as_of\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x04asOf\x12#\n" +
 	"\rproject_count\x18\n" +
 	" \x01(\x04R\fprojectCount\x12?\n" +
-	"\x1cawaiting_reply_message_count\x18\v \x01(\x04R\x19awaitingReplyMessageCount\x125\n" +
-	"\x17own_draft_message_count\x18\f \x01(\x04R\x14ownDraftMessageCount\"t\n" +
+	"\x1cawaiting_reply_message_count\x18\v \x01(\x04R\x19awaitingReplyMessageCount\x12;\n" +
+	"\x1aown_prepared_message_count\x18\f \x01(\x04R\x17ownPreparedMessageCount\"t\n" +
 	"\x13ListProjectsRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
@@ -4854,7 +4706,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\"\x7f\n" +
 	"\x18ListProjectTeamsResponse\x12;\n" +
 	"\rproject_teams\x18\x01 \x03(\v2\x16.syntra.v1.ProjectTeamR\fprojectTeams\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xac\x02\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x9c\x02\n" +
 	"\x15SetProjectTeamRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1d\n" +
 	"\n" +
@@ -4864,7 +4716,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\n" +
 	"request_id\x18\x06 \x01(\tR\trequestId\x12*\n" +
 	"\x11excluded_user_ids\x18\a \x03(\tR\x0fexcludedUserIds\x120\n" +
-	"\x14inherit_team_members\x18\b \x01(\bR\x12inheritTeamMembersJ\x04\b\x04\x10\x05R\buser_ids\"S\n" +
+	"\x14inherit_team_members\x18\b \x01(\bR\x12inheritTeamMembers\"S\n" +
 	"\x16SetProjectTeamResponse\x129\n" +
 	"\fproject_team\x18\x01 \x01(\v2\x16.syntra.v1.ProjectTeamR\vprojectTeam\"\xc1\x01\n" +
 	"\x18RemoveProjectTeamRequest\x12!\n" +
@@ -4875,31 +4727,31 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x11expected_revision\x18\x04 \x01(\tR\x10expectedRevision\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x05 \x01(\tR\trequestId\"\x1b\n" +
-	"\x19RemoveProjectTeamResponse\"\xfa\x02\n" +
-	"\x12ListTicketsRequest\x12!\n" +
+	"\x19RemoveProjectTeamResponse\"\xeb\x02\n" +
+	"\x12ListThreadsRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\"\n" +
 	"\n" +
 	"project_id\x18\x02 \x01(\tH\x00R\tprojectId\x88\x01\x01\x12,\n" +
-	"\x05state\x18\x04 \x01(\x0e2\x16.syntra.v1.TicketStateR\x05state\x12-\n" +
+	"\x05state\x18\x04 \x01(\x0e2\x16.syntra.v1.ThreadStateR\x05state\x12-\n" +
 	"\x10assignee_user_id\x18\x05 \x01(\tH\x01R\x0eassigneeUserId\x88\x01\x01\x12\x14\n" +
 	"\x05query\x18\x06 \x01(\tR\x05query\x12;\n" +
 	"\n" +
-	"visibility\x18\a \x01(\x0e2\x1b.syntra.v1.TicketVisibilityR\n" +
+	"visibility\x18\a \x01(\x0e2\x1b.syntra.v1.ThreadVisibilityR\n" +
 	"visibility\x12\x1b\n" +
 	"\tpage_size\x18\b \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
 	"page_token\x18\t \x01(\tR\tpageTokenB\r\n" +
 	"\v_project_idB\x13\n" +
-	"\x11_assignee_user_idJ\x04\b\x03\x10\x04R\aarea_id\"j\n" +
-	"\x13ListTicketsResponse\x12+\n" +
-	"\atickets\x18\x01 \x03(\v2\x11.syntra.v1.TicketR\atickets\x12&\n" +
+	"\x11_assignee_user_id\"j\n" +
+	"\x13ListThreadsResponse\x12+\n" +
+	"\athreads\x18\x01 \x03(\v2\x11.syntra.v1.ThreadR\athreads\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"R\n" +
-	"\x10GetTicketRequest\x12!\n" +
+	"\x10GetThreadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\">\n" +
-	"\x11GetTicketResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\x9c\x02\n" +
-	"\x13CreateTicketRequest\x12!\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\">\n" +
+	"\x11GetThreadResponse\x12)\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\xfd\x01\n" +
+	"\x13CreateThreadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x14\n" +
@@ -4908,108 +4760,100 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\asummary\x18\a \x01(\tR\asummary\x12)\n" +
 	"\x10context_markdown\x18\b \x01(\tR\x0fcontextMarkdown\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\t \x01(\tR\trequestIdJ\x04\b\x03\x10\x04J\x04\b\x05\x10\x06R\aarea_idR\bpriority\"\x7f\n" +
-	"\x14CreateTicketResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\x12<\n" +
-	"\rinitial_draft\x18\x02 \x01(\v2\x17.syntra.v1.MessageDraftR\finitialDraft\"\xc7\x01\n" +
-	"\x13UpdateTicketRequest\x12!\n" +
+	"request_id\x18\t \x01(\tR\trequestId\"\x97\x01\n" +
+	"\x14CreateThreadResponse\x12)\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\x12T\n" +
+	"\x18initial_prepared_message\x18\x02 \x01(\v2\x1a.syntra.v1.PreparedMessageR\x16initialPreparedMessage\"\xb7\x01\n" +
+	"\x13UpdateThreadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x14\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12+\n" +
 	"\x11expected_revision\x18\x05 \x01(\tR\x10expectedRevision\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\x06 \x01(\tR\trequestIdJ\x04\b\x04\x10\x05R\bpriority\"A\n" +
-	"\x14UpdateTicketResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\xcb\x01\n" +
-	"\x13AssignTicketRequest\x12!\n" +
+	"request_id\x18\x06 \x01(\tR\trequestId\"A\n" +
+	"\x14UpdateThreadResponse\x12)\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\xcb\x01\n" +
+	"\x13AssignThreadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12(\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12(\n" +
 	"\x10assignee_user_id\x18\x03 \x01(\tR\x0eassigneeUserId\x12+\n" +
 	"\x11expected_revision\x18\x04 \x01(\tR\x10expectedRevision\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x05 \x01(\tR\trequestId\"A\n" +
-	"\x14AssignTicketResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\xa6\x01\n" +
-	"\x18ProposeResolutionRequest\x12!\n" +
+	"\x14AssignThreadResponse\x12)\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\xe4\x01\n" +
+	"\x12CloseThreadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12+\n" +
-	"\x11expected_revision\x18\x03 \x01(\tR\x10expectedRevision\x12\x1d\n" +
-	"\n" +
-	"request_id\x18\x04 \x01(\tR\trequestId\"F\n" +
-	"\x19ProposeResolutionResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\xe4\x01\n" +
-	"\x12CloseTicketRequest\x12!\n" +
-	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12*\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12*\n" +
 	"\x04kind\x18\x03 \x01(\x0e2\x16.syntra.v1.ClosureKindR\x04kind\x12\x16\n" +
 	"\x06reason\x18\x04 \x01(\tR\x06reason\x12+\n" +
 	"\x11expected_revision\x18\x05 \x01(\tR\x10expectedRevision\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x06 \x01(\tR\trequestId\"@\n" +
-	"\x13CloseTicketResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\xb9\x01\n" +
-	"\x13ReopenTicketRequest\x12!\n" +
+	"\x13CloseThreadResponse\x12)\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\xb9\x01\n" +
+	"\x13ReopenThreadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x16\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12\x16\n" +
 	"\x06reason\x18\x03 \x01(\tR\x06reason\x12+\n" +
 	"\x11expected_revision\x18\x04 \x01(\tR\x10expectedRevision\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x05 \x01(\tR\trequestId\"A\n" +
-	"\x14ReopenTicketResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\xe0\x01\n" +
+	"\x14ReopenThreadResponse\x12)\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\xe0\x01\n" +
 	"\x13ListMessagesRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12*\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12*\n" +
 	"\x04view\x18\x03 \x01(\x0e2\x16.syntra.v1.MessageViewR\x04view\x12\x1b\n" +
 	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
 	"page_token\x18\x05 \x01(\tR\tpageToken\x12!\n" +
-	"\fnewest_first\x18\x06 \x01(\bR\vnewestFirst\"\xa8\x01\n" +
+	"\fnewest_first\x18\x06 \x01(\bR\vnewestFirst\"\xc0\x01\n" +
 	"\x14ListMessagesResponse\x127\n" +
-	"\bmessages\x18\x01 \x03(\v2\x1b.syntra.v1.PublishedMessageR\bmessages\x12/\n" +
-	"\x06drafts\x18\x02 \x03(\v2\x17.syntra.v1.MessageDraftR\x06drafts\x12&\n" +
-	"\x0fnext_page_token\x18\x03 \x01(\tR\rnextPageToken\"\xa2\x03\n" +
-	"\x10SaveDraftRequest\x12!\n" +
+	"\bmessages\x18\x01 \x03(\v2\x1b.syntra.v1.PublishedMessageR\bmessages\x12G\n" +
+	"\x11prepared_messages\x18\x02 \x03(\v2\x1a.syntra.v1.PreparedMessageR\x10preparedMessages\x12&\n" +
+	"\x0fnext_page_token\x18\x03 \x01(\tR\rnextPageToken\"\xec\x03\n" +
+	"\x1aSavePreparedMessageRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x1e\n" +
-	"\bdraft_id\x18\x03 \x01(\tH\x00R\adraftId\x88\x01\x01\x12*\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x123\n" +
+	"\x13prepared_message_id\x18\x03 \x01(\tH\x00R\x11preparedMessageId\x88\x01\x01\x12*\n" +
 	"\x11recipient_user_id\x18\x04 \x01(\tR\x0frecipientUserId\x12\x18\n" +
 	"\asummary\x18\x05 \x01(\tR\asummary\x12)\n" +
-	"\x10context_markdown\x18\x06 \x01(\tR\x0fcontextMarkdown\x12;\n" +
-	"\x17expected_draft_revision\x18\a \x01(\tH\x01R\x15expectedDraftRevision\x88\x01\x01\x128\n" +
-	"\x18expected_ticket_revision\x18\b \x01(\tR\x16expectedTicketRevision\x12\x1d\n" +
+	"\x10context_markdown\x18\x06 \x01(\tR\x0fcontextMarkdown\x12P\n" +
+	"\"expected_prepared_message_revision\x18\a \x01(\tH\x01R\x1fexpectedPreparedMessageRevision\x88\x01\x01\x128\n" +
+	"\x18expected_thread_revision\x18\b \x01(\tR\x16expectedThreadRevision\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\t \x01(\tR\trequestIdB\v\n" +
-	"\t_draft_idB\x1a\n" +
-	"\x18_expected_draft_revision\"m\n" +
-	"\x11SaveDraftResponse\x12-\n" +
-	"\x05draft\x18\x01 \x01(\v2\x17.syntra.v1.MessageDraftR\x05draft\x12)\n" +
-	"\x06ticket\x18\x02 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\"\x83\x02\n" +
+	"request_id\x18\t \x01(\tR\trequestIdB\x16\n" +
+	"\x14_prepared_message_idB%\n" +
+	"#_expected_prepared_message_revision\"\x8f\x01\n" +
+	"\x1bSavePreparedMessageResponse\x12E\n" +
+	"\x10prepared_message\x18\x01 \x01(\v2\x1a.syntra.v1.PreparedMessageR\x0fpreparedMessage\x12)\n" +
+	"\x06thread\x18\x02 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\xad\x02\n" +
 	"\x15PublishMessageRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x19\n" +
-	"\bdraft_id\x18\x03 \x01(\tR\adraftId\x126\n" +
-	"\x17expected_draft_revision\x18\x04 \x01(\tR\x15expectedDraftRevision\x128\n" +
-	"\x18expected_ticket_revision\x18\x05 \x01(\tR\x16expectedTicketRevision\x12\x1d\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12.\n" +
+	"\x13prepared_message_id\x18\x03 \x01(\tR\x11preparedMessageId\x12K\n" +
+	"\"expected_prepared_message_revision\x18\x04 \x01(\tR\x1fexpectedPreparedMessageRevision\x128\n" +
+	"\x18expected_thread_revision\x18\x05 \x01(\tR\x16expectedThreadRevision\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x06 \x01(\tR\trequestId\"z\n" +
 	"\x16PublishMessageResponse\x12)\n" +
-	"\x06ticket\x18\x01 \x01(\v2\x11.syntra.v1.TicketR\x06ticket\x125\n" +
-	"\amessage\x18\x02 \x01(\v2\x1b.syntra.v1.PublishedMessageR\amessage\"\x81\x02\n" +
-	"\x13DiscardDraftRequest\x12!\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\x125\n" +
+	"\amessage\x18\x02 \x01(\v2\x1b.syntra.v1.PublishedMessageR\amessage\"\xb5\x02\n" +
+	"\x1dDiscardPreparedMessageRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x19\n" +
-	"\bdraft_id\x18\x03 \x01(\tR\adraftId\x126\n" +
-	"\x17expected_draft_revision\x18\x04 \x01(\tR\x15expectedDraftRevision\x128\n" +
-	"\x18expected_ticket_revision\x18\x05 \x01(\tR\x16expectedTicketRevision\x12\x1d\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12.\n" +
+	"\x13prepared_message_id\x18\x03 \x01(\tR\x11preparedMessageId\x12K\n" +
+	"\"expected_prepared_message_revision\x18\x04 \x01(\tR\x1fexpectedPreparedMessageRevision\x128\n" +
+	"\x18expected_thread_revision\x18\x05 \x01(\tR\x16expectedThreadRevision\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\x06 \x01(\tR\trequestId\"\\\n" +
-	"\x14DiscardDraftResponse\x12\x19\n" +
-	"\bdraft_id\x18\x01 \x01(\tR\adraftId\x12)\n" +
-	"\x10ticket_discarded\x18\x02 \x01(\bR\x0fticketDiscarded\"\x8f\x01\n" +
+	"request_id\x18\x06 \x01(\tR\trequestId\"{\n" +
+	"\x1eDiscardPreparedMessageResponse\x12.\n" +
+	"\x13prepared_message_id\x18\x01 \x01(\tR\x11preparedMessageId\x12)\n" +
+	"\x10thread_discarded\x18\x02 \x01(\bR\x0fthreadDiscarded\"\x8f\x01\n" +
 	"\x0fMarkReadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x1d\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x03 \x01(\tR\tmessageId\x12\x1d\n" +
 	"\n" +
@@ -5018,7 +4862,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\areceipt\x18\x01 \x01(\v2\x1b.syntra.v1.RecipientReceiptR\areceipt\"\x93\x01\n" +
 	"\x13MarkReviewedRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x1d\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x03 \x01(\tR\tmessageId\x12\x1d\n" +
 	"\n" +
@@ -5034,54 +4878,52 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x16ListInboxItemsResponse\x12*\n" +
 	"\x05items\x18\x01 \x03(\v2\x14.syntra.v1.InboxItemR\x05items\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xb8\x01\n" +
-	"\x17ListTicketEventsRequest\x12!\n" +
+	"\x17ListThreadEventsRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
-	"\tticket_id\x18\x02 \x01(\tR\bticketId\x12\x1b\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12\x1b\n" +
 	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\x12!\n" +
 	"\fnewest_first\x18\x05 \x01(\bR\vnewestFirst\"r\n" +
-	"\x18ListTicketEventsResponse\x12.\n" +
-	"\x06events\x18\x01 \x03(\v2\x16.syntra.v1.TicketEventR\x06events\x12&\n" +
+	"\x18ListThreadEventsResponse\x12.\n" +
+	"\x06events\x18\x01 \x03(\v2\x16.syntra.v1.ThreadEventR\x06events\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"7\n" +
 	"\x12GetOverviewRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"F\n" +
 	"\x13GetOverviewResponse\x12/\n" +
-	"\boverview\x18\x01 \x01(\v2\x13.syntra.v1.OverviewR\boverview*\x99\x01\n" +
-	"\vTicketState\x12\x1c\n" +
-	"\x18TICKET_STATE_UNSPECIFIED\x10\x00\x12\x16\n" +
-	"\x12TICKET_STATE_DRAFT\x10\x01\x12\x15\n" +
-	"\x11TICKET_STATE_OPEN\x10\x02\x12$\n" +
-	" TICKET_STATE_RESOLUTION_PROPOSED\x10\x03\x12\x17\n" +
-	"\x13TICKET_STATE_CLOSED\x10\x04*x\n" +
-	"\x10TicketVisibility\x12!\n" +
-	"\x1dTICKET_VISIBILITY_UNSPECIFIED\x10\x00\x12\x1f\n" +
-	"\x1bTICKET_VISIBILITY_PUBLISHED\x10\x01\x12 \n" +
-	"\x1cTICKET_VISIBILITY_OWN_DRAFTS\x10\x02*d\n" +
+	"\boverview\x18\x01 \x01(\v2\x13.syntra.v1.OverviewR\boverview*u\n" +
+	"\vThreadState\x12\x1c\n" +
+	"\x18THREAD_STATE_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14THREAD_STATE_PENDING\x10\x01\x12\x15\n" +
+	"\x11THREAD_STATE_OPEN\x10\x02\x12\x17\n" +
+	"\x13THREAD_STATE_CLOSED\x10\x03*z\n" +
+	"\x10ThreadVisibility\x12!\n" +
+	"\x1dTHREAD_VISIBILITY_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bTHREAD_VISIBILITY_PUBLISHED\x10\x01\x12\"\n" +
+	"\x1eTHREAD_VISIBILITY_OWN_PREPARED\x10\x02*f\n" +
 	"\vMessageView\x12\x1c\n" +
 	"\x18MESSAGE_VIEW_UNSPECIFIED\x10\x00\x12\x1a\n" +
-	"\x16MESSAGE_VIEW_PUBLISHED\x10\x01\x12\x1b\n" +
-	"\x17MESSAGE_VIEW_OWN_DRAFTS\x10\x02*\x80\x01\n" +
+	"\x16MESSAGE_VIEW_PUBLISHED\x10\x01\x12\x1d\n" +
+	"\x19MESSAGE_VIEW_OWN_PREPARED\x10\x02*\x82\x01\n" +
 	"\tInboxView\x12\x1a\n" +
-	"\x16INBOX_VIEW_UNSPECIFIED\x10\x00\x12\x19\n" +
-	"\x15INBOX_VIEW_OWN_DRAFTS\x10\x01\x12\x1d\n" +
+	"\x16INBOX_VIEW_UNSPECIFIED\x10\x00\x12\x1b\n" +
+	"\x17INBOX_VIEW_OWN_PREPARED\x10\x01\x12\x1d\n" +
 	"\x19INBOX_VIEW_AWAITING_REPLY\x10\x02\x12\x1d\n" +
 	"\x19INBOX_VIEW_PENDING_REVIEW\x10\x03*l\n" +
 	"\vClosureKind\x12\x1c\n" +
 	"\x18CLOSURE_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16CLOSURE_KIND_VALIDATED\x10\x01\x12#\n" +
-	"\x1fCLOSURE_KIND_WITHOUT_VALIDATION\x10\x02*\x95\x03\n" +
-	"\x0fTicketEventKind\x12!\n" +
-	"\x1dTICKET_EVENT_KIND_UNSPECIFIED\x10\x00\x12&\n" +
-	"\"TICKET_EVENT_KIND_TICKET_PUBLISHED\x10\x01\x12$\n" +
-	" TICKET_EVENT_KIND_TICKET_UPDATED\x10\x02\x12%\n" +
-	"!TICKET_EVENT_KIND_TICKET_ASSIGNED\x10\x03\x12'\n" +
-	"#TICKET_EVENT_KIND_MESSAGE_PUBLISHED\x10\x04\x12\"\n" +
-	"\x1eTICKET_EVENT_KIND_MESSAGE_READ\x10\x05\x12&\n" +
-	"\"TICKET_EVENT_KIND_MESSAGE_REVIEWED\x10\x06\x12)\n" +
-	"%TICKET_EVENT_KIND_RESOLUTION_PROPOSED\x10\a\x12#\n" +
-	"\x1fTICKET_EVENT_KIND_TICKET_CLOSED\x10\b\x12%\n" +
-	"!TICKET_EVENT_KIND_TICKET_REOPENED\x10\t2\xa8\x03\n" +
+	"\x1fCLOSURE_KIND_WITHOUT_VALIDATION\x10\x02*\xea\x02\n" +
+	"\x0fThreadEventKind\x12!\n" +
+	"\x1dTHREAD_EVENT_KIND_UNSPECIFIED\x10\x00\x12&\n" +
+	"\"THREAD_EVENT_KIND_THREAD_PUBLISHED\x10\x01\x12$\n" +
+	" THREAD_EVENT_KIND_THREAD_UPDATED\x10\x02\x12%\n" +
+	"!THREAD_EVENT_KIND_THREAD_ASSIGNED\x10\x03\x12'\n" +
+	"#THREAD_EVENT_KIND_MESSAGE_PUBLISHED\x10\x04\x12\"\n" +
+	"\x1eTHREAD_EVENT_KIND_MESSAGE_READ\x10\x05\x12&\n" +
+	"\"THREAD_EVENT_KIND_MESSAGE_REVIEWED\x10\x06\x12#\n" +
+	"\x1fTHREAD_EVENT_KIND_THREAD_CLOSED\x10\b\x12%\n" +
+	"!THREAD_EVENT_KIND_THREAD_REOPENED\x10\t2\xa8\x03\n" +
 	"\x0eProjectService\x12O\n" +
 	"\fListProjects\x12\x1e.syntra.v1.ListProjectsRequest\x1a\x1f.syntra.v1.ListProjectsResponse\x12I\n" +
 	"\n" +
@@ -5092,27 +4934,26 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x12ProjectTeamService\x12[\n" +
 	"\x10ListProjectTeams\x12\".syntra.v1.ListProjectTeamsRequest\x1a#.syntra.v1.ListProjectTeamsResponse\x12U\n" +
 	"\x0eSetProjectTeam\x12 .syntra.v1.SetProjectTeamRequest\x1a!.syntra.v1.SetProjectTeamResponse\x12^\n" +
-	"\x11RemoveProjectTeam\x12#.syntra.v1.RemoveProjectTeamRequest\x1a$.syntra.v1.RemoveProjectTeamResponse2\x97\x05\n" +
-	"\rTicketService\x12L\n" +
-	"\vListTickets\x12\x1d.syntra.v1.ListTicketsRequest\x1a\x1e.syntra.v1.ListTicketsResponse\x12F\n" +
-	"\tGetTicket\x12\x1b.syntra.v1.GetTicketRequest\x1a\x1c.syntra.v1.GetTicketResponse\x12O\n" +
-	"\fCreateTicket\x12\x1e.syntra.v1.CreateTicketRequest\x1a\x1f.syntra.v1.CreateTicketResponse\x12O\n" +
-	"\fUpdateTicket\x12\x1e.syntra.v1.UpdateTicketRequest\x1a\x1f.syntra.v1.UpdateTicketResponse\x12O\n" +
-	"\fAssignTicket\x12\x1e.syntra.v1.AssignTicketRequest\x1a\x1f.syntra.v1.AssignTicketResponse\x12^\n" +
-	"\x11ProposeResolution\x12#.syntra.v1.ProposeResolutionRequest\x1a$.syntra.v1.ProposeResolutionResponse\x12L\n" +
-	"\vCloseTicket\x12\x1d.syntra.v1.CloseTicketRequest\x1a\x1e.syntra.v1.CloseTicketResponse\x12O\n" +
-	"\fReopenTicket\x12\x1e.syntra.v1.ReopenTicketRequest\x1a\x1f.syntra.v1.ReopenTicketResponse2\xe7\x03\n" +
+	"\x11RemoveProjectTeam\x12#.syntra.v1.RemoveProjectTeamRequest\x1a$.syntra.v1.RemoveProjectTeamResponse2\xb7\x04\n" +
+	"\rThreadService\x12L\n" +
+	"\vListThreads\x12\x1d.syntra.v1.ListThreadsRequest\x1a\x1e.syntra.v1.ListThreadsResponse\x12F\n" +
+	"\tGetThread\x12\x1b.syntra.v1.GetThreadRequest\x1a\x1c.syntra.v1.GetThreadResponse\x12O\n" +
+	"\fCreateThread\x12\x1e.syntra.v1.CreateThreadRequest\x1a\x1f.syntra.v1.CreateThreadResponse\x12O\n" +
+	"\fUpdateThread\x12\x1e.syntra.v1.UpdateThreadRequest\x1a\x1f.syntra.v1.UpdateThreadResponse\x12O\n" +
+	"\fAssignThread\x12\x1e.syntra.v1.AssignThreadRequest\x1a\x1f.syntra.v1.AssignThreadResponse\x12L\n" +
+	"\vCloseThread\x12\x1d.syntra.v1.CloseThreadRequest\x1a\x1e.syntra.v1.CloseThreadResponse\x12O\n" +
+	"\fReopenThread\x12\x1e.syntra.v1.ReopenThreadRequest\x1a\x1f.syntra.v1.ReopenThreadResponse2\xa3\x04\n" +
 	"\x0eMessageService\x12O\n" +
-	"\fListMessages\x12\x1e.syntra.v1.ListMessagesRequest\x1a\x1f.syntra.v1.ListMessagesResponse\x12F\n" +
-	"\tSaveDraft\x12\x1b.syntra.v1.SaveDraftRequest\x1a\x1c.syntra.v1.SaveDraftResponse\x12U\n" +
-	"\x0ePublishMessage\x12 .syntra.v1.PublishMessageRequest\x1a!.syntra.v1.PublishMessageResponse\x12O\n" +
-	"\fDiscardDraft\x12\x1e.syntra.v1.DiscardDraftRequest\x1a\x1f.syntra.v1.DiscardDraftResponse\x12C\n" +
+	"\fListMessages\x12\x1e.syntra.v1.ListMessagesRequest\x1a\x1f.syntra.v1.ListMessagesResponse\x12d\n" +
+	"\x13SavePreparedMessage\x12%.syntra.v1.SavePreparedMessageRequest\x1a&.syntra.v1.SavePreparedMessageResponse\x12U\n" +
+	"\x0ePublishMessage\x12 .syntra.v1.PublishMessageRequest\x1a!.syntra.v1.PublishMessageResponse\x12m\n" +
+	"\x16DiscardPreparedMessage\x12(.syntra.v1.DiscardPreparedMessageRequest\x1a).syntra.v1.DiscardPreparedMessageResponse\x12C\n" +
 	"\bMarkRead\x12\x1a.syntra.v1.MarkReadRequest\x1a\x1b.syntra.v1.MarkReadResponse\x12O\n" +
 	"\fMarkReviewed\x12\x1e.syntra.v1.MarkReviewedRequest\x1a\x1f.syntra.v1.MarkReviewedResponse2e\n" +
 	"\fInboxService\x12U\n" +
 	"\x0eListInboxItems\x12 .syntra.v1.ListInboxItemsRequest\x1a!.syntra.v1.ListInboxItemsResponse2n\n" +
 	"\x0fActivityService\x12[\n" +
-	"\x10ListTicketEvents\x12\".syntra.v1.ListTicketEventsRequest\x1a#.syntra.v1.ListTicketEventsResponse2`\n" +
+	"\x10ListThreadEvents\x12\".syntra.v1.ListThreadEventsRequest\x1a#.syntra.v1.ListThreadEventsResponse2`\n" +
 	"\x10DashboardService\x12L\n" +
 	"\vGetOverview\x12\x1d.syntra.v1.GetOverviewRequest\x1a\x1e.syntra.v1.GetOverviewResponseB)Z'syntra.local/mcp/gen/syntra/v1;syntrav1b\x06proto3"
 
@@ -5129,190 +4970,184 @@ func file_syntra_v1_collaboration_proto_rawDescGZIP() []byte {
 }
 
 var file_syntra_v1_collaboration_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_syntra_v1_collaboration_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
+var file_syntra_v1_collaboration_proto_msgTypes = make([]protoimpl.MessageInfo, 58)
 var file_syntra_v1_collaboration_proto_goTypes = []any{
-	(TicketState)(0),                  // 0: syntra.v1.TicketState
-	(TicketVisibility)(0),             // 1: syntra.v1.TicketVisibility
-	(MessageView)(0),                  // 2: syntra.v1.MessageView
-	(InboxView)(0),                    // 3: syntra.v1.InboxView
-	(ClosureKind)(0),                  // 4: syntra.v1.ClosureKind
-	(TicketEventKind)(0),              // 5: syntra.v1.TicketEventKind
-	(*Project)(nil),                   // 6: syntra.v1.Project
-	(*ProjectTeam)(nil),               // 7: syntra.v1.ProjectTeam
-	(*ProjectTeamMember)(nil),         // 8: syntra.v1.ProjectTeamMember
-	(*Ticket)(nil),                    // 9: syntra.v1.Ticket
-	(*MessageDraft)(nil),              // 10: syntra.v1.MessageDraft
-	(*PublishedMessage)(nil),          // 11: syntra.v1.PublishedMessage
-	(*RecipientReceipt)(nil),          // 12: syntra.v1.RecipientReceipt
-	(*TicketEvent)(nil),               // 13: syntra.v1.TicketEvent
-	(*InboxItem)(nil),                 // 14: syntra.v1.InboxItem
-	(*Overview)(nil),                  // 15: syntra.v1.Overview
-	(*ListProjectsRequest)(nil),       // 16: syntra.v1.ListProjectsRequest
-	(*ListProjectsResponse)(nil),      // 17: syntra.v1.ListProjectsResponse
-	(*GetProjectRequest)(nil),         // 18: syntra.v1.GetProjectRequest
-	(*GetProjectResponse)(nil),        // 19: syntra.v1.GetProjectResponse
-	(*CreateProjectRequest)(nil),      // 20: syntra.v1.CreateProjectRequest
-	(*CreateProjectResponse)(nil),     // 21: syntra.v1.CreateProjectResponse
-	(*UpdateProjectRequest)(nil),      // 22: syntra.v1.UpdateProjectRequest
-	(*UpdateProjectResponse)(nil),     // 23: syntra.v1.UpdateProjectResponse
-	(*DeleteProjectRequest)(nil),      // 24: syntra.v1.DeleteProjectRequest
-	(*DeleteProjectResponse)(nil),     // 25: syntra.v1.DeleteProjectResponse
-	(*ListProjectTeamsRequest)(nil),   // 26: syntra.v1.ListProjectTeamsRequest
-	(*ListProjectTeamsResponse)(nil),  // 27: syntra.v1.ListProjectTeamsResponse
-	(*SetProjectTeamRequest)(nil),     // 28: syntra.v1.SetProjectTeamRequest
-	(*SetProjectTeamResponse)(nil),    // 29: syntra.v1.SetProjectTeamResponse
-	(*RemoveProjectTeamRequest)(nil),  // 30: syntra.v1.RemoveProjectTeamRequest
-	(*RemoveProjectTeamResponse)(nil), // 31: syntra.v1.RemoveProjectTeamResponse
-	(*ListTicketsRequest)(nil),        // 32: syntra.v1.ListTicketsRequest
-	(*ListTicketsResponse)(nil),       // 33: syntra.v1.ListTicketsResponse
-	(*GetTicketRequest)(nil),          // 34: syntra.v1.GetTicketRequest
-	(*GetTicketResponse)(nil),         // 35: syntra.v1.GetTicketResponse
-	(*CreateTicketRequest)(nil),       // 36: syntra.v1.CreateTicketRequest
-	(*CreateTicketResponse)(nil),      // 37: syntra.v1.CreateTicketResponse
-	(*UpdateTicketRequest)(nil),       // 38: syntra.v1.UpdateTicketRequest
-	(*UpdateTicketResponse)(nil),      // 39: syntra.v1.UpdateTicketResponse
-	(*AssignTicketRequest)(nil),       // 40: syntra.v1.AssignTicketRequest
-	(*AssignTicketResponse)(nil),      // 41: syntra.v1.AssignTicketResponse
-	(*ProposeResolutionRequest)(nil),  // 42: syntra.v1.ProposeResolutionRequest
-	(*ProposeResolutionResponse)(nil), // 43: syntra.v1.ProposeResolutionResponse
-	(*CloseTicketRequest)(nil),        // 44: syntra.v1.CloseTicketRequest
-	(*CloseTicketResponse)(nil),       // 45: syntra.v1.CloseTicketResponse
-	(*ReopenTicketRequest)(nil),       // 46: syntra.v1.ReopenTicketRequest
-	(*ReopenTicketResponse)(nil),      // 47: syntra.v1.ReopenTicketResponse
-	(*ListMessagesRequest)(nil),       // 48: syntra.v1.ListMessagesRequest
-	(*ListMessagesResponse)(nil),      // 49: syntra.v1.ListMessagesResponse
-	(*SaveDraftRequest)(nil),          // 50: syntra.v1.SaveDraftRequest
-	(*SaveDraftResponse)(nil),         // 51: syntra.v1.SaveDraftResponse
-	(*PublishMessageRequest)(nil),     // 52: syntra.v1.PublishMessageRequest
-	(*PublishMessageResponse)(nil),    // 53: syntra.v1.PublishMessageResponse
-	(*DiscardDraftRequest)(nil),       // 54: syntra.v1.DiscardDraftRequest
-	(*DiscardDraftResponse)(nil),      // 55: syntra.v1.DiscardDraftResponse
-	(*MarkReadRequest)(nil),           // 56: syntra.v1.MarkReadRequest
-	(*MarkReadResponse)(nil),          // 57: syntra.v1.MarkReadResponse
-	(*MarkReviewedRequest)(nil),       // 58: syntra.v1.MarkReviewedRequest
-	(*MarkReviewedResponse)(nil),      // 59: syntra.v1.MarkReviewedResponse
-	(*ListInboxItemsRequest)(nil),     // 60: syntra.v1.ListInboxItemsRequest
-	(*ListInboxItemsResponse)(nil),    // 61: syntra.v1.ListInboxItemsResponse
-	(*ListTicketEventsRequest)(nil),   // 62: syntra.v1.ListTicketEventsRequest
-	(*ListTicketEventsResponse)(nil),  // 63: syntra.v1.ListTicketEventsResponse
-	(*GetOverviewRequest)(nil),        // 64: syntra.v1.GetOverviewRequest
-	(*GetOverviewResponse)(nil),       // 65: syntra.v1.GetOverviewResponse
-	(*timestamppb.Timestamp)(nil),     // 66: google.protobuf.Timestamp
+	(ThreadState)(0),                       // 0: syntra.v1.ThreadState
+	(ThreadVisibility)(0),                  // 1: syntra.v1.ThreadVisibility
+	(MessageView)(0),                       // 2: syntra.v1.MessageView
+	(InboxView)(0),                         // 3: syntra.v1.InboxView
+	(ClosureKind)(0),                       // 4: syntra.v1.ClosureKind
+	(ThreadEventKind)(0),                   // 5: syntra.v1.ThreadEventKind
+	(*Project)(nil),                        // 6: syntra.v1.Project
+	(*ProjectTeam)(nil),                    // 7: syntra.v1.ProjectTeam
+	(*ProjectTeamMember)(nil),              // 8: syntra.v1.ProjectTeamMember
+	(*Thread)(nil),                         // 9: syntra.v1.Thread
+	(*PreparedMessage)(nil),                // 10: syntra.v1.PreparedMessage
+	(*PublishedMessage)(nil),               // 11: syntra.v1.PublishedMessage
+	(*RecipientReceipt)(nil),               // 12: syntra.v1.RecipientReceipt
+	(*ThreadEvent)(nil),                    // 13: syntra.v1.ThreadEvent
+	(*InboxItem)(nil),                      // 14: syntra.v1.InboxItem
+	(*Overview)(nil),                       // 15: syntra.v1.Overview
+	(*ListProjectsRequest)(nil),            // 16: syntra.v1.ListProjectsRequest
+	(*ListProjectsResponse)(nil),           // 17: syntra.v1.ListProjectsResponse
+	(*GetProjectRequest)(nil),              // 18: syntra.v1.GetProjectRequest
+	(*GetProjectResponse)(nil),             // 19: syntra.v1.GetProjectResponse
+	(*CreateProjectRequest)(nil),           // 20: syntra.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),          // 21: syntra.v1.CreateProjectResponse
+	(*UpdateProjectRequest)(nil),           // 22: syntra.v1.UpdateProjectRequest
+	(*UpdateProjectResponse)(nil),          // 23: syntra.v1.UpdateProjectResponse
+	(*DeleteProjectRequest)(nil),           // 24: syntra.v1.DeleteProjectRequest
+	(*DeleteProjectResponse)(nil),          // 25: syntra.v1.DeleteProjectResponse
+	(*ListProjectTeamsRequest)(nil),        // 26: syntra.v1.ListProjectTeamsRequest
+	(*ListProjectTeamsResponse)(nil),       // 27: syntra.v1.ListProjectTeamsResponse
+	(*SetProjectTeamRequest)(nil),          // 28: syntra.v1.SetProjectTeamRequest
+	(*SetProjectTeamResponse)(nil),         // 29: syntra.v1.SetProjectTeamResponse
+	(*RemoveProjectTeamRequest)(nil),       // 30: syntra.v1.RemoveProjectTeamRequest
+	(*RemoveProjectTeamResponse)(nil),      // 31: syntra.v1.RemoveProjectTeamResponse
+	(*ListThreadsRequest)(nil),             // 32: syntra.v1.ListThreadsRequest
+	(*ListThreadsResponse)(nil),            // 33: syntra.v1.ListThreadsResponse
+	(*GetThreadRequest)(nil),               // 34: syntra.v1.GetThreadRequest
+	(*GetThreadResponse)(nil),              // 35: syntra.v1.GetThreadResponse
+	(*CreateThreadRequest)(nil),            // 36: syntra.v1.CreateThreadRequest
+	(*CreateThreadResponse)(nil),           // 37: syntra.v1.CreateThreadResponse
+	(*UpdateThreadRequest)(nil),            // 38: syntra.v1.UpdateThreadRequest
+	(*UpdateThreadResponse)(nil),           // 39: syntra.v1.UpdateThreadResponse
+	(*AssignThreadRequest)(nil),            // 40: syntra.v1.AssignThreadRequest
+	(*AssignThreadResponse)(nil),           // 41: syntra.v1.AssignThreadResponse
+	(*CloseThreadRequest)(nil),             // 42: syntra.v1.CloseThreadRequest
+	(*CloseThreadResponse)(nil),            // 43: syntra.v1.CloseThreadResponse
+	(*ReopenThreadRequest)(nil),            // 44: syntra.v1.ReopenThreadRequest
+	(*ReopenThreadResponse)(nil),           // 45: syntra.v1.ReopenThreadResponse
+	(*ListMessagesRequest)(nil),            // 46: syntra.v1.ListMessagesRequest
+	(*ListMessagesResponse)(nil),           // 47: syntra.v1.ListMessagesResponse
+	(*SavePreparedMessageRequest)(nil),     // 48: syntra.v1.SavePreparedMessageRequest
+	(*SavePreparedMessageResponse)(nil),    // 49: syntra.v1.SavePreparedMessageResponse
+	(*PublishMessageRequest)(nil),          // 50: syntra.v1.PublishMessageRequest
+	(*PublishMessageResponse)(nil),         // 51: syntra.v1.PublishMessageResponse
+	(*DiscardPreparedMessageRequest)(nil),  // 52: syntra.v1.DiscardPreparedMessageRequest
+	(*DiscardPreparedMessageResponse)(nil), // 53: syntra.v1.DiscardPreparedMessageResponse
+	(*MarkReadRequest)(nil),                // 54: syntra.v1.MarkReadRequest
+	(*MarkReadResponse)(nil),               // 55: syntra.v1.MarkReadResponse
+	(*MarkReviewedRequest)(nil),            // 56: syntra.v1.MarkReviewedRequest
+	(*MarkReviewedResponse)(nil),           // 57: syntra.v1.MarkReviewedResponse
+	(*ListInboxItemsRequest)(nil),          // 58: syntra.v1.ListInboxItemsRequest
+	(*ListInboxItemsResponse)(nil),         // 59: syntra.v1.ListInboxItemsResponse
+	(*ListThreadEventsRequest)(nil),        // 60: syntra.v1.ListThreadEventsRequest
+	(*ListThreadEventsResponse)(nil),       // 61: syntra.v1.ListThreadEventsResponse
+	(*GetOverviewRequest)(nil),             // 62: syntra.v1.GetOverviewRequest
+	(*GetOverviewResponse)(nil),            // 63: syntra.v1.GetOverviewResponse
+	(*timestamppb.Timestamp)(nil),          // 64: google.protobuf.Timestamp
 }
 var file_syntra_v1_collaboration_proto_depIdxs = []int32{
-	66, // 0: syntra.v1.Project.created_at:type_name -> google.protobuf.Timestamp
-	66, // 1: syntra.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
+	64, // 0: syntra.v1.Project.created_at:type_name -> google.protobuf.Timestamp
+	64, // 1: syntra.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
 	8,  // 2: syntra.v1.ProjectTeam.members:type_name -> syntra.v1.ProjectTeamMember
-	66, // 3: syntra.v1.ProjectTeam.created_at:type_name -> google.protobuf.Timestamp
-	66, // 4: syntra.v1.ProjectTeam.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 5: syntra.v1.Ticket.state:type_name -> syntra.v1.TicketState
-	66, // 6: syntra.v1.Ticket.created_at:type_name -> google.protobuf.Timestamp
-	66, // 7: syntra.v1.Ticket.updated_at:type_name -> google.protobuf.Timestamp
-	66, // 8: syntra.v1.Ticket.published_at:type_name -> google.protobuf.Timestamp
-	66, // 9: syntra.v1.Ticket.resolution_proposed_at:type_name -> google.protobuf.Timestamp
-	4,  // 10: syntra.v1.Ticket.closure_kind:type_name -> syntra.v1.ClosureKind
-	66, // 11: syntra.v1.Ticket.closed_at:type_name -> google.protobuf.Timestamp
-	66, // 12: syntra.v1.MessageDraft.created_at:type_name -> google.protobuf.Timestamp
-	66, // 13: syntra.v1.MessageDraft.updated_at:type_name -> google.protobuf.Timestamp
-	66, // 14: syntra.v1.PublishedMessage.published_at:type_name -> google.protobuf.Timestamp
-	12, // 15: syntra.v1.PublishedMessage.receipt:type_name -> syntra.v1.RecipientReceipt
-	66, // 16: syntra.v1.RecipientReceipt.read_at:type_name -> google.protobuf.Timestamp
-	66, // 17: syntra.v1.RecipientReceipt.reviewed_at:type_name -> google.protobuf.Timestamp
-	5,  // 18: syntra.v1.TicketEvent.kind:type_name -> syntra.v1.TicketEventKind
-	66, // 19: syntra.v1.TicketEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	0,  // 20: syntra.v1.TicketEvent.previous_state:type_name -> syntra.v1.TicketState
-	0,  // 21: syntra.v1.TicketEvent.state:type_name -> syntra.v1.TicketState
-	4,  // 22: syntra.v1.TicketEvent.closure_kind:type_name -> syntra.v1.ClosureKind
-	11, // 23: syntra.v1.InboxItem.message:type_name -> syntra.v1.PublishedMessage
-	9,  // 24: syntra.v1.InboxItem.ticket:type_name -> syntra.v1.Ticket
-	10, // 25: syntra.v1.InboxItem.draft:type_name -> syntra.v1.MessageDraft
-	66, // 26: syntra.v1.Overview.as_of:type_name -> google.protobuf.Timestamp
-	6,  // 27: syntra.v1.ListProjectsResponse.projects:type_name -> syntra.v1.Project
-	6,  // 28: syntra.v1.GetProjectResponse.project:type_name -> syntra.v1.Project
-	6,  // 29: syntra.v1.CreateProjectResponse.project:type_name -> syntra.v1.Project
-	6,  // 30: syntra.v1.UpdateProjectResponse.project:type_name -> syntra.v1.Project
-	7,  // 31: syntra.v1.ListProjectTeamsResponse.project_teams:type_name -> syntra.v1.ProjectTeam
-	7,  // 32: syntra.v1.SetProjectTeamResponse.project_team:type_name -> syntra.v1.ProjectTeam
-	0,  // 33: syntra.v1.ListTicketsRequest.state:type_name -> syntra.v1.TicketState
-	1,  // 34: syntra.v1.ListTicketsRequest.visibility:type_name -> syntra.v1.TicketVisibility
-	9,  // 35: syntra.v1.ListTicketsResponse.tickets:type_name -> syntra.v1.Ticket
-	9,  // 36: syntra.v1.GetTicketResponse.ticket:type_name -> syntra.v1.Ticket
-	9,  // 37: syntra.v1.CreateTicketResponse.ticket:type_name -> syntra.v1.Ticket
-	10, // 38: syntra.v1.CreateTicketResponse.initial_draft:type_name -> syntra.v1.MessageDraft
-	9,  // 39: syntra.v1.UpdateTicketResponse.ticket:type_name -> syntra.v1.Ticket
-	9,  // 40: syntra.v1.AssignTicketResponse.ticket:type_name -> syntra.v1.Ticket
-	9,  // 41: syntra.v1.ProposeResolutionResponse.ticket:type_name -> syntra.v1.Ticket
-	4,  // 42: syntra.v1.CloseTicketRequest.kind:type_name -> syntra.v1.ClosureKind
-	9,  // 43: syntra.v1.CloseTicketResponse.ticket:type_name -> syntra.v1.Ticket
-	9,  // 44: syntra.v1.ReopenTicketResponse.ticket:type_name -> syntra.v1.Ticket
-	2,  // 45: syntra.v1.ListMessagesRequest.view:type_name -> syntra.v1.MessageView
-	11, // 46: syntra.v1.ListMessagesResponse.messages:type_name -> syntra.v1.PublishedMessage
-	10, // 47: syntra.v1.ListMessagesResponse.drafts:type_name -> syntra.v1.MessageDraft
-	10, // 48: syntra.v1.SaveDraftResponse.draft:type_name -> syntra.v1.MessageDraft
-	9,  // 49: syntra.v1.SaveDraftResponse.ticket:type_name -> syntra.v1.Ticket
-	9,  // 50: syntra.v1.PublishMessageResponse.ticket:type_name -> syntra.v1.Ticket
-	11, // 51: syntra.v1.PublishMessageResponse.message:type_name -> syntra.v1.PublishedMessage
-	12, // 52: syntra.v1.MarkReadResponse.receipt:type_name -> syntra.v1.RecipientReceipt
-	12, // 53: syntra.v1.MarkReviewedResponse.receipt:type_name -> syntra.v1.RecipientReceipt
-	3,  // 54: syntra.v1.ListInboxItemsRequest.view:type_name -> syntra.v1.InboxView
-	14, // 55: syntra.v1.ListInboxItemsResponse.items:type_name -> syntra.v1.InboxItem
-	13, // 56: syntra.v1.ListTicketEventsResponse.events:type_name -> syntra.v1.TicketEvent
-	15, // 57: syntra.v1.GetOverviewResponse.overview:type_name -> syntra.v1.Overview
-	16, // 58: syntra.v1.ProjectService.ListProjects:input_type -> syntra.v1.ListProjectsRequest
-	18, // 59: syntra.v1.ProjectService.GetProject:input_type -> syntra.v1.GetProjectRequest
-	20, // 60: syntra.v1.ProjectService.CreateProject:input_type -> syntra.v1.CreateProjectRequest
-	22, // 61: syntra.v1.ProjectService.UpdateProject:input_type -> syntra.v1.UpdateProjectRequest
-	24, // 62: syntra.v1.ProjectService.DeleteProject:input_type -> syntra.v1.DeleteProjectRequest
-	26, // 63: syntra.v1.ProjectTeamService.ListProjectTeams:input_type -> syntra.v1.ListProjectTeamsRequest
-	28, // 64: syntra.v1.ProjectTeamService.SetProjectTeam:input_type -> syntra.v1.SetProjectTeamRequest
-	30, // 65: syntra.v1.ProjectTeamService.RemoveProjectTeam:input_type -> syntra.v1.RemoveProjectTeamRequest
-	32, // 66: syntra.v1.TicketService.ListTickets:input_type -> syntra.v1.ListTicketsRequest
-	34, // 67: syntra.v1.TicketService.GetTicket:input_type -> syntra.v1.GetTicketRequest
-	36, // 68: syntra.v1.TicketService.CreateTicket:input_type -> syntra.v1.CreateTicketRequest
-	38, // 69: syntra.v1.TicketService.UpdateTicket:input_type -> syntra.v1.UpdateTicketRequest
-	40, // 70: syntra.v1.TicketService.AssignTicket:input_type -> syntra.v1.AssignTicketRequest
-	42, // 71: syntra.v1.TicketService.ProposeResolution:input_type -> syntra.v1.ProposeResolutionRequest
-	44, // 72: syntra.v1.TicketService.CloseTicket:input_type -> syntra.v1.CloseTicketRequest
-	46, // 73: syntra.v1.TicketService.ReopenTicket:input_type -> syntra.v1.ReopenTicketRequest
-	48, // 74: syntra.v1.MessageService.ListMessages:input_type -> syntra.v1.ListMessagesRequest
-	50, // 75: syntra.v1.MessageService.SaveDraft:input_type -> syntra.v1.SaveDraftRequest
-	52, // 76: syntra.v1.MessageService.PublishMessage:input_type -> syntra.v1.PublishMessageRequest
-	54, // 77: syntra.v1.MessageService.DiscardDraft:input_type -> syntra.v1.DiscardDraftRequest
-	56, // 78: syntra.v1.MessageService.MarkRead:input_type -> syntra.v1.MarkReadRequest
-	58, // 79: syntra.v1.MessageService.MarkReviewed:input_type -> syntra.v1.MarkReviewedRequest
-	60, // 80: syntra.v1.InboxService.ListInboxItems:input_type -> syntra.v1.ListInboxItemsRequest
-	62, // 81: syntra.v1.ActivityService.ListTicketEvents:input_type -> syntra.v1.ListTicketEventsRequest
-	64, // 82: syntra.v1.DashboardService.GetOverview:input_type -> syntra.v1.GetOverviewRequest
-	17, // 83: syntra.v1.ProjectService.ListProjects:output_type -> syntra.v1.ListProjectsResponse
-	19, // 84: syntra.v1.ProjectService.GetProject:output_type -> syntra.v1.GetProjectResponse
-	21, // 85: syntra.v1.ProjectService.CreateProject:output_type -> syntra.v1.CreateProjectResponse
-	23, // 86: syntra.v1.ProjectService.UpdateProject:output_type -> syntra.v1.UpdateProjectResponse
-	25, // 87: syntra.v1.ProjectService.DeleteProject:output_type -> syntra.v1.DeleteProjectResponse
-	27, // 88: syntra.v1.ProjectTeamService.ListProjectTeams:output_type -> syntra.v1.ListProjectTeamsResponse
-	29, // 89: syntra.v1.ProjectTeamService.SetProjectTeam:output_type -> syntra.v1.SetProjectTeamResponse
-	31, // 90: syntra.v1.ProjectTeamService.RemoveProjectTeam:output_type -> syntra.v1.RemoveProjectTeamResponse
-	33, // 91: syntra.v1.TicketService.ListTickets:output_type -> syntra.v1.ListTicketsResponse
-	35, // 92: syntra.v1.TicketService.GetTicket:output_type -> syntra.v1.GetTicketResponse
-	37, // 93: syntra.v1.TicketService.CreateTicket:output_type -> syntra.v1.CreateTicketResponse
-	39, // 94: syntra.v1.TicketService.UpdateTicket:output_type -> syntra.v1.UpdateTicketResponse
-	41, // 95: syntra.v1.TicketService.AssignTicket:output_type -> syntra.v1.AssignTicketResponse
-	43, // 96: syntra.v1.TicketService.ProposeResolution:output_type -> syntra.v1.ProposeResolutionResponse
-	45, // 97: syntra.v1.TicketService.CloseTicket:output_type -> syntra.v1.CloseTicketResponse
-	47, // 98: syntra.v1.TicketService.ReopenTicket:output_type -> syntra.v1.ReopenTicketResponse
-	49, // 99: syntra.v1.MessageService.ListMessages:output_type -> syntra.v1.ListMessagesResponse
-	51, // 100: syntra.v1.MessageService.SaveDraft:output_type -> syntra.v1.SaveDraftResponse
-	53, // 101: syntra.v1.MessageService.PublishMessage:output_type -> syntra.v1.PublishMessageResponse
-	55, // 102: syntra.v1.MessageService.DiscardDraft:output_type -> syntra.v1.DiscardDraftResponse
-	57, // 103: syntra.v1.MessageService.MarkRead:output_type -> syntra.v1.MarkReadResponse
-	59, // 104: syntra.v1.MessageService.MarkReviewed:output_type -> syntra.v1.MarkReviewedResponse
-	61, // 105: syntra.v1.InboxService.ListInboxItems:output_type -> syntra.v1.ListInboxItemsResponse
-	63, // 106: syntra.v1.ActivityService.ListTicketEvents:output_type -> syntra.v1.ListTicketEventsResponse
-	65, // 107: syntra.v1.DashboardService.GetOverview:output_type -> syntra.v1.GetOverviewResponse
-	83, // [83:108] is the sub-list for method output_type
-	58, // [58:83] is the sub-list for method input_type
-	58, // [58:58] is the sub-list for extension type_name
-	58, // [58:58] is the sub-list for extension extendee
-	0,  // [0:58] is the sub-list for field type_name
+	64, // 3: syntra.v1.ProjectTeam.created_at:type_name -> google.protobuf.Timestamp
+	64, // 4: syntra.v1.ProjectTeam.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 5: syntra.v1.Thread.state:type_name -> syntra.v1.ThreadState
+	64, // 6: syntra.v1.Thread.created_at:type_name -> google.protobuf.Timestamp
+	64, // 7: syntra.v1.Thread.updated_at:type_name -> google.protobuf.Timestamp
+	64, // 8: syntra.v1.Thread.published_at:type_name -> google.protobuf.Timestamp
+	4,  // 9: syntra.v1.Thread.closure_kind:type_name -> syntra.v1.ClosureKind
+	64, // 10: syntra.v1.Thread.closed_at:type_name -> google.protobuf.Timestamp
+	64, // 11: syntra.v1.PreparedMessage.created_at:type_name -> google.protobuf.Timestamp
+	64, // 12: syntra.v1.PreparedMessage.updated_at:type_name -> google.protobuf.Timestamp
+	64, // 13: syntra.v1.PublishedMessage.published_at:type_name -> google.protobuf.Timestamp
+	12, // 14: syntra.v1.PublishedMessage.receipt:type_name -> syntra.v1.RecipientReceipt
+	64, // 15: syntra.v1.RecipientReceipt.read_at:type_name -> google.protobuf.Timestamp
+	64, // 16: syntra.v1.RecipientReceipt.reviewed_at:type_name -> google.protobuf.Timestamp
+	5,  // 17: syntra.v1.ThreadEvent.kind:type_name -> syntra.v1.ThreadEventKind
+	64, // 18: syntra.v1.ThreadEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	0,  // 19: syntra.v1.ThreadEvent.previous_state:type_name -> syntra.v1.ThreadState
+	0,  // 20: syntra.v1.ThreadEvent.state:type_name -> syntra.v1.ThreadState
+	4,  // 21: syntra.v1.ThreadEvent.closure_kind:type_name -> syntra.v1.ClosureKind
+	11, // 22: syntra.v1.InboxItem.message:type_name -> syntra.v1.PublishedMessage
+	9,  // 23: syntra.v1.InboxItem.thread:type_name -> syntra.v1.Thread
+	10, // 24: syntra.v1.InboxItem.prepared_message:type_name -> syntra.v1.PreparedMessage
+	64, // 25: syntra.v1.Overview.as_of:type_name -> google.protobuf.Timestamp
+	6,  // 26: syntra.v1.ListProjectsResponse.projects:type_name -> syntra.v1.Project
+	6,  // 27: syntra.v1.GetProjectResponse.project:type_name -> syntra.v1.Project
+	6,  // 28: syntra.v1.CreateProjectResponse.project:type_name -> syntra.v1.Project
+	6,  // 29: syntra.v1.UpdateProjectResponse.project:type_name -> syntra.v1.Project
+	7,  // 30: syntra.v1.ListProjectTeamsResponse.project_teams:type_name -> syntra.v1.ProjectTeam
+	7,  // 31: syntra.v1.SetProjectTeamResponse.project_team:type_name -> syntra.v1.ProjectTeam
+	0,  // 32: syntra.v1.ListThreadsRequest.state:type_name -> syntra.v1.ThreadState
+	1,  // 33: syntra.v1.ListThreadsRequest.visibility:type_name -> syntra.v1.ThreadVisibility
+	9,  // 34: syntra.v1.ListThreadsResponse.threads:type_name -> syntra.v1.Thread
+	9,  // 35: syntra.v1.GetThreadResponse.thread:type_name -> syntra.v1.Thread
+	9,  // 36: syntra.v1.CreateThreadResponse.thread:type_name -> syntra.v1.Thread
+	10, // 37: syntra.v1.CreateThreadResponse.initial_prepared_message:type_name -> syntra.v1.PreparedMessage
+	9,  // 38: syntra.v1.UpdateThreadResponse.thread:type_name -> syntra.v1.Thread
+	9,  // 39: syntra.v1.AssignThreadResponse.thread:type_name -> syntra.v1.Thread
+	4,  // 40: syntra.v1.CloseThreadRequest.kind:type_name -> syntra.v1.ClosureKind
+	9,  // 41: syntra.v1.CloseThreadResponse.thread:type_name -> syntra.v1.Thread
+	9,  // 42: syntra.v1.ReopenThreadResponse.thread:type_name -> syntra.v1.Thread
+	2,  // 43: syntra.v1.ListMessagesRequest.view:type_name -> syntra.v1.MessageView
+	11, // 44: syntra.v1.ListMessagesResponse.messages:type_name -> syntra.v1.PublishedMessage
+	10, // 45: syntra.v1.ListMessagesResponse.prepared_messages:type_name -> syntra.v1.PreparedMessage
+	10, // 46: syntra.v1.SavePreparedMessageResponse.prepared_message:type_name -> syntra.v1.PreparedMessage
+	9,  // 47: syntra.v1.SavePreparedMessageResponse.thread:type_name -> syntra.v1.Thread
+	9,  // 48: syntra.v1.PublishMessageResponse.thread:type_name -> syntra.v1.Thread
+	11, // 49: syntra.v1.PublishMessageResponse.message:type_name -> syntra.v1.PublishedMessage
+	12, // 50: syntra.v1.MarkReadResponse.receipt:type_name -> syntra.v1.RecipientReceipt
+	12, // 51: syntra.v1.MarkReviewedResponse.receipt:type_name -> syntra.v1.RecipientReceipt
+	3,  // 52: syntra.v1.ListInboxItemsRequest.view:type_name -> syntra.v1.InboxView
+	14, // 53: syntra.v1.ListInboxItemsResponse.items:type_name -> syntra.v1.InboxItem
+	13, // 54: syntra.v1.ListThreadEventsResponse.events:type_name -> syntra.v1.ThreadEvent
+	15, // 55: syntra.v1.GetOverviewResponse.overview:type_name -> syntra.v1.Overview
+	16, // 56: syntra.v1.ProjectService.ListProjects:input_type -> syntra.v1.ListProjectsRequest
+	18, // 57: syntra.v1.ProjectService.GetProject:input_type -> syntra.v1.GetProjectRequest
+	20, // 58: syntra.v1.ProjectService.CreateProject:input_type -> syntra.v1.CreateProjectRequest
+	22, // 59: syntra.v1.ProjectService.UpdateProject:input_type -> syntra.v1.UpdateProjectRequest
+	24, // 60: syntra.v1.ProjectService.DeleteProject:input_type -> syntra.v1.DeleteProjectRequest
+	26, // 61: syntra.v1.ProjectTeamService.ListProjectTeams:input_type -> syntra.v1.ListProjectTeamsRequest
+	28, // 62: syntra.v1.ProjectTeamService.SetProjectTeam:input_type -> syntra.v1.SetProjectTeamRequest
+	30, // 63: syntra.v1.ProjectTeamService.RemoveProjectTeam:input_type -> syntra.v1.RemoveProjectTeamRequest
+	32, // 64: syntra.v1.ThreadService.ListThreads:input_type -> syntra.v1.ListThreadsRequest
+	34, // 65: syntra.v1.ThreadService.GetThread:input_type -> syntra.v1.GetThreadRequest
+	36, // 66: syntra.v1.ThreadService.CreateThread:input_type -> syntra.v1.CreateThreadRequest
+	38, // 67: syntra.v1.ThreadService.UpdateThread:input_type -> syntra.v1.UpdateThreadRequest
+	40, // 68: syntra.v1.ThreadService.AssignThread:input_type -> syntra.v1.AssignThreadRequest
+	42, // 69: syntra.v1.ThreadService.CloseThread:input_type -> syntra.v1.CloseThreadRequest
+	44, // 70: syntra.v1.ThreadService.ReopenThread:input_type -> syntra.v1.ReopenThreadRequest
+	46, // 71: syntra.v1.MessageService.ListMessages:input_type -> syntra.v1.ListMessagesRequest
+	48, // 72: syntra.v1.MessageService.SavePreparedMessage:input_type -> syntra.v1.SavePreparedMessageRequest
+	50, // 73: syntra.v1.MessageService.PublishMessage:input_type -> syntra.v1.PublishMessageRequest
+	52, // 74: syntra.v1.MessageService.DiscardPreparedMessage:input_type -> syntra.v1.DiscardPreparedMessageRequest
+	54, // 75: syntra.v1.MessageService.MarkRead:input_type -> syntra.v1.MarkReadRequest
+	56, // 76: syntra.v1.MessageService.MarkReviewed:input_type -> syntra.v1.MarkReviewedRequest
+	58, // 77: syntra.v1.InboxService.ListInboxItems:input_type -> syntra.v1.ListInboxItemsRequest
+	60, // 78: syntra.v1.ActivityService.ListThreadEvents:input_type -> syntra.v1.ListThreadEventsRequest
+	62, // 79: syntra.v1.DashboardService.GetOverview:input_type -> syntra.v1.GetOverviewRequest
+	17, // 80: syntra.v1.ProjectService.ListProjects:output_type -> syntra.v1.ListProjectsResponse
+	19, // 81: syntra.v1.ProjectService.GetProject:output_type -> syntra.v1.GetProjectResponse
+	21, // 82: syntra.v1.ProjectService.CreateProject:output_type -> syntra.v1.CreateProjectResponse
+	23, // 83: syntra.v1.ProjectService.UpdateProject:output_type -> syntra.v1.UpdateProjectResponse
+	25, // 84: syntra.v1.ProjectService.DeleteProject:output_type -> syntra.v1.DeleteProjectResponse
+	27, // 85: syntra.v1.ProjectTeamService.ListProjectTeams:output_type -> syntra.v1.ListProjectTeamsResponse
+	29, // 86: syntra.v1.ProjectTeamService.SetProjectTeam:output_type -> syntra.v1.SetProjectTeamResponse
+	31, // 87: syntra.v1.ProjectTeamService.RemoveProjectTeam:output_type -> syntra.v1.RemoveProjectTeamResponse
+	33, // 88: syntra.v1.ThreadService.ListThreads:output_type -> syntra.v1.ListThreadsResponse
+	35, // 89: syntra.v1.ThreadService.GetThread:output_type -> syntra.v1.GetThreadResponse
+	37, // 90: syntra.v1.ThreadService.CreateThread:output_type -> syntra.v1.CreateThreadResponse
+	39, // 91: syntra.v1.ThreadService.UpdateThread:output_type -> syntra.v1.UpdateThreadResponse
+	41, // 92: syntra.v1.ThreadService.AssignThread:output_type -> syntra.v1.AssignThreadResponse
+	43, // 93: syntra.v1.ThreadService.CloseThread:output_type -> syntra.v1.CloseThreadResponse
+	45, // 94: syntra.v1.ThreadService.ReopenThread:output_type -> syntra.v1.ReopenThreadResponse
+	47, // 95: syntra.v1.MessageService.ListMessages:output_type -> syntra.v1.ListMessagesResponse
+	49, // 96: syntra.v1.MessageService.SavePreparedMessage:output_type -> syntra.v1.SavePreparedMessageResponse
+	51, // 97: syntra.v1.MessageService.PublishMessage:output_type -> syntra.v1.PublishMessageResponse
+	53, // 98: syntra.v1.MessageService.DiscardPreparedMessage:output_type -> syntra.v1.DiscardPreparedMessageResponse
+	55, // 99: syntra.v1.MessageService.MarkRead:output_type -> syntra.v1.MarkReadResponse
+	57, // 100: syntra.v1.MessageService.MarkReviewed:output_type -> syntra.v1.MarkReviewedResponse
+	59, // 101: syntra.v1.InboxService.ListInboxItems:output_type -> syntra.v1.ListInboxItemsResponse
+	61, // 102: syntra.v1.ActivityService.ListThreadEvents:output_type -> syntra.v1.ListThreadEventsResponse
+	63, // 103: syntra.v1.DashboardService.GetOverview:output_type -> syntra.v1.GetOverviewResponse
+	80, // [80:104] is the sub-list for method output_type
+	56, // [56:80] is the sub-list for method input_type
+	56, // [56:56] is the sub-list for extension type_name
+	56, // [56:56] is the sub-list for extension extendee
+	0,  // [0:56] is the sub-list for field type_name
 }
 
 func init() { file_syntra_v1_collaboration_proto_init() }
@@ -5323,14 +5158,14 @@ func file_syntra_v1_collaboration_proto_init() {
 	file_syntra_v1_collaboration_proto_msgTypes[3].OneofWrappers = []any{}
 	file_syntra_v1_collaboration_proto_msgTypes[7].OneofWrappers = []any{}
 	file_syntra_v1_collaboration_proto_msgTypes[26].OneofWrappers = []any{}
-	file_syntra_v1_collaboration_proto_msgTypes[44].OneofWrappers = []any{}
+	file_syntra_v1_collaboration_proto_msgTypes[42].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_collaboration_proto_rawDesc), len(file_syntra_v1_collaboration_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   60,
+			NumMessages:   58,
 			NumExtensions: 0,
 			NumServices:   7,
 		},

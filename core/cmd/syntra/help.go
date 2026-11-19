@@ -24,17 +24,17 @@ var helpEntries = map[string]helpEntry{
 	"teams":      {"List project teams.", "--workspace UUID --project UUID", "syntra teams --workspace WORKSPACE_UUID --project PROJECT_UUID", "Team JSON."},
 	"members":    {"List workspace members.", "--workspace UUID", "syntra members --workspace WORKSPACE_UUID", "Member JSON."},
 	"resolve":    {"Resolve workspace, project, team and recipient names.", "--workspace NAME [--project NAME] [--team NAME] [--recipient NAME]", "syntra resolve --workspace Acme --recipient Alex", "Resolved IDs or clarification JSON."},
-	"tickets":    {"List tickets.", "--workspace UUID [--view published|own-drafts]", "syntra tickets --workspace WORKSPACE_UUID", "Ticket JSON."},
-	"ticket":     {"Read one ticket, its state and its opaque revision. Closed tickets accept no replies.", "--workspace UUID --ticket UUID", "syntra ticket --workspace WORKSPACE_UUID --ticket TICKET_UUID", "Ticket JSON, including state and revision."},
-	"messages":   {"Read ticket messages.", "--workspace UUID --ticket UUID [--view published|own-drafts]", "syntra messages --workspace WORKSPACE_UUID --ticket TICKET_UUID", "Message JSON."},
-	"reply":      {"Prepare a reply to the creator of a published, nonclosed ticket.", "--workspace UUID --ticket UUID --summary TEXT --context-file PATH|-", "syntra reply --workspace WORKSPACE_UUID --ticket TICKET_UUID --summary Done --context-file context.md", "Draft ID and an exact command for explicit publication."},
-	"prepare":    {"Prepare private content without publishing.", "--file PATH|- [--base REQUEST_UUID] | --template new|reply --workspace UUID [--project UUID] [--ticket UUID]", "syntra prepare --template reply --workspace WORKSPACE_UUID --ticket TICKET_UUID", "Template JSON for --template (reply requires a published, nonclosed ticket); private draft snapshot JSON for --file."},
-	"link":       {"Link a private draft to a member without publishing.", "--file PATH|- --base REQUEST_UUID", "syntra link --file link.json --base REQUEST_UUID", "Private draft snapshot JSON."},
-	"publish":    {"Publish an exact retained private draft.", "--file PATH|- --base REQUEST_UUID", "syntra publish --file publish.json --base REQUEST_UUID", "Published snapshot JSON."},
+	"threads":    {"List threads.", "--workspace UUID [--view published|own-prepared]", "syntra threads --workspace WORKSPACE_UUID", "Thread JSON."},
+	"thread":     {"Read one thread, its state and its opaque revision. Closed threads accept no replies.", "--workspace UUID --thread UUID", "syntra thread --workspace WORKSPACE_UUID --thread THREAD_UUID", "Thread JSON, including state and revision."},
+	"messages":   {"Read thread messages.", "--workspace UUID --thread UUID [--view published|own-prepared]", "syntra messages --workspace WORKSPACE_UUID --thread THREAD_UUID", "Message JSON."},
+	"reply":      {"Prepare a reply to the creator of a published, nonclosed thread.", "--workspace UUID --thread UUID --summary TEXT --context-file PATH|-", "syntra reply --workspace WORKSPACE_UUID --thread THREAD_UUID --summary Done --context-file context.md", "Prepared ID and an exact command for explicit publication."},
+	"prepare":    {"Prepare private content without publishing.", "--file PATH|- [--base REQUEST_UUID] | --template new|reply --workspace UUID [--project UUID] [--thread UUID]", "syntra prepare --template reply --workspace WORKSPACE_UUID --thread THREAD_UUID", "Template JSON for --template (reply requires a published, nonclosed thread); private prepared message snapshot JSON for --file."},
+	"link":       {"Link a private prepared message to a member without publishing.", "--file PATH|- --base REQUEST_UUID", "syntra link --file link.json --base REQUEST_UUID", "Private prepared snapshot JSON."},
+	"publish":    {"Publish an exact retained private prepared message.", "--file PATH|- --base REQUEST_UUID", "syntra publish --file publish.json --base REQUEST_UUID", "Published snapshot JSON."},
 	"snapshot":   {"Read and verify a content snapshot.", "--file PATH|- [--base REQUEST_UUID]", "syntra snapshot --file snapshot.json", "Snapshot JSON and verification level."},
 	"retry":      {"Retry an exact retained request.", "--request UUID", "syntra retry --request REQUEST_UUID", "Original result JSON."},
 }
-var helpOrder = []string{"version", "login", "status", "identity", "disconnect", "forget", "mcp", "workspaces", "projects", "teams", "members", "resolve", "tickets", "ticket", "messages", "reply", "prepare", "link", "publish", "snapshot", "retry"}
+var helpOrder = []string{"version", "login", "status", "identity", "disconnect", "forget", "mcp", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "reply", "prepare", "link", "publish", "snapshot", "retry"}
 
 func usage(name string) string {
 	e := helpEntries[name]
@@ -49,7 +49,7 @@ func printHelp(name string) {
 		for _, n := range helpOrder {
 			fmt.Fprintf(os.Stdout, "  %-12s %s\n", n, helpEntries[n].purpose)
 		}
-		fmt.Fprintln(os.Stdout, "\nTypical workflow: login/status -> workspaces/projects/tickets -> ticket -> resolve -> prepare -> publish\nRun syntra help <command> for flags and examples.\nExit codes: 0 success; 1 error.\nOTP and credentials are never accepted as arguments.")
+		fmt.Fprintln(os.Stdout, "\nTypical workflow: login/status -> workspaces/projects/threads -> thread -> resolve -> prepare -> publish\nRun syntra help <command> for flags and examples.\nExit codes: 0 success; 1 error.\nOTP and credentials are never accepted as arguments.")
 		return
 	}
 	e := helpEntries[name]
@@ -64,7 +64,7 @@ Browser consent requires read and lets you deselect optional permissions.
 A first browser login without permission flags requests read, prepare and publish.
 Supply permission flags to request only the listed optional permissions.
 OTP login without permission flags grants read only.
-  --prepare    Create tickets and prepare or link private drafts.
+  --prepare    Create threads and prepare or link private prepared messages.
   --publish    Publish explicitly. Requires --prepare.
   --mark-read  Allow explicit read receipts. This does not mark items reviewed.
 Use --reauthorize to request new permissions for the installed connection.

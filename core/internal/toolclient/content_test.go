@@ -36,8 +36,8 @@ const backendTeamID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 const qaTeamID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 const formerPedroID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
 const otherID = "66666666-6666-4666-8666-666666666666"
-const ticketID = "77777777-7777-4777-8777-777777777777"
-const draftID = "88888888-8888-4888-8888-888888888888"
+const threadID = "77777777-7777-4777-8777-777777777777"
+const preparedID = "88888888-8888-4888-8888-888888888888"
 const messageID = "99999999-9999-4999-8999-999999999999"
 
 func rev(n byte) string    { return base64.RawURLEncoding.EncodeToString(bytes.Repeat([]byte{n}, 32)) }
@@ -50,26 +50,27 @@ type contentFixture struct {
 	syntrav1connect.UnimplementedProjectTeamServiceHandler
 	syntrav1connect.UnimplementedWorkspaceServiceHandler
 	syntrav1connect.UnimplementedMessageServiceHandler
-	syntrav1connect.UnimplementedTicketServiceHandler
-	mu          sync.Mutex
-	p           *Profile
-	attempts    map[string]proto.Message
-	snapshots   map[string]*v1.AuthoredContentSnapshot
-	calls       int
-	pages       int
-	duplicate   bool
-	noTeams     bool
-	expire      bool
-	incomplete  bool
-	deny        bool
-	closed      bool
-	ticketReads int
-	ticketState v1.TicketState
-	tamper      string
-	hold        bool
-	committed   chan struct{}
-	snapshot    *v1.AuthoredContentSnapshot
-	legacy      *v1.LegacyContentSnapshot
+	syntrav1connect.UnimplementedThreadServiceHandler
+	mu            sync.Mutex
+	p             *Profile
+	attempts      map[string]proto.Message
+	snapshots     map[string]*v1.AuthoredContentSnapshot
+	calls         int
+	pages         int
+	duplicate     bool
+	noTeams       bool
+	expire        bool
+	incomplete    bool
+	deny          bool
+	closed        bool
+	threadReads   int
+	threadState   v1.ThreadState
+	threadPrivate bool
+	tamper        string
+	hold          bool
+	committed     chan struct{}
+	snapshot      *v1.AuthoredContentSnapshot
+	record        *v1.GetContentSnapshotResponse
 }
 
 func (f *contentFixture) GetIdentity(context.Context, *connect.Request[v1.GetIdentityRequest]) (*connect.Response[v1.GetIdentityResponse], error) {
@@ -142,8 +143,8 @@ func (f *contentFixture) apply(ctx context.Context, id string, req proto.Message
 	s := f.snapshots[id]
 	if s == nil {
 		h, _ := digest(c)
-		receipt := &v1.ContentProvenanceReceipt{ContentDigest: h, OwnerUserId: accountA, ConnectionId: ptr(f.p.ConnectionID), RequestId: id, TicketId: ticketID, RecordedAt: timestamppb.Now(), ClientReported: p, IntegrityOrigin: 1}
-		s = &v1.AuthoredContentSnapshot{Content: proto.Clone(c).(*v1.AuthoredContent), Receipt: receipt, TicketRevision: rev(byte(len(f.snapshots) + 1)), Record: &v1.AuthoredContentSnapshot_PrivateDraft{PrivateDraft: &v1.PrivateContentRevision{DraftId: draftID, Revision: rev(byte(len(f.snapshots) + 1))}}}
+		receipt := &v1.ContentProvenanceReceipt{ContentDigest: h, OwnerUserId: accountA, ConnectionId: ptr(f.p.ConnectionID), RequestId: id, ThreadId: threadID, RecordedAt: timestamppb.Now(), ClientReported: p, IntegrityOrigin: 1}
+		s = &v1.AuthoredContentSnapshot{Content: proto.Clone(c).(*v1.AuthoredContent), Receipt: receipt, ThreadRevision: rev(byte(len(f.snapshots) + 1)), Record: &v1.AuthoredContentSnapshot_PreparedMessage{PreparedMessage: &v1.PrivateContentRevision{PreparedMessageId: preparedID, Revision: rev(byte(len(f.snapshots) + 1))}}}
 		if publish {
 			receipt.MessageId = messageID
 			s.Record = &v1.AuthoredContentSnapshot_PublishedMessageId{PublishedMessageId: messageID}
@@ -151,13 +152,13 @@ func (f *contentFixture) apply(ctx context.Context, id string, req proto.Message
 		switch q := req.(type) {
 		case *v1.PrepareContentRequest:
 			if q.Update != nil {
-				s.TicketRevision = q.Update.ExpectedTicketRevision
-			} else if q.ExpectedTicketRevision != nil {
-				s.TicketRevision = *q.ExpectedTicketRevision
+				s.ThreadRevision = q.Update.ExpectedThreadRevision
+			} else if q.ExpectedThreadRevision != nil {
+				s.ThreadRevision = *q.ExpectedThreadRevision
 			}
 		case *v1.LinkContentRequest:
-			if q.LinkedContent.ExistingTicketId != nil {
-				s.TicketRevision = q.Current.ExpectedTicketRevision
+			if q.LinkedContent.ExistingThreadId != nil {
+				s.ThreadRevision = q.Current.ExpectedThreadRevision
 			}
 		}
 		f.attempts[id] = proto.Clone(req)
@@ -183,8 +184,8 @@ func (f *contentFixture) apply(ctx context.Context, id string, req proto.Message
 		out.Receipt.RequestId = accountB
 	case "reported":
 		out.Receipt.ClientReported = &v1.ClientReportedProvenance{Model: ptr("substitute")}
-	case "ticket":
-		out.Receipt.TicketId = accountB
+	case "thread":
+		out.Receipt.ThreadId = accountB
 	case "record":
 		out.Receipt.MessageId = messageID
 	case "origin":
@@ -193,15 +194,15 @@ func (f *contentFixture) apply(ctx context.Context, id string, req proto.Message
 		out.Content.ProjectId = ptr(projectID)
 		h, _ := digest(out.Content)
 		out.Receipt.ContentDigest = h
-	case "same-ticket-cas":
+	case "same-thread-cas":
 		switch q := req.(type) {
 		case *v1.LinkContentRequest:
-			out.TicketRevision = q.Current.ExpectedTicketRevision
+			out.ThreadRevision = q.Current.ExpectedThreadRevision
 		case *v1.PublishContentRequest:
-			out.TicketRevision = q.Current.ExpectedTicketRevision
+			out.ThreadRevision = q.Current.ExpectedThreadRevision
 		}
-	case "ticket-cas":
-		out.TicketRevision = rev(99)
+	case "thread-cas":
+		out.ThreadRevision = rev(99)
 	case "timestamp":
 		out.Receipt.RecordedAt = nil
 	}
@@ -239,10 +240,10 @@ func (f *contentFixture) PublishContent(ctx context.Context, r *connect.Request[
 func (f *contentFixture) GetContentSnapshot(context.Context, *connect.Request[v1.GetContentSnapshotRequest]) (*connect.Response[v1.GetContentSnapshotResponse], error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if f.legacy != nil {
-		return connect.NewResponse(&v1.GetContentSnapshotResponse{Representation: &v1.GetContentSnapshotResponse_Legacy{Legacy: f.legacy}}), nil
+	if f.record != nil {
+		return connect.NewResponse(f.record), nil
 	}
-	return connect.NewResponse(&v1.GetContentSnapshotResponse{Representation: &v1.GetContentSnapshotResponse_Authored{Authored: f.snapshot}}), nil
+	return connect.NewResponse(snapshotRecord(f.snapshot)), nil
 }
 func setupContent(t *testing.T) (*App, *contentFixture, string, *x509.Certificate) {
 	t.Helper()
@@ -252,7 +253,7 @@ func setupContent(t *testing.T) (*App, *contentFixture, string, *x509.Certificat
 		t.Fatal(e)
 	}
 	t.Cleanup(func() { s.Close() })
-	f := &contentFixture{attempts: map[string]proto.Message{}, snapshots: map[string]*v1.AuthoredContentSnapshot{}, committed: make(chan struct{})}
+	f := &contentFixture{threadState: v1.ThreadState_THREAD_STATE_OPEN, attempts: map[string]proto.Message{}, snapshots: map[string]*v1.AuthoredContentSnapshot{}, committed: make(chan struct{})}
 	mux := http.NewServeMux()
 	mux.Handle(syntrav1connect.NewToolConnectionServiceHandler(f))
 	mux.Handle(syntrav1connect.NewAuthoredContentServiceHandler(f))
@@ -260,7 +261,7 @@ func setupContent(t *testing.T) (*App, *contentFixture, string, *x509.Certificat
 	mux.Handle(syntrav1connect.NewProjectTeamServiceHandler(f))
 	mux.Handle(syntrav1connect.NewWorkspaceServiceHandler(f))
 	mux.Handle(syntrav1connect.NewMessageServiceHandler(f))
-	mux.Handle(syntrav1connect.NewTicketServiceHandler(f))
+	mux.Handle(syntrav1connect.NewThreadServiceHandler(f))
 	srv := httptest.NewTLSServer(mux)
 	t.Cleanup(srv.Close)
 	pool := x509.NewCertPool()
@@ -426,7 +427,7 @@ func TestExactContentLinkPublishRetryAndModelSwitch(t *testing.T) {
 	}
 	again, e := a.Retry(ctx, pub.RequestId)
 	if e != nil || !proto.Equal(again, s3) {
-		t.Fatal("consumed draft retry changed immutable publication", e)
+		t.Fatal("consumed prepared retry changed immutable publication", e)
 	}
 	first, e := a.Retry(ctx, r.RequestId)
 	if e != nil || first.Receipt.ClientReported.GetModel() != "first-model" {
@@ -435,11 +436,11 @@ func TestExactContentLinkPublishRetryAndModelSwitch(t *testing.T) {
 	f.mu.Lock()
 	f.snapshot = s3
 	f.mu.Unlock()
-	got, e := a.Snapshot(ctx, &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, TicketId: ticketID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}, pub.RequestId)
+	got, e := a.Snapshot(ctx, &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, ThreadId: threadID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}, pub.RequestId)
 	if e != nil || got.Verification != "retained-client-expectation" {
 		t.Fatal(e)
 	}
-	got, e = a.Snapshot(ctx, &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, TicketId: ticketID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}, "")
+	got, e = a.Snapshot(ctx, &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, ThreadId: threadID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}, "")
 	if e != nil || got.Verification != "receipt-consistency-only" {
 		t.Fatal(e)
 	}
@@ -465,7 +466,7 @@ func TestRetainedTamperingAndCapabilities(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if s.GetPrivateDraft() == nil {
+	if s.GetPreparedMessage() == nil {
 		t.Fatal("missing private")
 	}
 	path := filepath.Join(dir, "attempt-"+r.RequestId+".json")
@@ -573,15 +574,15 @@ func TestCompiledCLIProcessCrashRetryAndLocking(t *testing.T) {
 		t.Fatal("compiled discovery failed", e, string(out))
 	}
 
-	out, e = cliCall(t, binary, "messages", "--profile-dir", dir, "--workspace", workspaceID, "--ticket", ticketID)
+	out, e = cliCall(t, binary, "messages", "--profile-dir", dir, "--workspace", workspaceID, "--thread", threadID)
 	var history v1.ListMessagesResponse
 	if e != nil || protojson.Unmarshal(out, &history) != nil || len(history.Messages) != 2 {
 		t.Fatal("compiled message discovery failed", e, string(out))
 	}
-	out, e = cliCall(t, binary, "tickets", "--profile-dir", dir, "--workspace", workspaceID, "--view", "own-drafts")
-	var listing v1.ListTicketsResponse
-	if e != nil || protojson.Unmarshal(out, &listing) != nil || len(listing.Tickets) != 1 {
-		t.Fatal("compiled explicit ticket view failed", e, string(out))
+	out, e = cliCall(t, binary, "threads", "--profile-dir", dir, "--workspace", workspaceID, "--view", "own-prepared")
+	var listing v1.ListThreadsResponse
+	if e != nil || protojson.Unmarshal(out, &listing) != nil || len(listing.Threads) != 1 {
+		t.Fatal("compiled explicit thread view failed", e, string(out))
 	}
 	current, _ := expectation(&got)
 	linkedContent := proto.Clone(got.Content).(*v1.AuthoredContent)
@@ -606,7 +607,7 @@ func TestCompiledCLIProcessCrashRetryAndLocking(t *testing.T) {
 	f.mu.Lock()
 	f.snapshot = &published
 	f.mu.Unlock()
-	snapshotRequest := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, TicketId: ticketID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}
+	snapshotRequest := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, ThreadId: threadID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}
 	raw, _ = protojson.Marshal(snapshotRequest)
 	os.WriteFile(input, raw, 0600)
 	out, e = cliCall(t, binary, "snapshot", "--profile-dir", dir, "--file", input, "--base", publish.RequestId)
@@ -723,7 +724,7 @@ func TestNilExplicitIDEditCASAndPublicationCapability(t *testing.T) {
 	}
 	bad = proto.Clone(edit).(*v1.PrepareContentRequest)
 	bad.RequestId = randomUUID()
-	bad.Update.ExpectedTicketRevision = rev(99)
+	bad.Update.ExpectedThreadRevision = rev(99)
 	if _, e = a.Prepare(ctx, bad, q.RequestId); e == nil || f.calls != before {
 		t.Fatal("stale CAS reached mutation")
 	}
@@ -759,7 +760,7 @@ func TestStoredResultTamperAndImmutableRetryMetadata(t *testing.T) {
 		t.Fatal(e)
 	}
 	f.mu.Lock()
-	f.tamper = "ticket"
+	f.tamper = "thread"
 	f.mu.Unlock()
 	if _, e := a.Retry(ctx, q.RequestId); e == nil {
 		t.Fatal("retry changed immutable resource ID")
@@ -824,30 +825,53 @@ func TestActualUnicodeCRLFAndLiteralBackslashRemainDistinct(t *testing.T) {
 		t.Fatal("literal backslashes normalized into actual Unicode/newlines")
 	}
 }
-func TestSnapshotLegacyContextAndPrivateOwnerSubstitution(t *testing.T) {
-	for _, kind := range []string{"good", "draft-workspace", "draft-ticket", "draft-owner", "published-workspace", "published-ticket", "authored-private-owner"} {
+func TestSnapshotMessageContextAndPrivateOwnerSubstitution(t *testing.T) {
+	for _, kind := range []string{"good", "prepared-workspace", "prepared-thread", "prepared-owner", "published-workspace", "published-thread", "authored-private-owner", "authored-missing-thread", "authored-missing-record", "authored-cross-thread"} {
 		t.Run(kind, func(t *testing.T) {
 			a, f, _, _ := setupContent(t)
 			ctx := context.Background()
-			d := &v1.MessageDraft{Id: draftID, WorkspaceId: workspaceID, TicketId: ticketID, AuthorUserId: accountA, Revision: rev(1)}
-			l := &v1.LegacyContentSnapshot{Ticket: &v1.Ticket{Id: ticketID, WorkspaceId: workspaceID}, Record: &v1.LegacyContentSnapshot_PrivateDraft{PrivateDraft: d}}
-			r := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, TicketId: ticketID, Record: &v1.GetContentSnapshotRequest_PrivateDraft{PrivateDraft: &v1.PrivateContentRevision{DraftId: draftID, Revision: rev(1)}}}
+			d := &v1.PreparedMessage{Id: preparedID, WorkspaceId: workspaceID, ThreadId: threadID, AuthorUserId: accountA, Revision: rev(1)}
+			l := &v1.GetContentSnapshotResponse{Thread: &v1.Thread{Id: threadID, WorkspaceId: workspaceID}, Record: &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: d}}
+			r := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, ThreadId: threadID, Record: &v1.GetContentSnapshotRequest_PreparedMessage{PreparedMessage: &v1.PrivateContentRevision{PreparedMessageId: preparedID, Revision: rev(1)}}}
 			switch kind {
-			case "draft-workspace":
+			case "prepared-workspace":
 				d.WorkspaceId = accountB
-			case "draft-ticket":
-				d.TicketId = accountB
-			case "draft-owner":
+			case "prepared-thread":
+				d.ThreadId = accountB
+			case "prepared-owner":
 				d.AuthorUserId = accountB
-			case "published-workspace", "published-ticket":
-				m := &v1.PublishedMessage{Id: messageID, WorkspaceId: workspaceID, TicketId: ticketID}
+			case "published-workspace", "published-thread":
+				m := &v1.PublishedMessage{Id: messageID, WorkspaceId: workspaceID, ThreadId: threadID}
 				if kind == "published-workspace" {
 					m.WorkspaceId = accountB
 				} else {
-					m.TicketId = accountB
+					m.ThreadId = accountB
 				}
-				l.Record = &v1.LegacyContentSnapshot_PublishedMessage{PublishedMessage: m}
+				l.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: m}
 				r.Record = &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}
+			case "authored-missing-thread", "authored-missing-record", "authored-cross-thread":
+				original, e := a.Prepare(ctx, request(), "")
+				if e != nil {
+					t.Fatal(e)
+				}
+				malformed := snapshotRecord(original)
+				switch kind {
+				case "authored-missing-thread":
+					malformed.Thread = nil
+				case "authored-missing-record":
+					malformed.Record = nil
+				case "authored-cross-thread":
+					malformed.Thread.Id = accountB
+				}
+				f.mu.Lock()
+				f.record = malformed
+				f.mu.Unlock()
+				got, e := a.Snapshot(ctx, r, "")
+				if e == nil || got != nil {
+					t.Fatal("authored evidence bypassed common message identity binding")
+				}
+				return
+
 			case "authored-private-owner":
 				q := request()
 				s, e := a.Prepare(ctx, q, "")
@@ -868,15 +892,15 @@ func TestSnapshotLegacyContextAndPrivateOwnerSubstitution(t *testing.T) {
 				return
 			}
 			f.mu.Lock()
-			f.legacy = l
+			f.record = l
 			f.mu.Unlock()
 			got, e := a.Snapshot(ctx, r, "")
 			if kind == "good" {
-				if e != nil || got.Verification != "legacy-no-client-integrity" || got.Snapshot != nil {
-					t.Fatal("legacy invented integrity", e)
+				if e != nil || got.Verification != "server-record" || got.Snapshot != nil {
+					t.Fatal("record invented integrity", e)
 				}
 			} else if e == nil || got != nil {
-				t.Fatal("inconsistent legacy projection accepted")
+				t.Fatal("inconsistent record projection accepted")
 			}
 		})
 	}
@@ -906,65 +930,65 @@ func TestDirectoryAggregateByteBoundAndCursorLoop(t *testing.T) {
 }
 
 func (f *contentFixture) ListMessages(_ context.Context, r *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error) {
-	if r.Msg.View == v1.MessageView_MESSAGE_VIEW_OWN_DRAFTS {
-		return connect.NewResponse(&v1.ListMessagesResponse{Drafts: []*v1.MessageDraft{{Id: draftID, WorkspaceId: workspaceID, TicketId: ticketID, AuthorUserId: accountA}}}), nil
+	if r.Msg.View == v1.MessageView_MESSAGE_VIEW_OWN_PREPARED {
+		return connect.NewResponse(&v1.ListMessagesResponse{PreparedMessages: []*v1.PreparedMessage{{Id: preparedID, WorkspaceId: workspaceID, ThreadId: threadID, AuthorUserId: accountA}}}), nil
 	}
 	if r.Msg.View != v1.MessageView_MESSAGE_VIEW_PUBLISHED {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("view required"))
 	}
 	if r.Msg.PageToken == "" {
-		return connect.NewResponse(&v1.ListMessagesResponse{Messages: []*v1.PublishedMessage{{Id: messageID, WorkspaceId: workspaceID, TicketId: ticketID}}, NextPageToken: "later"}), nil
+		return connect.NewResponse(&v1.ListMessagesResponse{Messages: []*v1.PublishedMessage{{Id: messageID, WorkspaceId: workspaceID, ThreadId: threadID}}, NextPageToken: "later"}), nil
 	}
-	return connect.NewResponse(&v1.ListMessagesResponse{Messages: []*v1.PublishedMessage{{Id: otherID, WorkspaceId: workspaceID, TicketId: ticketID}}}), nil
+	return connect.NewResponse(&v1.ListMessagesResponse{Messages: []*v1.PublishedMessage{{Id: otherID, WorkspaceId: workspaceID, ThreadId: threadID}}}), nil
 }
-func (f *contentFixture) ListTickets(_ context.Context, r *connect.Request[v1.ListTicketsRequest]) (*connect.Response[v1.ListTicketsResponse], error) {
-	if r.Msg.Visibility != v1.TicketVisibility_TICKET_VISIBILITY_OWN_DRAFTS && r.Msg.Visibility != v1.TicketVisibility_TICKET_VISIBILITY_PUBLISHED {
+func (f *contentFixture) ListThreads(_ context.Context, r *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error) {
+	if r.Msg.Visibility != v1.ThreadVisibility_THREAD_VISIBILITY_OWN_PREPARED && r.Msg.Visibility != v1.ThreadVisibility_THREAD_VISIBILITY_PUBLISHED {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("explicit visibility required"))
 	}
-	return connect.NewResponse(&v1.ListTicketsResponse{Tickets: []*v1.Ticket{{Id: ticketID, WorkspaceId: workspaceID}}}), nil
+	return connect.NewResponse(&v1.ListThreadsResponse{Threads: []*v1.Thread{{Id: threadID, WorkspaceId: workspaceID}}}), nil
 }
-func (f *contentFixture) GetTicket(_ context.Context, r *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error) {
+func (f *contentFixture) GetThread(_ context.Context, r *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.ticketReads++
-	state := f.ticketState
-	if state == v1.TicketState_TICKET_STATE_UNSPECIFIED {
-		state = v1.TicketState_TICKET_STATE_OPEN
+	f.threadReads++
+	state := f.threadState
+	if f.threadPrivate {
+		state = v1.ThreadState_THREAD_STATE_PENDING
 	}
-	return connect.NewResponse(&v1.GetTicketResponse{Ticket: &v1.Ticket{Id: r.Msg.TicketId, WorkspaceId: r.Msg.WorkspaceId, CreatorUserId: accountB, Title: "Fixture title", ProjectId: projectID, State: state, Revision: rev(88)}}), nil
+	return connect.NewResponse(&v1.GetThreadResponse{Thread: &v1.Thread{Id: r.Msg.ThreadId, WorkspaceId: r.Msg.WorkspaceId, CreatorUserId: accountB, Title: "Fixture title", ProjectId: projectID, State: state, Revision: rev(88)}}), nil
 }
-func TestCompleteMessagesAndExplicitTicketViews(t *testing.T) {
+func TestCompleteMessagesAndExplicitThreadViews(t *testing.T) {
 	a, _, _, _ := setupContent(t)
 	ctx := context.Background()
-	messages, e := a.Messages(ctx, workspaceID, ticketID, v1.MessageView_MESSAGE_VIEW_PUBLISHED)
+	messages, e := a.Messages(ctx, workspaceID, threadID, v1.MessageView_MESSAGE_VIEW_PUBLISHED)
 	if e != nil || len(messages.Messages) != 2 || messages.NextPageToken != "" {
 		t.Fatal("complete publication discovery failed", e)
 	}
-	drafts, e := a.Messages(ctx, workspaceID, ticketID, v1.MessageView_MESSAGE_VIEW_OWN_DRAFTS)
-	if e != nil || len(drafts.Drafts) != 1 || len(drafts.Messages) != 0 {
+	prepared_messages, e := a.Messages(ctx, workspaceID, threadID, v1.MessageView_MESSAGE_VIEW_OWN_PREPARED)
+	if e != nil || len(prepared_messages.PreparedMessages) != 1 || len(prepared_messages.Messages) != 0 {
 		t.Fatal("private message view failed", e)
 	}
-	if _, e = a.Messages(ctx, workspaceID, ticketID, v1.MessageView_MESSAGE_VIEW_UNSPECIFIED); e == nil {
+	if _, e = a.Messages(ctx, workspaceID, threadID, v1.MessageView_MESSAGE_VIEW_UNSPECIFIED); e == nil {
 		t.Fatal("implicit message view")
 	}
-	for _, view := range []v1.TicketVisibility{v1.TicketVisibility_TICKET_VISIBILITY_OWN_DRAFTS, v1.TicketVisibility_TICKET_VISIBILITY_PUBLISHED} {
-		rows, e := a.Tickets(ctx, workspaceID, view)
+	for _, view := range []v1.ThreadVisibility{v1.ThreadVisibility_THREAD_VISIBILITY_OWN_PREPARED, v1.ThreadVisibility_THREAD_VISIBILITY_PUBLISHED} {
+		rows, e := a.Threads(ctx, workspaceID, view)
 		if e != nil || len(rows) != 1 {
-			t.Fatal("explicit ticket view failed", e)
+			t.Fatal("explicit thread view failed", e)
 		}
 	}
 }
-func TestReturnedTicketCASModeRules(t *testing.T) {
+func TestReturnedThreadCASModeRules(t *testing.T) {
 	ctx := context.Background()
 	for _, kind := range []string{"edit-preserves", "link-initial-advances", "link-reply-preserves", "publish-advances"} {
 		t.Run(kind, func(t *testing.T) {
 			a, f, _, _ := setupContent(t)
 			q := request()
 			if kind == "link-reply-preserves" {
-				q.Content.ExistingTicketId = ptr(ticketID)
+				q.Content.ExistingThreadId = ptr(threadID)
 				q.Content.ProjectId = ptr(projectID)
 				q.Content.Title = "Fixture title"
-				q.ExpectedTicketRevision = ptr(rev(88))
+				q.ExpectedThreadRevision = ptr(rev(88))
 			}
 			s, e := a.Prepare(ctx, q, "")
 			if e != nil {
@@ -976,16 +1000,16 @@ func TestReturnedTicketCASModeRules(t *testing.T) {
 				edited := proto.Clone(s.Content).(*v1.AuthoredContent)
 				edited.Summary = "edit"
 				f.mu.Lock()
-				f.tamper = "ticket-cas"
+				f.tamper = "thread-cas"
 				f.mu.Unlock()
 				_, e = a.Prepare(ctx, &v1.PrepareContentRequest{RequestId: randomUUID(), Content: edited, Update: x}, q.RequestId)
 			case "link-initial-advances", "link-reply-preserves":
 				c := proto.Clone(s.Content).(*v1.AuthoredContent)
 				c.Destination = &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: accountB}}
 				f.mu.Lock()
-				f.tamper = "same-ticket-cas"
+				f.tamper = "same-thread-cas"
 				if kind == "link-reply-preserves" {
-					f.tamper = "ticket-cas"
+					f.tamper = "thread-cas"
 				}
 				f.mu.Unlock()
 				_, e = a.Link(ctx, &v1.LinkContentRequest{RequestId: randomUUID(), Current: x, LinkedContent: c}, q.RequestId)
@@ -998,12 +1022,12 @@ func TestReturnedTicketCASModeRules(t *testing.T) {
 				}
 				x, _ = expectation(s)
 				f.mu.Lock()
-				f.tamper = "same-ticket-cas"
+				f.tamper = "same-thread-cas"
 				f.mu.Unlock()
 				_, e = a.Publish(ctx, &v1.PublishContentRequest{RequestId: randomUUID(), WorkspaceId: workspaceID, ExpectedAuthorUserId: accountA, Current: x}, linked.RequestId)
 			}
 			if e == nil {
-				t.Fatal("incorrect returned ticket CAS accepted", kind)
+				t.Fatal("incorrect returned thread CAS accepted", kind)
 			}
 		})
 	}
@@ -1118,11 +1142,11 @@ func TestPrepareReportsInvalidReplyFieldsWithoutContent(t *testing.T) {
 		field  string
 	}{
 		{"missing title", func(r *v1.PrepareContentRequest) { r.Content.Title = "" }, "content.title"},
-		{"missing revision", func(r *v1.PrepareContentRequest) { r.Content.ExistingTicketId = ptr(projectID) }, "expectedTicketRevision"},
+		{"missing revision", func(r *v1.PrepareContentRequest) { r.Content.ExistingThreadId = ptr(projectID) }, "expectedThreadRevision"},
 		{"documented numeric revision", func(r *v1.PrepareContentRequest) {
-			r.Content.ExistingTicketId = ptr(projectID)
-			r.ExpectedTicketRevision = ptr("12")
-		}, "expectedTicketRevision"},
+			r.Content.ExistingThreadId = ptr(projectID)
+			r.ExpectedThreadRevision = ptr("12")
+		}, "expectedThreadRevision"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := request()
@@ -1142,12 +1166,12 @@ func TestCompiledCLIReplyRevision(t *testing.T) {
 	r := request()
 	r.Content.ProjectId = ptr(projectID)
 	r.Content.Title = "Fixture title"
-	r.Content.ExistingTicketId = ptr(ticketID)
+	r.Content.ExistingThreadId = ptr(threadID)
 	r.Content.Destination = &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: accountB}}
 	input := t.TempDir() + "/reply.json"
 	a.store.Close()
 	for _, revision := range []string{"12", rev(88)} {
-		r.ExpectedTicketRevision = ptr(revision)
+		r.ExpectedThreadRevision = ptr(revision)
 		raw, err := protojson.Marshal(r)
 		if err != nil {
 			t.Fatal(err)
@@ -1157,7 +1181,7 @@ func TestCompiledCLIReplyRevision(t *testing.T) {
 		}
 		out, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--file", input)
 		if revision == "12" {
-			if err == nil || !bytes.Contains(out, []byte("expectedTicketRevision")) || f.calls != 0 {
+			if err == nil || !bytes.Contains(out, []byte("expectedThreadRevision")) || f.calls != 0 {
 				t.Fatalf("invalid revision: %v %s", err, out)
 			}
 		} else if err != nil || f.calls != 1 {
@@ -1166,22 +1190,22 @@ func TestCompiledCLIReplyRevision(t *testing.T) {
 	}
 }
 
-func TestNestedTicketRevisionNormalization(t *testing.T) {
-	raw := `{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"22222222-2222-4222-8222-222222222222","projectId":"33333333-3333-4333-8333-333333333333","existingTicketId":"44444444-4444-4444-8444-444444444444","expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title":"...","originalDestinationIntent":"...","summary":"...","contextMarkdown":"","destination":{"unlinkedLabel":"..."}},"clientReported":{"tool":"Claude Code","model":"..."}}`
+func TestNestedThreadRevisionNormalization(t *testing.T) {
+	raw := `{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"22222222-2222-4222-8222-222222222222","projectId":"33333333-3333-4333-8333-333333333333","existingThreadId":"44444444-4444-4444-8444-444444444444","expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title":"...","originalDestinationIntent":"...","summary":"...","contextMarkdown":"","destination":{"unlinkedLabel":"..."}},"clientReported":{"tool":"Claude Code","model":"..."}}`
 	var request v1.PrepareContentRequest
 	var correction string
 	if err := ReadContentInputWithCorrections(strings.NewReader(raw), &request, func(s string) { correction = s }); err != nil {
 		t.Fatal(err)
 	}
-	if request.GetExpectedTicketRevision() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" || correction == "" {
+	if request.GetExpectedThreadRevision() != "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" || correction == "" {
 		t.Fatalf("revision or correction missing")
 	}
 	first, err := digest(request.Content)
 	if err != nil {
 		t.Fatal(err)
 	}
-	correct := strings.Replace(raw, `"content":{`, `"expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","content":{`, 1)
-	correct = strings.Replace(correct, `"expectedTicketRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title"`, `"title"`, 1)
+	correct := strings.Replace(raw, `"content":{`, `"expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","content":{`, 1)
+	correct = strings.Replace(correct, `"expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title"`, `"title"`, 1)
 	var canonical v1.PrepareContentRequest
 	if err := ReadContentInput(strings.NewReader(correct), &canonical); err != nil {
 		t.Fatal(err)
@@ -1203,19 +1227,19 @@ func TestCompiledReplyPublishesOnlyOnExplicitCommand(t *testing.T) {
 	if err := os.WriteFile(contextPath, []byte("Details"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	out, err := cliCall(t, binary, "reply", "--profile-dir", dir, "--workspace", workspaceID, "--ticket", ticketID, "--summary", "Resolved", "--context-file", contextPath)
+	out, err := cliCall(t, binary, "reply", "--profile-dir", dir, "--workspace", workspaceID, "--thread", threadID, "--summary", "Resolved", "--context-file", contextPath)
 	if err != nil {
 		t.Fatalf("reply: %v %s", err, out)
 	}
 	parts := strings.SplitN(string(out), "Publish explicitly with:\n", 2)
-	if len(parts) != 2 || !strings.Contains(parts[0], draftID) {
+	if len(parts) != 2 || !strings.Contains(parts[0], preparedID) {
 		t.Fatalf("missing next command: %s", out)
 	}
 	f.mu.Lock()
-	before, reads := f.calls, f.ticketReads
+	before, reads := f.calls, f.threadReads
 	f.mu.Unlock()
 	if before != 1 || reads != 1 {
-		t.Fatalf("reply sent %d mutations and %d ticket reads", before, reads)
+		t.Fatalf("reply sent %d mutations and %d thread reads", before, reads)
 	}
 	cmd := exec.Command("bash", "-c", strings.TrimSpace(parts[1]))
 	cmd.Env = append(testsupport.FixtureCLIEnv(), "PATH="+filepath.Dir(binary)+":"+os.Getenv("PATH"))
@@ -1233,7 +1257,7 @@ func TestCompiledTemplateToPrepare(t *testing.T) {
 	a, f, dir, ca := setupContent(t)
 	binary := testsupport.BuildCLI(t, "../../cmd/syntra", ca)
 	a.store.Close()
-	out, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--template", "reply", "--workspace", workspaceID, "--ticket", ticketID)
+	out, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--template", "reply", "--workspace", workspaceID, "--thread", threadID)
 	if err != nil {
 		t.Fatalf("template: %v %s", err, out)
 	}
@@ -1242,7 +1266,7 @@ func TestCompiledTemplateToPrepare(t *testing.T) {
 		t.Fatal(err)
 	}
 	content := raw["content"].(map[string]any)
-	if raw["expectedTicketRevision"] != rev(88) || content["originalDestinationIntent"] != "TODO: SYNTRA recipient name" {
+	if raw["expectedThreadRevision"] != rev(88) || content["originalDestinationIntent"] != "TODO: SYNTRA recipient name" {
 		t.Fatalf("incorrect template: %s", out)
 	}
 	input := filepath.Join(t.TempDir(), "reply.json")
@@ -1268,7 +1292,40 @@ func TestCompiledTemplateToPrepare(t *testing.T) {
 		t.Fatalf("prepare: %v %s", err, result)
 	}
 	var snap v1.AuthoredContentSnapshot
-	if err = protojson.Unmarshal(result, &snap); err != nil || snap.Content.GetOriginalDestinationIntent() != "Pedro" || snap.GetPrivateDraft() == nil || f.calls != 1 {
+	if err = protojson.Unmarshal(result, &snap); err != nil || snap.Content.GetOriginalDestinationIntent() != "Pedro" || snap.GetPreparedMessage() == nil || f.calls != 1 {
 		t.Fatalf("bad result %v %s", err, result)
+	}
+}
+
+func snapshotRecord(s *v1.AuthoredContentSnapshot) *v1.GetContentSnapshotResponse {
+	if s == nil {
+		return &v1.GetContentSnapshotResponse{}
+	}
+	out := &v1.GetContentSnapshotResponse{Authored: s, Thread: &v1.Thread{Id: s.Receipt.ThreadId, WorkspaceId: s.Content.WorkspaceId}}
+	if d := s.GetPreparedMessage(); d != nil {
+		out.Record = &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: &v1.PreparedMessage{Id: d.PreparedMessageId, Revision: d.Revision, WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+	} else {
+		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+	}
+	return out
+}
+
+func TestHistoricalAuthoredEvidenceIsSeparateFromCurrentPrivateRecord(t *testing.T) {
+	a, f, _, _ := setupContent(t)
+	ctx := context.Background()
+	old, e := a.Prepare(ctx, request(), "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	response := snapshotRecord(old)
+	response.GetCurrentPreparedMessage().Revision = rev(99)
+	response.GetCurrentPreparedMessage().Summary = "Current edited server text"
+	f.mu.Lock()
+	f.record = response
+	f.mu.Unlock()
+	r := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, ThreadId: threadID, Record: &v1.GetContentSnapshotRequest_PreparedMessage{PreparedMessage: old.GetPreparedMessage()}}
+	got, e := a.Snapshot(ctx, r, "")
+	if e != nil || !proto.Equal(got.Snapshot, old) || got.Snapshot.Content.Summary == response.GetCurrentPreparedMessage().Summary {
+		t.Fatal("historical authored evidence conflated with current record", e)
 	}
 }

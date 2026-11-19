@@ -51,6 +51,8 @@ const (
 type AuthoredContentServiceClient interface {
 	PrepareContent(context.Context, *connect.Request[v1.PrepareContentRequest]) (*connect.Response[v1.PrepareContentResponse], error)
 	LinkContent(context.Context, *connect.Request[v1.LinkContentRequest]) (*connect.Response[v1.LinkContentResponse], error)
+	// Agents require PUBLISH capability; the authenticated human author may send
+	// the exact reviewed preparation using its digest and both revision tokens.
 	PublishContent(context.Context, *connect.Request[v1.PublishContentRequest]) (*connect.Response[v1.PublishContentResponse], error)
 	GetContentSnapshot(context.Context, *connect.Request[v1.GetContentSnapshotRequest]) (*connect.Response[v1.GetContentSnapshotResponse], error)
 }
@@ -126,6 +128,8 @@ func (c *authoredContentServiceClient) GetContentSnapshot(ctx context.Context, r
 type AuthoredContentServiceHandler interface {
 	PrepareContent(context.Context, *connect.Request[v1.PrepareContentRequest]) (*connect.Response[v1.PrepareContentResponse], error)
 	LinkContent(context.Context, *connect.Request[v1.LinkContentRequest]) (*connect.Response[v1.LinkContentResponse], error)
+	// Agents require PUBLISH capability; the authenticated human author may send
+	// the exact reviewed preparation using its digest and both revision tokens.
 	PublishContent(context.Context, *connect.Request[v1.PublishContentRequest]) (*connect.Response[v1.PublishContentResponse], error)
 	GetContentSnapshot(context.Context, *connect.Request[v1.GetContentSnapshotRequest]) (*connect.Response[v1.GetContentSnapshotResponse], error)
 }

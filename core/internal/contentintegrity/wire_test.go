@@ -13,8 +13,8 @@ import (
 
 const owner = "11111111-1111-4111-8111-111111111111"
 const workspace = "22222222-2222-4222-8222-222222222222"
-const ticket = "33333333-3333-4333-8333-333333333333"
-const draft = "44444444-4444-4444-8444-444444444444"
+const thread = "33333333-3333-4333-8333-333333333333"
+const prepared = "44444444-4444-4444-8444-444444444444"
 const request = "55555555-5555-4555-8555-555555555555"
 const member = "66666666-6666-4666-8666-666666666666"
 
@@ -38,8 +38,8 @@ func prepare(t *testing.T) *v1.PrepareContentRequest {
 	c := wireContent()
 	return &v1.PrepareContentRequest{Content: c, ExpectedContentDigest: contentDigest(t, c), RequestId: request}
 }
-func current(t *testing.T, c *v1.AuthoredContent) *v1.ContentDraftExpectation {
-	return &v1.ContentDraftExpectation{TicketId: ticket, DraftId: draft, ExpectedTicketRevision: revision(), ExpectedDraftRevision: revision(), ExpectedContentDigest: contentDigest(t, c)}
+func current(t *testing.T, c *v1.AuthoredContent) *v1.PreparedContentExpectation {
+	return &v1.PreparedContentExpectation{ThreadId: thread, PreparedMessageId: prepared, ExpectedThreadRevision: revision(), ExpectedPreparedMessageRevision: revision(), ExpectedContentDigest: contentDigest(t, c)}
 }
 func TestPrepareIntegrityAndModes(t *testing.T) {
 	r := prepare(t)
@@ -47,7 +47,7 @@ func TestPrepareIntegrityAndModes(t *testing.T) {
 		t.Fatal(e)
 	}
 	for name, change := range map[string]func(*v1.PrepareContentRequest){
-		"missing digest": func(r *v1.PrepareContentRequest) { r.ExpectedContentDigest = nil }, "tampered bytes": func(r *v1.PrepareContentRequest) { r.Content.Summary += " " }, "missing author": func(r *v1.PrepareContentRequest) { r.Content.ExpectedAuthorUserId = "" }, "bad revision": func(r *v1.PrepareContentRequest) { r.ExpectedTicketRevision = proto.String("bad") }, "unknown": func(r *v1.PrepareContentRequest) { r.ProtoReflect().SetUnknown([]byte{0x98, 6, 1}) }, "empty provenance": func(r *v1.PrepareContentRequest) {
+		"missing digest": func(r *v1.PrepareContentRequest) { r.ExpectedContentDigest = nil }, "tampered bytes": func(r *v1.PrepareContentRequest) { r.Content.Summary += " " }, "missing author": func(r *v1.PrepareContentRequest) { r.Content.ExpectedAuthorUserId = "" }, "bad revision": func(r *v1.PrepareContentRequest) { r.ExpectedThreadRevision = proto.String("bad") }, "unknown": func(r *v1.PrepareContentRequest) { r.ProtoReflect().SetUnknown([]byte{0x98, 6, 1}) }, "empty provenance": func(r *v1.PrepareContentRequest) {
 			r.ClientReported = &v1.ClientReportedProvenance{Model: proto.String("")}
 		},
 	} {
@@ -63,12 +63,12 @@ func TestPrepareIntegrityAndModes(t *testing.T) {
 		t.Fatal("wrong owner accepted")
 	}
 	reply := prepare(t)
-	reply.Content.ExistingTicketId = proto.String(ticket)
+	reply.Content.ExistingThreadId = proto.String(thread)
 	reply.ExpectedContentDigest = contentDigest(t, reply.Content)
 	if ValidatePrepare(reply, owner) == nil {
 		t.Fatal("reply without CAS")
 	}
-	reply.ExpectedTicketRevision = proto.String(revision())
+	reply.ExpectedThreadRevision = proto.String(revision())
 	if e := ValidatePrepare(reply, owner); e != nil {
 		t.Fatal(e)
 	}
@@ -77,7 +77,7 @@ func TestPrepareIntegrityAndModes(t *testing.T) {
 	if e := ValidatePrepare(update, owner); e != nil {
 		t.Fatal(e)
 	}
-	update.ExpectedTicketRevision = proto.String(revision())
+	update.ExpectedThreadRevision = proto.String(revision())
 	if ValidatePrepare(update, owner) == nil {
 		t.Fatal("ambiguous update mode")
 	}
@@ -245,11 +245,11 @@ func TestStrictJSONRequiresSemanticGate(t *testing.T) {
 	}
 }
 func TestSnapshotSelector(t *testing.T) {
-	r := &v1.GetContentSnapshotRequest{WorkspaceId: workspace, TicketId: ticket, Record: &v1.GetContentSnapshotRequest_PrivateDraft{PrivateDraft: &v1.PrivateContentRevision{DraftId: draft, Revision: revision()}}}
+	r := &v1.GetContentSnapshotRequest{WorkspaceId: workspace, ThreadId: thread, Record: &v1.GetContentSnapshotRequest_PreparedMessage{PreparedMessage: &v1.PrivateContentRevision{PreparedMessageId: prepared, Revision: revision()}}}
 	if e := ValidateSnapshotRequest(r); e != nil {
 		t.Fatal(e)
 	}
-	r.GetPrivateDraft().Revision = ""
+	r.GetPreparedMessage().Revision = ""
 	if ValidateSnapshotRequest(r) == nil {
 		t.Fatal("missing exact private revision")
 	}
@@ -257,7 +257,7 @@ func TestSnapshotSelector(t *testing.T) {
 	if e := ValidateSnapshotRequest(r); e != nil {
 		t.Fatal(e)
 	}
-	if DecodeStrictJSON([]byte(`{"privateDraft":{},"publishedMessageId":null}`), r) == nil {
+	if DecodeStrictJSON([]byte(`{"preparedMessage":{},"publishedMessageId":null}`), r) == nil {
 		t.Fatal("ambiguous selector accepted")
 	}
 }

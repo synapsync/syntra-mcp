@@ -35,7 +35,7 @@ func TestFrozenVectors(t *testing.T) {
 			if err != nil || hex.EncodeToString(d[:]) != v.SHA256 {
 				t.Fatal("digest mismatch", err)
 			}
-			for _, field := range []string{"author", "workspace", "project", "ticket", "title", "intent", "destination", "summary", "markdown"} {
+			for _, field := range []string{"author", "workspace", "project", "thread", "title", "intent", "destination", "summary", "markdown"} {
 				c := v.Content
 				s := "changed"
 				switch field {
@@ -45,8 +45,8 @@ func TestFrozenVectors(t *testing.T) {
 					c.WorkspaceID += s
 				case "project":
 					c.ProjectID = &s
-				case "ticket":
-					c.ExistingTicketID = &s
+				case "thread":
+					c.ExistingThreadID = &s
 				case "title":
 					c.Title += s
 				case "intent":

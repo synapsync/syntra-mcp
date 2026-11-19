@@ -1,5 +1,5 @@
 // Package toolclient shares one human-owned local connection across CLI and MCP.
-// It never persists managed human sessions or interprets ticket content as code.
+// It never persists managed human sessions or interprets thread content as code.
 package toolclient
 
 import (
@@ -31,7 +31,7 @@ type Config struct {
 }
 
 // BrowserConfig contains only public fields for browser-authorized profiles.
-// ProviderOrigin and PublishableKey remain specific to the legacy OTP method.
+// ProviderOrigin and PublishableKey remain specific to the OTP method.
 type BrowserConfig struct {
 	APIOrigin       string              `json:"apiOrigin"`
 	BrowserOrigin   string              `json:"browserOrigin"`
@@ -160,7 +160,7 @@ func (c Config) Validate() error {
 	if ValidateOrigin(c.APIOrigin) != nil || ValidateOrigin(c.ProviderOrigin) != nil {
 		return ErrProfile
 	}
-	// Only the new public publishable-key form is accepted; legacy JWT keys can
+	// Only public publishable keys are accepted; JWT keys can
 	// contain privileged roles and are deliberately unsupported in this pilot.
 	if !strings.HasPrefix(c.PublishableKey, "sb_publishable_") || len(c.PublishableKey) > 256 || len(c.PublishableKey) < 20 {
 		return ErrProfile

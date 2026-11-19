@@ -57,7 +57,7 @@ func moveMisplacedRevision(root, content map[string]json.RawMessage, contentKey,
 		root[expectationKey] = raw
 		destination = expectationKey
 	} else {
-		if key != "expectedTicketRevision" || contentKey != "content" {
+		if key != "expectedThreadRevision" || contentKey != "content" {
 			return "", false, fmt.Errorf("%w: %s belongs in %s", ci.ErrWire, key, expectationKey)
 		}
 		if _, exists = root[key]; exists {
@@ -79,7 +79,7 @@ func normalizeRoot(b []byte, contentKey, expectationKey string, report func(stri
 		return b, nil
 	}
 	changed := false
-	for _, key := range []string{"expectedTicketRevision", "expectedDraftRevision"} {
+	for _, key := range []string{"expectedThreadRevision", "expectedPreparedMessageRevision"} {
 		destination, moved, err := moveMisplacedRevision(root, content, contentKey, expectationKey, key)
 		if err != nil {
 			return nil, err
