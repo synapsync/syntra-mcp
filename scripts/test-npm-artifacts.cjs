@@ -201,15 +201,21 @@ function runMCP(command, args, options) {
       if (pendingLine) settleLine(pendingLine);
       closed = true;
       closeResult = { code, signal };
-      for (const waiter of waiters.splice(0)) waiter.reject(new Error(`MCP exited before its response (code=${code}, signal=${signal})`));
+      for (const waiter of waiters.splice(0)) waiter.reject(earlyExit());
     });
+
+    function earlyExit() {
+      const diagnostic = stderr.trim().slice(-1000);
+      return new Error(`MCP exited before its response (code=${closeResult.code}, signal=${closeResult.signal})` +
+        (diagnostic ? `: ${diagnostic}` : ''));
+    }
 
     function nextFrame() {
       if (frames.length > 0 && frames.length > deliveredFrames) {
         deliveredFrames++;
         return Promise.resolve(frames[deliveredFrames - 1]);
       }
-      if (closed) return Promise.reject(new Error(`MCP exited before its response (code=${closeResult.code}, signal=${closeResult.signal})`));
+      if (closed) return Promise.reject(earlyExit());
       return new Promise((resolveLine, rejectLine) => {
         const timer = setTimeout(() => {
           const index = waiters.findIndex(waiter => waiter.resolve === wrappedResolve);

@@ -47,12 +47,36 @@ syntra setup --agent claude-code
 syntra setup --agent opencode
 ```
 
-Add `--dry-run` to preview the registration and skill installation. For a
-recognized stale Syntra entry, review the before/after preview and confirm the
-replacement, or use `--replace` to apply it without prompting. Setup retains
-a private config backup and preserves an existing different skill on replacement.
-Start a fresh host session after changing its registration, then ask it to list
-your Syntra workspaces. For other stdio hosts or a custom profile, use the
+New registrations default to **latest**. Each new MCP process asks npm for
+`@synapsync/syntra-mcp@latest` with `--prefer-online`. npm uses your configured
+registry and cache. It can reuse cached package files and may fall back to
+cache when the registry is unavailable. A cold cache needs registry access.
+Startup can take longer during npm resolution. A running MCP process keeps
+its version for the whole session.
+
+Choose **local** to start the selected npm-global installation directly,
+without a startup registry check:
+
+```sh
+syntra setup --agent codex --mode local --dry-run
+syntra setup --agent codex --mode local
+```
+
+Run local setup from the global installation you want the host to use. It
+records the absolute Node executable and launcher paths, so a GUI host does
+not need the terminal's PATH. A global update in the same prefix keeps that
+registration valid. If you move the installation or uninstall its Node
+runtime, preview setup again from the new installation.
+
+Setup leaves recognized existing registrations in place by default. To
+migrate one, run `syntra setup --agent codex --mode latest --dry-run` (or
+choose `local`), then apply and confirm in a terminal. Pass `--replace` with
+the explicit mode to consent non-interactively. Migration retains the MCP
+arguments, the host's other fields, and a private config backup. It preserves
+any different existing skill. Custom wrappers require manual resolution.
+
+Start a fresh host session to use a new registration or installed version.
+For other stdio hosts, use the
 [manual configuration templates](https://syntra.synapsynclabs.com/docs/agent-setup/host-configurations.html).
 
 ## Permissions and renewal
@@ -79,8 +103,8 @@ A connection requests 30 days by default. On first login, you can request up to
 | No Syntra connection | `syntra login` |
 | Agent lacks prepare or publish | `syntra login --reauthorize --prepare --publish` for both, or omit `--publish` for preparation only. Keep any other permission flags you still need. |
 | Connection expired | `syntra login --reauthorize` |
-| CLI works but agent keeps asking to log in | Compare `syntra status` with MCP `identity`. Use `syntra setup --agent codex --replace` to move Codex to the shared default, or use the same deliberate `--profile-dir` in both places. |
-| Agent still runs an older pinned version | `syntra update`, then follow its `syntra setup --agent … --replace` command. |
+| CLI works but agent keeps asking to log in | Compare `syntra status` with MCP `identity`. Use the same deliberate `--profile-dir` in both places or edit the host command to use the shared default. |
+| Agent still runs an older pinned version | Keep the pin if intentional, or preview a migration with `syntra setup --agent codex --mode latest --dry-run`. |
 
 ## Preparing a reply
 
@@ -124,8 +148,11 @@ updates a global npm installation after confirmation; `--yes` permits an
 unattended update. Set `SYNTRA_UPDATE_OFFLINE=1` to disable network checks.
 For npx use `npx -y @synapsync/syntra-mcp@latest ...`; for a checkout or local
 install use `npm install -g @synapsync/syntra-mcp@latest` for a global CLI.
-Only stable X.Y.Z versions are supported by the updater. Setup pins the exact
-package version so the host cannot pick up a new release on startup. After a
-global update, the launcher lists any recognized older pins and prints the
-command to replace each one. Host config changes use a separate confirmation
-or an explicit `--replace`.
+Only stable X.Y.Z versions are supported by the updater. An update targets
+the verified npm prefix of the executing global package and leaves provider
+configs and skills untouched. The check reports the user-level registration
+it can inspect for each supported host, including local paths, npm pins and
+unresolved entries. Project-level and managed overrides, other users and
+already-running host processes are outside that inspection. The MCP
+`initialize` response gives the actual responding process version in
+`serverInfo.version`.

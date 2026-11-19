@@ -7,27 +7,38 @@ commit. For the build matrix and publishing process, see
 The published root `package.json` is the version source of truth. The release
 builder stages that version in all package manifests and embeds it in each Go
 binary with `-ldflags`; the launcher reads its manifest for `--version` and
-`version`. Direct development builds default to `0.0.0-handoff`. See the README
+`version`, and the MCP process reports its embedded version in `initialize`. Direct development builds default to `0.0.0-handoff`. See the README
 for `syntra update`, its confirmation, offline option and exit statuses.
 
-## Shared profile and exact host pins
+## Shared profile and launch modes
 
 A single browser login serves CLI and MCP sessions of the same OS user when they
 use the default profile. Set up a supported host once with `syntra setup --agent
 codex`, `syntra setup --agent claude-code`, or `syntra setup --agent opencode`.
-The registration contains an exact package version. A successful global update
-reports older recognized pins and gives a command to refresh each. Review the
-setup preview, then confirm interactively or pass `--replace`. A successful
-replacement retains the previous config as a private backup.
+New entries use `latest`, resolving the npm tag at each MCP start with
+`--prefer-online`. To avoid startup registry resolution, run setup from the
+selected npm-global installation with `--mode local`. This uses absolute paths
+to Node and its installed launcher on Linux, macOS, and Windows. Windows uses
+Node plus npm's npx CLI entry point for `latest`.
+
+Existing registrations remain unchanged unless you choose a mode explicitly
+and confirm the migration. Apply with a terminal confirmation or pass
+`--replace` together with a mode. Setup keeps the previous config as a private
+backup and preserves the MCP arguments and other host settings. Update checks
+report the recognized configured mode even when the executing package is
+current. Running sessions and host config precedence require host inspection.
 
 | Symptom | Command |
 | --- | --- |
 | Agent and CLI disagree about login or permissions | Compare MCP `identity` with `syntra status`. For Codex, preview the shared-profile registration with `syntra setup --agent codex --dry-run`. |
 | No connection | `syntra login`, then choose from the requested permissions in the browser. |
 | Missing permission | `syntra login --reauthorize --prepare --publish` for private preparation and explicit sending. Use `--prepare` alone for preparation, or include `--mark-read` for explicit read receipts. |
-| Older pinned Codex registration after update | `syntra setup --agent codex --replace`, then start a fresh session. |
+| Older pinned Codex registration after update | To opt out of the pin, preview with `syntra setup --agent codex --mode latest --dry-run`, then apply and start a fresh session. |
 
 For a deliberately isolated profile, use the same custom `--profile-dir` for CLI
-and MCP. Setup can identify registrations calling the Syntra executable with
-`mcp` or the official package through npx. A registration it cannot identify must
-be resolved by its owner.
+and MCP. The global config locations inspected are Codex's `config.toml`
+under `CODEX_HOME` or `~/.codex`, Claude Code's `.claude.json` under
+`CLAUDE_CONFIG_DIR` or the home directory, and OpenCode's global
+`opencode.json` or `opencode.jsonc` under the XDG config root. Existing
+OpenCode V1 entries under `mcp.syntra` retain their layout. Setup reports
+unsupported custom launchers or ambiguous global configs for manual review.
