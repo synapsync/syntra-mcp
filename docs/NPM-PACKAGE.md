@@ -8,7 +8,7 @@ The published root `package.json` is the version source of truth. The release
 builder stages that version in all package manifests and embeds it in each Go
 binary with `-ldflags`; the launcher reads its manifest for `--version` and
 `version`, and the MCP process reports its embedded version in `initialize`. Direct development builds default to `0.0.0-handoff`. See the README
-for `syntra update`, its confirmation, offline option and exit statuses.
+for the update workflow and the [CLI reference](https://syntra.synapsynclabs.com/docs/reference/cli.html) for flags and exit statuses.
 
 ## Shared profile and launch modes
 
@@ -30,7 +30,7 @@ current. Running sessions and host config precedence require host inspection.
 
 | Symptom | Command |
 | --- | --- |
-| Agent and CLI disagree about login or permissions | Compare MCP `identity` with `syntra status`. For Codex, preview the shared-profile registration with `syntra setup --agent codex --dry-run`. |
+| Agent and CLI disagree about login or permissions | Compare MCP `identity` with `syntra status`. Make sure the host and CLI use the same OS user and profile directory. Setup migration preserves existing MCP arguments, including an explicit profile path. |
 | No connection | `syntra login`, then choose from the requested permissions in the browser. |
 | Missing permission | `syntra login --reauthorize --prepare --publish` for private preparation and explicit sending. Use `--prepare` alone for preparation, or include `--mark-read` for explicit read receipts. |
 | Older pinned Codex registration after update | To opt out of the pin, preview with `syntra setup --agent codex --mode latest --dry-run`, then apply and start a fresh session. |

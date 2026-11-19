@@ -1,130 +1,115 @@
-# Syntra CLI and MCP
+# Syntra MCP
 
-A reply to another active ticket creator can be prepared with `syntra reply
---workspace WORKSPACE_UUID --ticket TICKET_UUID --summary "Summary" --context-file
-context.md`. It prints the draft ID and a separate explicit publish command.
-If the creator is the caller or cannot be resolved to an active named member, use
-the template and select a recipient. Publication is never implicit.
+Give your coding agent access to the work you share in Syntra. Look up
+workspaces, projects, teams and thread history, then prepare a private message
+or send it when you explicitly ask. The package includes the `syntra` CLI and a
+local MCP server that connects to the Syntra API over your authorized profile.
 
-Local request syntax, routing IDs, revisions and content bounds are checked before
-loading the profile. Author identity and retained-base authorization are checked
-only after the authenticated connection is loaded. Unsafe diagnostic keys are
-redacted; unknown safe keys can include descriptor-derived locations and suggestions.
+[Documentation](https://syntra.synapsynclabs.com/docs/) · [npm package](https://www.npmjs.com/package/@synapsync/syntra-mcp) · [Tool reference](https://syntra.synapsynclabs.com/docs/reference/tools.html)
 
-Start with `syntra --help`. To reply, run `syntra prepare --template reply --workspace WORKSPACE_UUID --ticket TICKET_UUID`, save the JSON privately, replace all `TODO: SYNTRA` placeholders, and run `syntra prepare --file request.json`. Publish separately. The ticket revision belongs at request top level beside `content`.
+## Quick start
 
-Syntra connects your agent to the workspaces, project teams and tickets you can
-access. Read shared work, prepare private drafts and send tickets or replies
-when you ask. The client runs locally over stdio and connects to the Syntra API
-using a profile you authorize in the browser.
+Requires Node.js 22.12 or newer. npm installs the matching native executable
+for Linux or macOS (x64 and arm64), or Windows (x64).
 
-**[Official documentation](https://syntra.synapsynclabs.com/docs/) · [npm package](https://www.npmjs.com/package/@synapsync/syntra-mcp)**
-
-## Get started
-
-Use Node.js 22.12 or later. npm installs the matching Go executable for Linux
-x64 or arm64, macOS Intel or Apple Silicon, or Windows x64.
+**1. Install and connect your account.** Run these commands in a terminal and
+approve the connection in your browser.
 
 ```sh
 npm install --global @synapsync/syntra-mcp
 syntra login
-syntra status
 syntra workspaces
 ```
 
-One login serves every agent session of the same OS user using the default
-Syntra profile. The CLI and MCP read the same private profile at each call.
-Approve the permissions you need in the browser. To run without a global install,
-use `npx -y @synapsync/syntra-mcp login`.
+**2. Register your host.** Run the command for the host you use.
 
-## Connect your agent
-
-Choose one host:
-
-```sh
-syntra setup --agent codex
-syntra setup --agent claude-code
-syntra setup --agent opencode
-```
-
-New registrations default to **latest**. Each new MCP process asks npm for
-`@synapsync/syntra-mcp@latest` with `--prefer-online`. npm uses your configured
-registry and cache. It can reuse cached package files and may fall back to
-cache when the registry is unavailable. A cold cache needs registry access.
-Startup can take longer during npm resolution. A running MCP process keeps
-its version for the whole session.
-
-Choose **local** to start the selected npm-global installation directly,
-without a startup registry check:
-
-```sh
-syntra setup --agent codex --mode local --dry-run
-syntra setup --agent codex --mode local
-```
-
-Run local setup from the global installation you want the host to use. It
-records the absolute Node executable and launcher paths, so a GUI host does
-not need the terminal's PATH. A global update in the same prefix keeps that
-registration valid. If you move the installation or uninstall its Node
-runtime, preview setup again from the new installation.
-
-Setup leaves recognized existing registrations in place by default. To
-migrate one, run `syntra setup --agent codex --mode latest --dry-run` (or
-choose `local`), then apply and confirm in a terminal. Pass `--replace` with
-the explicit mode to consent non-interactively. Migration retains the MCP
-arguments, the host's other fields, and a private config backup. It preserves
-any different existing skill. Custom wrappers require manual resolution.
-
-Start a fresh host session to use a new registration or installed version.
-For other stdio hosts, use the
-[manual configuration templates](https://syntra.synapsynclabs.com/docs/agent-setup/host-configurations.html).
-
-## Permissions and renewal
-
-| Permission | Login flag | Use |
-| --- | --- | --- |
-| read | Always requested | Discover and read authorized workspaces, people, tickets and messages. |
-| prepare | `--prepare` | Create tickets and prepare or link private drafts. |
-| publish | `--publish` with `--prepare` | Send an exact retained draft in a separate call. |
-| mark-read | `--mark-read` | Permit explicit read receipts in clients that support them. Listing messages does not mark them read. |
-
-A first browser login without permission flags requests read, prepare and publish.
-In the browser, you can deselect the optional permissions. If you supply
-permission flags, they select which optional permissions to request. An existing
-profile is reused by plain login. During reauthorization, include each optional
-permission you want to retain when supplying flags. The browser must approve the
-new request.
-
-A connection requests 30 days by default. On first login, you can request up to
-90 days with `syntra login --lifetime-seconds 7776000`.
-
-| Symptom | Command |
+| Host | Command |
 | --- | --- |
-| No Syntra connection | `syntra login` |
-| Agent lacks prepare or publish | `syntra login --reauthorize --prepare --publish` for both, or omit `--publish` for preparation only. Keep any other permission flags you still need. |
-| Connection expired | `syntra login --reauthorize` |
-| CLI works but agent keeps asking to log in | Compare `syntra status` with MCP `identity`. Use the same deliberate `--profile-dir` in both places or edit the host command to use the shared default. |
-| Agent still runs an older pinned version | Keep the pin if intentional, or preview a migration with `syntra setup --agent codex --mode latest --dry-run`. |
+| Codex | `syntra setup --agent codex` |
+| Claude Code | `syntra setup --agent claude-code` |
+| OpenCode | `syntra setup --agent opencode` |
 
-## Preparing a reply
+Add `--dry-run` to preview changes. For Claude Desktop and other local stdio
+hosts, use the [manual configuration templates](https://syntra.synapsynclabs.com/docs/agent-setup/host-configurations.html).
 
-Read the ticket with `syntra ticket` and copy its `revision` exactly into
-`expectedTicketRevision`. The revision is an opaque base64url token encoding
-32 bytes, not a number or a value to invent. Use the ticket's exact title and
-project ID (omit `projectId` when absent). Field diagnostics identify invalid or
-missing input without including message content.
+**3. Open a fresh agent session.** Ask it to list your Syntra workspaces.
+The CLI and MCP share one login when they use the same OS user and profile.
+For first-time setup without a global install, use
+`npx -y @synapsync/syntra-mcp@latest` in place of the `syntra` command.
 
-## Reference
+## Work with threads
 
-- [CLI commands and flags](https://syntra.synapsynclabs.com/docs/reference/cli.html)
-- [MCP tools and effects](https://syntra.synapsynclabs.com/docs/reference/tools.html)
-- [Find project teams and send a ticket](https://syntra.synapsynclabs.com/docs/guides/workspaces-to-ticket.html)
-- [Replies, retry and recovery](https://syntra.synapsynclabs.com/docs/guides/replies-and-retry.html)
+| Ask your agent to… | MCP tools |
+| --- | --- |
+| Show the projects and teams in a workspace | `workspaces`, `projects`, `teams` |
+| Find a teammate or read the latest replies in a thread | `members`, `resolve`, `threads`, `thread`, `messages` |
+| Prepare a reply for you to review | `prepare` |
+| Send the exact message you authorized | `publish` |
 
-## Build and test
+You can also use the CLI directly. Replace the placeholder UUIDs with IDs
+returned by Syntra. The reply shortcut prepares a private message addressed to
+the active thread creator and prints a separate command for publication.
 
-Use Go 1.27.3, Python 3 and Node.js 22.12 or later. The client builds from this
-repository with its own Go module.
+```sh
+syntra threads --workspace WORKSPACE_UUID
+syntra thread --workspace WORKSPACE_UUID --thread THREAD_UUID
+syntra reply --workspace WORKSPACE_UUID --thread THREAD_UUID --summary "Update" --context-file context.md
+```
+
+To choose a different recipient, generate the reply request with
+`syntra prepare --template reply --workspace WORKSPACE_UUID --thread THREAD_UUID`,
+fill the placeholders in a private JSON file, then run
+`syntra prepare --file request.json`. When building the request yourself, copy
+the thread's opaque revision to the top-level `expectedThreadRevision` field.
+Use [the reply and retry guide](https://syntra.synapsynclabs.com/docs/guides/replies-and-retry.html)
+for the full workflow, including recovery after an uncertain send. To start a new
+conversation, see [Find a team and send a thread](https://syntra.synapsynclabs.com/docs/guides/workspaces-to-thread.html).
+
+## Updates and launch modes
+
+| Mode | Version used by a new MCP process |
+| --- | --- |
+| `latest` (default for new registrations) | npm resolves `@synapsync/syntra-mcp@latest` with `--prefer-online`. It can reuse cached files, including when the registry is unavailable. A cold cache requires registry access. |
+| `local` | Starts the npm-global installation you selected during setup, using absolute Node and launcher paths. There is no registry check at MCP startup. |
+
+Existing registrations stay as configured. To migrate a recognized registration,
+preview the change, then apply it and confirm in a terminal. Choose `local`
+instead if you want to use the global installation running setup. Explicit
+noninteractive migration uses `--replace` together with `--mode`.
+
+```sh
+syntra setup --agent codex --mode latest --dry-run
+syntra setup --agent codex --mode latest
+```
+
+`syntra update --check` compares the installed CLI with the npm release and
+reports recognized user-level host registrations. `syntra update` updates the
+executing npm-global installation after confirmation. It leaves host settings
+intact. Restart the host after a change. To verify a running MCP process, read
+`serverInfo.version` from its MCP `initialize` response. See
+[CLI reference](https://syntra.synapsynclabs.com/docs/reference/cli.html)
+for options and exit codes.
+
+## Access and troubleshooting
+
+- **Connection expired.** Run `syntra login --reauthorize`. The default
+  connection lifetime is 30 days. On first login you can request up to 90 days
+  with `syntra login --lifetime-seconds 7776000`.
+- **Missing permission.** Run `syntra login --reauthorize --prepare --publish`
+  to request preparation and publication. Use `--prepare` alone for preparation
+  only. If you supply permission flags, include every optional permission you
+  want to keep. The browser shows exactly what you can approve.
+- **CLI works but the agent asks you to log in.** Compare MCP `identity` with
+  `syntra status`. Check that both use the same OS user and profile directory.
+  Keep credentials out of host configuration and agent prompts.
+- **The agent reports an older version.** Open a new host session and check
+  whether the host uses a version pin, a local launcher or a project override.
+
+More in [troubleshooting](https://syntra.synapsynclabs.com/docs/troubleshooting.html).
+
+## Development
+
+Use Go 1.27.3, Python 3 and Node.js 22.12 or later.
 
 ```sh
 python3 scripts/check-protocol-parity.py
@@ -134,25 +119,7 @@ npm run test:launcher
 npm run test:setup
 ```
 
-See [release operations](https://github.com/synapsync/syntra-mcp/blob/main/docs/NPM-RELEASE.md) for the build matrix and publishing
-workflow. The client is [MIT licensed](https://github.com/synapsync/syntra-mcp/blob/main/LICENSE). Compiled dependencies and
-bundled components have [third-party notices](https://github.com/synapsync/syntra-mcp/blob/main/THIRD-PARTY-NOTICES.md).
+See [npm release operations](https://github.com/synapsync/syntra-mcp/blob/main/docs/NPM-RELEASE.md)
+for publication and the platform test matrix.
 
-## Updates and versions
-
-`syntra --version` and `syntra version` print the installed package version.
-Run `syntra update --check` to compare it with the latest stable version from
-npm's configured registry. The check exits 0 if current (or newer than the
-registry), 10 if an update is available, and 1 on error. `syntra update`
-updates a global npm installation after confirmation; `--yes` permits an
-unattended update. Set `SYNTRA_UPDATE_OFFLINE=1` to disable network checks.
-For npx use `npx -y @synapsync/syntra-mcp@latest ...`; for a checkout or local
-install use `npm install -g @synapsync/syntra-mcp@latest` for a global CLI.
-Only stable X.Y.Z versions are supported by the updater. An update targets
-the verified npm prefix of the executing global package and leaves provider
-configs and skills untouched. The check reports the user-level registration
-it can inspect for each supported host, including local paths, npm pins and
-unresolved entries. Project-level and managed overrides, other users and
-already-running host processes are outside that inspection. The MCP
-`initialize` response gives the actual responding process version in
-`serverInfo.version`.
+[MIT license](https://github.com/synapsync/syntra-mcp/blob/main/LICENSE) · [Third-party notices](https://github.com/synapsync/syntra-mcp/blob/main/THIRD-PARTY-NOTICES.md)
