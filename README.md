@@ -105,6 +105,12 @@ for options and exit codes.
 - **The agent reports an older version.** Open a new host session and check
   whether the host uses a version pin, a local launcher or a project override.
 
+- **The agent still follows the old skill.** `syntra update` leaves installed
+  skills in place. Use `syntra setup --agent codex --dry-run` (or your host's
+  name) to find the skill directory. To replace a previously installed copy,
+  move it to a private backup outside the host's skill directories, run setup
+  again, then open a fresh session. Review any custom changes before replacing it.
+
 More in [troubleshooting](https://syntra.synapsynclabs.com/docs/troubleshooting.html).
 
 ## Development
