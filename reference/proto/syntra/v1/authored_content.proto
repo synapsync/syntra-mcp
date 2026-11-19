@@ -10,16 +10,14 @@ message ContentDestination {
     string unlinked_label = 2;
   }
 }
-// Standalone envelope, not a modification of released collaboration messages.
+// Authored envelope with exact client-supplied UTF-8 content.
 // Digest encoding is specified in CONTENT-INTEGRITY.md, never protobuf bytes.
 message AuthoredContent {
   uint32 format_version = 1;
   string expected_author_user_id = 2;
   string workspace_id = 3;
   optional string project_id = 4;
-  reserved 5;
-  reserved "area_id";
-  optional string existing_ticket_id = 6;
+  optional string existing_thread_id = 6;
   string title = 7;
   string original_destination_intent = 8;
   ContentDestination destination = 9;
@@ -36,7 +34,6 @@ message ClientReportedProvenance {
 enum ContentIntegrityOrigin {
   CONTENT_INTEGRITY_ORIGIN_UNSPECIFIED = 0;
   CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED = 1;
-  CONTENT_INTEGRITY_ORIGIN_LEGACY_SERVER_COMPUTED = 2;
 }
 // Server-verified attribution is separate from content and client assertions.
 // CLIENT_EXPECTED records a checked expectation, not remote authenticity.
@@ -45,7 +42,7 @@ message ContentProvenanceReceipt {
   string owner_user_id = 2;
   optional string connection_id = 3;
   string request_id = 4;
-  string ticket_id = 5;
+  string thread_id = 5;
   string message_id = 6;
   google.protobuf.Timestamp recorded_at = 7;
   ClientReportedProvenance client_reported = 8;

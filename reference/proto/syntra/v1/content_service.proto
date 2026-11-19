@@ -4,52 +4,54 @@ import "syntra/v1/authored_content.proto";
 import "syntra/v1/collaboration.proto";
 option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
 
-// Additive contract only: not registered or enabled by T2.1.
 // Current account/workspace authority is required even when replaying a result.
 service AuthoredContentService {
   rpc PrepareContent(PrepareContentRequest) returns (PrepareContentResponse);
   rpc LinkContent(LinkContentRequest) returns (LinkContentResponse);
+  // Agents require PUBLISH capability; the authenticated human author may send
+  // the exact reviewed preparation using its digest and both revision tokens.
   rpc PublishContent(PublishContentRequest) returns (PublishContentResponse);
   rpc GetContentSnapshot(GetContentSnapshotRequest) returns (GetContentSnapshotResponse);
 }
-// Required together when replacing/linking/publishing a private draft.
+// Required together when replacing/linking/publishing a private prepared message.
 // Digest refers to the prior exact content, not the new replacement.
-message ContentDraftExpectation {
-  string ticket_id = 1;
-  string draft_id = 2;
-  string expected_ticket_revision = 3;
-  string expected_draft_revision = 4;
+message PreparedContentExpectation {
+  string thread_id = 1;
+  string prepared_message_id = 2;
+  string expected_thread_revision = 3;
+  string expected_prepared_message_revision = 4;
   bytes expected_content_digest = 5;
 }
 // Requires PREPARE. No publication, delivery or recipient-side receipt.
-// New initial: existing_ticket_id and update absent, ticket revision absent.
-// New reply: existing_ticket_id and ticket revision present, update absent.
-// Replacement: update present, ticket revision absent (contained in update).
+// New initial: existing_thread_id and update absent, thread revision absent.
+// New reply: existing_thread_id and thread revision present, update absent.
+// Replacement: update present, thread revision absent (contained in update).
 message PrepareContentRequest {
   AuthoredContent content = 1;
   bytes expected_content_digest = 2;
   string request_id = 3;
-  optional string expected_ticket_revision = 4;
-  ContentDraftExpectation update = 5;
+  optional string expected_thread_revision = 4;
+  PreparedContentExpectation update = 5;
   ClientReportedProvenance client_reported = 6;
 }
 message PrepareContentResponse { AuthoredContentSnapshot snapshot = 1; }
 // Requires PREPARE. Only unlinked -> linked; preserves every other envelope
 // field including original intent. Never sends. Both old and new digests bind.
 message LinkContentRequest {
-  ContentDraftExpectation current = 1;
+  PreparedContentExpectation current = 1;
   AuthoredContent linked_content = 2;
   bytes expected_content_digest = 3;
   string request_id = 4;
   ClientReportedProvenance client_reported = 5;
 }
 message LinkContentResponse { AuthoredContentSnapshot snapshot = 1; }
-// Requires explicit PUBLISH capability and linked active member, nonclosed
-// ticket, current authorization and both CAS tokens. No implicit approval field.
+// Requires the authenticated human author or an agent with PUBLISH capability,
+// a linked active member, current authorization and both CAS tokens. Closed
+// threads reject publication. No implicit approval field.
 message PublishContentRequest {
   string workspace_id = 1;
   string expected_author_user_id = 2;
-  ContentDraftExpectation current = 3;
+  PreparedContentExpectation current = 3;
   string request_id = 4;
   ClientReportedProvenance client_reported = 5;
 }
@@ -59,38 +61,35 @@ message PublishContentResponse { AuthoredContentSnapshot snapshot = 1; }
 message AuthoredContentSnapshot {
   AuthoredContent content = 1;
   ContentProvenanceReceipt receipt = 2;
-  string ticket_revision = 3;
+  string thread_revision = 3;
   oneof record {
-    PrivateContentRevision private_draft = 4;
+    PrivateContentRevision prepared_message = 4;
     string published_message_id = 5;
   }
 }
 message PrivateContentRevision {
-  string draft_id = 1;
+  string prepared_message_id = 1;
   string revision = 2;
-}
-// Exact released representation. There is no retained authored v1 preimage,
-// client expectation or canonical content digest; do not manufacture them.
-message LegacyContentSnapshot {
-  Ticket ticket = 1;
-  oneof record {
-    MessageDraft private_draft = 2;
-    PublishedMessage published_message = 3;
-  }
 }
 // READ. Private snapshots are owner-only and require exact retained revision;
 // published IDs address immutable content. Missing/foreign resources are hidden.
 message GetContentSnapshotRequest {
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   oneof record {
-    PrivateContentRevision private_draft = 3;
+    PrivateContentRevision prepared_message = 3;
     string published_message_id = 4;
   }
 }
+// Current authorized message record, with optional retained authored evidence.
+// current_prepared_message is the current persisted version; authored may identify
+// an exact historical revision requested by the caller. No digest is invented
+// for messages that have no retained authored envelope.
 message GetContentSnapshotResponse {
-  oneof representation {
-    AuthoredContentSnapshot authored = 1;
-    LegacyContentSnapshot legacy = 2;
+  AuthoredContentSnapshot authored = 1;
+  Thread thread = 2;
+  oneof record {
+    PreparedMessage current_prepared_message = 3;
+    PublishedMessage published_message = 4;
   }
 }

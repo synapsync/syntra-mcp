@@ -28,7 +28,7 @@ func TestNestedDiagnosticPathsAndSuggestion(t *testing.T) {
 		target    interface{ ProtoReflect() protoreflect.Message }
 	}{
 		{`{"content":{"destination":{"unknowne":"secret"}}}`, "request.content.destination", &v1.PrepareContentRequest{}},
-		{`{"update":{"draftId":null}}`, "request.update.draftId", &v1.PrepareContentRequest{}},
+		{`{"update":{"preparedMessageId":null}}`, "request.update.preparedMessageId", &v1.PrepareContentRequest{}},
 		{`{"linkedContent":{"destination":{"linkedMemberId":null}}}`, "request.linkedContent.destination.linkedMemberId", &v1.LinkContentRequest{}},
 		{`{"content":{"summry":"value"}}`, "did you mean summary?", &v1.PrepareContentRequest{}},
 	}
@@ -80,19 +80,19 @@ func TestNormalizationHelpers(t *testing.T) {
 		t.Fatal(err)
 	}
 	root := map[string]json.RawMessage{}
-	content := map[string]json.RawMessage{"expectedTicketRevision": json.RawMessage(`"revision"`)}
-	where, moved, err := moveMisplacedRevision(root, content, "content", "update", "expectedTicketRevision")
-	if err != nil || !moved || where != "top level" || string(root["expectedTicketRevision"]) != `"revision"` {
+	content := map[string]json.RawMessage{"expectedThreadRevision": json.RawMessage(`"revision"`)}
+	where, moved, err := moveMisplacedRevision(root, content, "content", "update", "expectedThreadRevision")
+	if err != nil || !moved || where != "top level" || string(root["expectedThreadRevision"]) != `"revision"` {
 		t.Fatal(where, moved, err)
 	}
-	root = map[string]json.RawMessage{"update": json.RawMessage(`{"draftId":"id"}`)}
-	content = map[string]json.RawMessage{"expectedDraftRevision": json.RawMessage(`"revision"`)}
-	where, moved, err = moveMisplacedRevision(root, content, "content", "update", "expectedDraftRevision")
-	if err != nil || !moved || where != "update" || !bytes.Contains(root["update"], []byte(`"expectedDraftRevision"`)) {
+	root = map[string]json.RawMessage{"update": json.RawMessage(`{"preparedMessageId":"id"}`)}
+	content = map[string]json.RawMessage{"expectedPreparedMessageRevision": json.RawMessage(`"revision"`)}
+	where, moved, err = moveMisplacedRevision(root, content, "content", "update", "expectedPreparedMessageRevision")
+	if err != nil || !moved || where != "update" || !bytes.Contains(root["update"], []byte(`"expectedPreparedMessageRevision"`)) {
 		t.Fatal(where, moved, err)
 	}
-	content["expectedDraftRevision"] = json.RawMessage(`"duplicate"`)
-	if _, _, err = moveMisplacedRevision(root, content, "content", "update", "expectedDraftRevision"); err == nil || !strings.Contains(err.Error(), "duplicate") {
+	content["expectedPreparedMessageRevision"] = json.RawMessage(`"duplicate"`)
+	if _, _, err = moveMisplacedRevision(root, content, "content", "update", "expectedPreparedMessageRevision"); err == nil || !strings.Contains(err.Error(), "duplicate") {
 		t.Fatal(err)
 	}
 	if got := closestField("SuMmRy", []string{"summary", "title"}); got != "summary" {

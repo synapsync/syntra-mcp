@@ -25,8 +25,8 @@ const (
 	ProjectServiceName = "syntra.v1.ProjectService"
 	// ProjectTeamServiceName is the fully-qualified name of the ProjectTeamService service.
 	ProjectTeamServiceName = "syntra.v1.ProjectTeamService"
-	// TicketServiceName is the fully-qualified name of the TicketService service.
-	TicketServiceName = "syntra.v1.TicketService"
+	// ThreadServiceName is the fully-qualified name of the ThreadService service.
+	ThreadServiceName = "syntra.v1.ThreadService"
 	// MessageServiceName is the fully-qualified name of the MessageService service.
 	MessageServiceName = "syntra.v1.MessageService"
 	// InboxServiceName is the fully-qualified name of the InboxService service.
@@ -69,41 +69,38 @@ const (
 	// ProjectTeamServiceRemoveProjectTeamProcedure is the fully-qualified name of the
 	// ProjectTeamService's RemoveProjectTeam RPC.
 	ProjectTeamServiceRemoveProjectTeamProcedure = "/syntra.v1.ProjectTeamService/RemoveProjectTeam"
-	// TicketServiceListTicketsProcedure is the fully-qualified name of the TicketService's ListTickets
+	// ThreadServiceListThreadsProcedure is the fully-qualified name of the ThreadService's ListThreads
 	// RPC.
-	TicketServiceListTicketsProcedure = "/syntra.v1.TicketService/ListTickets"
-	// TicketServiceGetTicketProcedure is the fully-qualified name of the TicketService's GetTicket RPC.
-	TicketServiceGetTicketProcedure = "/syntra.v1.TicketService/GetTicket"
-	// TicketServiceCreateTicketProcedure is the fully-qualified name of the TicketService's
-	// CreateTicket RPC.
-	TicketServiceCreateTicketProcedure = "/syntra.v1.TicketService/CreateTicket"
-	// TicketServiceUpdateTicketProcedure is the fully-qualified name of the TicketService's
-	// UpdateTicket RPC.
-	TicketServiceUpdateTicketProcedure = "/syntra.v1.TicketService/UpdateTicket"
-	// TicketServiceAssignTicketProcedure is the fully-qualified name of the TicketService's
-	// AssignTicket RPC.
-	TicketServiceAssignTicketProcedure = "/syntra.v1.TicketService/AssignTicket"
-	// TicketServiceProposeResolutionProcedure is the fully-qualified name of the TicketService's
-	// ProposeResolution RPC.
-	TicketServiceProposeResolutionProcedure = "/syntra.v1.TicketService/ProposeResolution"
-	// TicketServiceCloseTicketProcedure is the fully-qualified name of the TicketService's CloseTicket
+	ThreadServiceListThreadsProcedure = "/syntra.v1.ThreadService/ListThreads"
+	// ThreadServiceGetThreadProcedure is the fully-qualified name of the ThreadService's GetThread RPC.
+	ThreadServiceGetThreadProcedure = "/syntra.v1.ThreadService/GetThread"
+	// ThreadServiceCreateThreadProcedure is the fully-qualified name of the ThreadService's
+	// CreateThread RPC.
+	ThreadServiceCreateThreadProcedure = "/syntra.v1.ThreadService/CreateThread"
+	// ThreadServiceUpdateThreadProcedure is the fully-qualified name of the ThreadService's
+	// UpdateThread RPC.
+	ThreadServiceUpdateThreadProcedure = "/syntra.v1.ThreadService/UpdateThread"
+	// ThreadServiceAssignThreadProcedure is the fully-qualified name of the ThreadService's
+	// AssignThread RPC.
+	ThreadServiceAssignThreadProcedure = "/syntra.v1.ThreadService/AssignThread"
+	// ThreadServiceCloseThreadProcedure is the fully-qualified name of the ThreadService's CloseThread
 	// RPC.
-	TicketServiceCloseTicketProcedure = "/syntra.v1.TicketService/CloseTicket"
-	// TicketServiceReopenTicketProcedure is the fully-qualified name of the TicketService's
-	// ReopenTicket RPC.
-	TicketServiceReopenTicketProcedure = "/syntra.v1.TicketService/ReopenTicket"
+	ThreadServiceCloseThreadProcedure = "/syntra.v1.ThreadService/CloseThread"
+	// ThreadServiceReopenThreadProcedure is the fully-qualified name of the ThreadService's
+	// ReopenThread RPC.
+	ThreadServiceReopenThreadProcedure = "/syntra.v1.ThreadService/ReopenThread"
 	// MessageServiceListMessagesProcedure is the fully-qualified name of the MessageService's
 	// ListMessages RPC.
 	MessageServiceListMessagesProcedure = "/syntra.v1.MessageService/ListMessages"
-	// MessageServiceSaveDraftProcedure is the fully-qualified name of the MessageService's SaveDraft
-	// RPC.
-	MessageServiceSaveDraftProcedure = "/syntra.v1.MessageService/SaveDraft"
+	// MessageServiceSavePreparedMessageProcedure is the fully-qualified name of the MessageService's
+	// SavePreparedMessage RPC.
+	MessageServiceSavePreparedMessageProcedure = "/syntra.v1.MessageService/SavePreparedMessage"
 	// MessageServicePublishMessageProcedure is the fully-qualified name of the MessageService's
 	// PublishMessage RPC.
 	MessageServicePublishMessageProcedure = "/syntra.v1.MessageService/PublishMessage"
-	// MessageServiceDiscardDraftProcedure is the fully-qualified name of the MessageService's
-	// DiscardDraft RPC.
-	MessageServiceDiscardDraftProcedure = "/syntra.v1.MessageService/DiscardDraft"
+	// MessageServiceDiscardPreparedMessageProcedure is the fully-qualified name of the MessageService's
+	// DiscardPreparedMessage RPC.
+	MessageServiceDiscardPreparedMessageProcedure = "/syntra.v1.MessageService/DiscardPreparedMessage"
 	// MessageServiceMarkReadProcedure is the fully-qualified name of the MessageService's MarkRead RPC.
 	MessageServiceMarkReadProcedure = "/syntra.v1.MessageService/MarkRead"
 	// MessageServiceMarkReviewedProcedure is the fully-qualified name of the MessageService's
@@ -112,9 +109,9 @@ const (
 	// InboxServiceListInboxItemsProcedure is the fully-qualified name of the InboxService's
 	// ListInboxItems RPC.
 	InboxServiceListInboxItemsProcedure = "/syntra.v1.InboxService/ListInboxItems"
-	// ActivityServiceListTicketEventsProcedure is the fully-qualified name of the ActivityService's
-	// ListTicketEvents RPC.
-	ActivityServiceListTicketEventsProcedure = "/syntra.v1.ActivityService/ListTicketEvents"
+	// ActivityServiceListThreadEventsProcedure is the fully-qualified name of the ActivityService's
+	// ListThreadEvents RPC.
+	ActivityServiceListThreadEventsProcedure = "/syntra.v1.ActivityService/ListThreadEvents"
 	// DashboardServiceGetOverviewProcedure is the fully-qualified name of the DashboardService's
 	// GetOverview RPC.
 	DashboardServiceGetOverviewProcedure = "/syntra.v1.DashboardService/GetOverview"
@@ -416,264 +413,238 @@ func (UnimplementedProjectTeamServiceHandler) RemoveProjectTeam(context.Context,
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ProjectTeamService.RemoveProjectTeam is not implemented"))
 }
 
-// TicketServiceClient is a client for the syntra.v1.TicketService service.
-type TicketServiceClient interface {
-	ListTickets(context.Context, *connect.Request[v1.ListTicketsRequest]) (*connect.Response[v1.ListTicketsResponse], error)
-	GetTicket(context.Context, *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error)
-	CreateTicket(context.Context, *connect.Request[v1.CreateTicketRequest]) (*connect.Response[v1.CreateTicketResponse], error)
-	UpdateTicket(context.Context, *connect.Request[v1.UpdateTicketRequest]) (*connect.Response[v1.UpdateTicketResponse], error)
-	AssignTicket(context.Context, *connect.Request[v1.AssignTicketRequest]) (*connect.Response[v1.AssignTicketResponse], error)
-	ProposeResolution(context.Context, *connect.Request[v1.ProposeResolutionRequest]) (*connect.Response[v1.ProposeResolutionResponse], error)
-	CloseTicket(context.Context, *connect.Request[v1.CloseTicketRequest]) (*connect.Response[v1.CloseTicketResponse], error)
-	ReopenTicket(context.Context, *connect.Request[v1.ReopenTicketRequest]) (*connect.Response[v1.ReopenTicketResponse], error)
+// ThreadServiceClient is a client for the syntra.v1.ThreadService service.
+type ThreadServiceClient interface {
+	ListThreads(context.Context, *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error)
+	GetThread(context.Context, *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error)
+	CreateThread(context.Context, *connect.Request[v1.CreateThreadRequest]) (*connect.Response[v1.CreateThreadResponse], error)
+	UpdateThread(context.Context, *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error)
+	AssignThread(context.Context, *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error)
+	CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error)
+	ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error)
 }
 
-// NewTicketServiceClient constructs a client for the syntra.v1.TicketService service. By default,
+// NewThreadServiceClient constructs a client for the syntra.v1.ThreadService service. By default,
 // it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and
 // sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC()
 // or connect.WithGRPCWeb() options.
 //
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
-func NewTicketServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) TicketServiceClient {
+func NewThreadServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) ThreadServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	ticketServiceMethods := v1.File_syntra_v1_collaboration_proto.Services().ByName("TicketService").Methods()
-	return &ticketServiceClient{
-		listTickets: connect.NewClient[v1.ListTicketsRequest, v1.ListTicketsResponse](
+	threadServiceMethods := v1.File_syntra_v1_collaboration_proto.Services().ByName("ThreadService").Methods()
+	return &threadServiceClient{
+		listThreads: connect.NewClient[v1.ListThreadsRequest, v1.ListThreadsResponse](
 			httpClient,
-			baseURL+TicketServiceListTicketsProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("ListTickets")),
+			baseURL+ThreadServiceListThreadsProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("ListThreads")),
 			connect.WithClientOptions(opts...),
 		),
-		getTicket: connect.NewClient[v1.GetTicketRequest, v1.GetTicketResponse](
+		getThread: connect.NewClient[v1.GetThreadRequest, v1.GetThreadResponse](
 			httpClient,
-			baseURL+TicketServiceGetTicketProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("GetTicket")),
+			baseURL+ThreadServiceGetThreadProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("GetThread")),
 			connect.WithClientOptions(opts...),
 		),
-		createTicket: connect.NewClient[v1.CreateTicketRequest, v1.CreateTicketResponse](
+		createThread: connect.NewClient[v1.CreateThreadRequest, v1.CreateThreadResponse](
 			httpClient,
-			baseURL+TicketServiceCreateTicketProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("CreateTicket")),
+			baseURL+ThreadServiceCreateThreadProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("CreateThread")),
 			connect.WithClientOptions(opts...),
 		),
-		updateTicket: connect.NewClient[v1.UpdateTicketRequest, v1.UpdateTicketResponse](
+		updateThread: connect.NewClient[v1.UpdateThreadRequest, v1.UpdateThreadResponse](
 			httpClient,
-			baseURL+TicketServiceUpdateTicketProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("UpdateTicket")),
+			baseURL+ThreadServiceUpdateThreadProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("UpdateThread")),
 			connect.WithClientOptions(opts...),
 		),
-		assignTicket: connect.NewClient[v1.AssignTicketRequest, v1.AssignTicketResponse](
+		assignThread: connect.NewClient[v1.AssignThreadRequest, v1.AssignThreadResponse](
 			httpClient,
-			baseURL+TicketServiceAssignTicketProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("AssignTicket")),
+			baseURL+ThreadServiceAssignThreadProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("AssignThread")),
 			connect.WithClientOptions(opts...),
 		),
-		proposeResolution: connect.NewClient[v1.ProposeResolutionRequest, v1.ProposeResolutionResponse](
+		closeThread: connect.NewClient[v1.CloseThreadRequest, v1.CloseThreadResponse](
 			httpClient,
-			baseURL+TicketServiceProposeResolutionProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("ProposeResolution")),
+			baseURL+ThreadServiceCloseThreadProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("CloseThread")),
 			connect.WithClientOptions(opts...),
 		),
-		closeTicket: connect.NewClient[v1.CloseTicketRequest, v1.CloseTicketResponse](
+		reopenThread: connect.NewClient[v1.ReopenThreadRequest, v1.ReopenThreadResponse](
 			httpClient,
-			baseURL+TicketServiceCloseTicketProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("CloseTicket")),
-			connect.WithClientOptions(opts...),
-		),
-		reopenTicket: connect.NewClient[v1.ReopenTicketRequest, v1.ReopenTicketResponse](
-			httpClient,
-			baseURL+TicketServiceReopenTicketProcedure,
-			connect.WithSchema(ticketServiceMethods.ByName("ReopenTicket")),
+			baseURL+ThreadServiceReopenThreadProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("ReopenThread")),
 			connect.WithClientOptions(opts...),
 		),
 	}
 }
 
-// ticketServiceClient implements TicketServiceClient.
-type ticketServiceClient struct {
-	listTickets       *connect.Client[v1.ListTicketsRequest, v1.ListTicketsResponse]
-	getTicket         *connect.Client[v1.GetTicketRequest, v1.GetTicketResponse]
-	createTicket      *connect.Client[v1.CreateTicketRequest, v1.CreateTicketResponse]
-	updateTicket      *connect.Client[v1.UpdateTicketRequest, v1.UpdateTicketResponse]
-	assignTicket      *connect.Client[v1.AssignTicketRequest, v1.AssignTicketResponse]
-	proposeResolution *connect.Client[v1.ProposeResolutionRequest, v1.ProposeResolutionResponse]
-	closeTicket       *connect.Client[v1.CloseTicketRequest, v1.CloseTicketResponse]
-	reopenTicket      *connect.Client[v1.ReopenTicketRequest, v1.ReopenTicketResponse]
+// threadServiceClient implements ThreadServiceClient.
+type threadServiceClient struct {
+	listThreads  *connect.Client[v1.ListThreadsRequest, v1.ListThreadsResponse]
+	getThread    *connect.Client[v1.GetThreadRequest, v1.GetThreadResponse]
+	createThread *connect.Client[v1.CreateThreadRequest, v1.CreateThreadResponse]
+	updateThread *connect.Client[v1.UpdateThreadRequest, v1.UpdateThreadResponse]
+	assignThread *connect.Client[v1.AssignThreadRequest, v1.AssignThreadResponse]
+	closeThread  *connect.Client[v1.CloseThreadRequest, v1.CloseThreadResponse]
+	reopenThread *connect.Client[v1.ReopenThreadRequest, v1.ReopenThreadResponse]
 }
 
-// ListTickets calls syntra.v1.TicketService.ListTickets.
-func (c *ticketServiceClient) ListTickets(ctx context.Context, req *connect.Request[v1.ListTicketsRequest]) (*connect.Response[v1.ListTicketsResponse], error) {
-	return c.listTickets.CallUnary(ctx, req)
+// ListThreads calls syntra.v1.ThreadService.ListThreads.
+func (c *threadServiceClient) ListThreads(ctx context.Context, req *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error) {
+	return c.listThreads.CallUnary(ctx, req)
 }
 
-// GetTicket calls syntra.v1.TicketService.GetTicket.
-func (c *ticketServiceClient) GetTicket(ctx context.Context, req *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error) {
-	return c.getTicket.CallUnary(ctx, req)
+// GetThread calls syntra.v1.ThreadService.GetThread.
+func (c *threadServiceClient) GetThread(ctx context.Context, req *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error) {
+	return c.getThread.CallUnary(ctx, req)
 }
 
-// CreateTicket calls syntra.v1.TicketService.CreateTicket.
-func (c *ticketServiceClient) CreateTicket(ctx context.Context, req *connect.Request[v1.CreateTicketRequest]) (*connect.Response[v1.CreateTicketResponse], error) {
-	return c.createTicket.CallUnary(ctx, req)
+// CreateThread calls syntra.v1.ThreadService.CreateThread.
+func (c *threadServiceClient) CreateThread(ctx context.Context, req *connect.Request[v1.CreateThreadRequest]) (*connect.Response[v1.CreateThreadResponse], error) {
+	return c.createThread.CallUnary(ctx, req)
 }
 
-// UpdateTicket calls syntra.v1.TicketService.UpdateTicket.
-func (c *ticketServiceClient) UpdateTicket(ctx context.Context, req *connect.Request[v1.UpdateTicketRequest]) (*connect.Response[v1.UpdateTicketResponse], error) {
-	return c.updateTicket.CallUnary(ctx, req)
+// UpdateThread calls syntra.v1.ThreadService.UpdateThread.
+func (c *threadServiceClient) UpdateThread(ctx context.Context, req *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error) {
+	return c.updateThread.CallUnary(ctx, req)
 }
 
-// AssignTicket calls syntra.v1.TicketService.AssignTicket.
-func (c *ticketServiceClient) AssignTicket(ctx context.Context, req *connect.Request[v1.AssignTicketRequest]) (*connect.Response[v1.AssignTicketResponse], error) {
-	return c.assignTicket.CallUnary(ctx, req)
+// AssignThread calls syntra.v1.ThreadService.AssignThread.
+func (c *threadServiceClient) AssignThread(ctx context.Context, req *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error) {
+	return c.assignThread.CallUnary(ctx, req)
 }
 
-// ProposeResolution calls syntra.v1.TicketService.ProposeResolution.
-func (c *ticketServiceClient) ProposeResolution(ctx context.Context, req *connect.Request[v1.ProposeResolutionRequest]) (*connect.Response[v1.ProposeResolutionResponse], error) {
-	return c.proposeResolution.CallUnary(ctx, req)
+// CloseThread calls syntra.v1.ThreadService.CloseThread.
+func (c *threadServiceClient) CloseThread(ctx context.Context, req *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error) {
+	return c.closeThread.CallUnary(ctx, req)
 }
 
-// CloseTicket calls syntra.v1.TicketService.CloseTicket.
-func (c *ticketServiceClient) CloseTicket(ctx context.Context, req *connect.Request[v1.CloseTicketRequest]) (*connect.Response[v1.CloseTicketResponse], error) {
-	return c.closeTicket.CallUnary(ctx, req)
+// ReopenThread calls syntra.v1.ThreadService.ReopenThread.
+func (c *threadServiceClient) ReopenThread(ctx context.Context, req *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error) {
+	return c.reopenThread.CallUnary(ctx, req)
 }
 
-// ReopenTicket calls syntra.v1.TicketService.ReopenTicket.
-func (c *ticketServiceClient) ReopenTicket(ctx context.Context, req *connect.Request[v1.ReopenTicketRequest]) (*connect.Response[v1.ReopenTicketResponse], error) {
-	return c.reopenTicket.CallUnary(ctx, req)
+// ThreadServiceHandler is an implementation of the syntra.v1.ThreadService service.
+type ThreadServiceHandler interface {
+	ListThreads(context.Context, *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error)
+	GetThread(context.Context, *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error)
+	CreateThread(context.Context, *connect.Request[v1.CreateThreadRequest]) (*connect.Response[v1.CreateThreadResponse], error)
+	UpdateThread(context.Context, *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error)
+	AssignThread(context.Context, *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error)
+	CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error)
+	ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error)
 }
 
-// TicketServiceHandler is an implementation of the syntra.v1.TicketService service.
-type TicketServiceHandler interface {
-	ListTickets(context.Context, *connect.Request[v1.ListTicketsRequest]) (*connect.Response[v1.ListTicketsResponse], error)
-	GetTicket(context.Context, *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error)
-	CreateTicket(context.Context, *connect.Request[v1.CreateTicketRequest]) (*connect.Response[v1.CreateTicketResponse], error)
-	UpdateTicket(context.Context, *connect.Request[v1.UpdateTicketRequest]) (*connect.Response[v1.UpdateTicketResponse], error)
-	AssignTicket(context.Context, *connect.Request[v1.AssignTicketRequest]) (*connect.Response[v1.AssignTicketResponse], error)
-	ProposeResolution(context.Context, *connect.Request[v1.ProposeResolutionRequest]) (*connect.Response[v1.ProposeResolutionResponse], error)
-	CloseTicket(context.Context, *connect.Request[v1.CloseTicketRequest]) (*connect.Response[v1.CloseTicketResponse], error)
-	ReopenTicket(context.Context, *connect.Request[v1.ReopenTicketRequest]) (*connect.Response[v1.ReopenTicketResponse], error)
-}
-
-// NewTicketServiceHandler builds an HTTP handler from the service implementation. It returns the
+// NewThreadServiceHandler builds an HTTP handler from the service implementation. It returns the
 // path on which to mount the handler and the handler itself.
 //
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
-func NewTicketServiceHandler(svc TicketServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	ticketServiceMethods := v1.File_syntra_v1_collaboration_proto.Services().ByName("TicketService").Methods()
-	ticketServiceListTicketsHandler := connect.NewUnaryHandler(
-		TicketServiceListTicketsProcedure,
-		svc.ListTickets,
-		connect.WithSchema(ticketServiceMethods.ByName("ListTickets")),
+func NewThreadServiceHandler(svc ThreadServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	threadServiceMethods := v1.File_syntra_v1_collaboration_proto.Services().ByName("ThreadService").Methods()
+	threadServiceListThreadsHandler := connect.NewUnaryHandler(
+		ThreadServiceListThreadsProcedure,
+		svc.ListThreads,
+		connect.WithSchema(threadServiceMethods.ByName("ListThreads")),
 		connect.WithHandlerOptions(opts...),
 	)
-	ticketServiceGetTicketHandler := connect.NewUnaryHandler(
-		TicketServiceGetTicketProcedure,
-		svc.GetTicket,
-		connect.WithSchema(ticketServiceMethods.ByName("GetTicket")),
+	threadServiceGetThreadHandler := connect.NewUnaryHandler(
+		ThreadServiceGetThreadProcedure,
+		svc.GetThread,
+		connect.WithSchema(threadServiceMethods.ByName("GetThread")),
 		connect.WithHandlerOptions(opts...),
 	)
-	ticketServiceCreateTicketHandler := connect.NewUnaryHandler(
-		TicketServiceCreateTicketProcedure,
-		svc.CreateTicket,
-		connect.WithSchema(ticketServiceMethods.ByName("CreateTicket")),
+	threadServiceCreateThreadHandler := connect.NewUnaryHandler(
+		ThreadServiceCreateThreadProcedure,
+		svc.CreateThread,
+		connect.WithSchema(threadServiceMethods.ByName("CreateThread")),
 		connect.WithHandlerOptions(opts...),
 	)
-	ticketServiceUpdateTicketHandler := connect.NewUnaryHandler(
-		TicketServiceUpdateTicketProcedure,
-		svc.UpdateTicket,
-		connect.WithSchema(ticketServiceMethods.ByName("UpdateTicket")),
+	threadServiceUpdateThreadHandler := connect.NewUnaryHandler(
+		ThreadServiceUpdateThreadProcedure,
+		svc.UpdateThread,
+		connect.WithSchema(threadServiceMethods.ByName("UpdateThread")),
 		connect.WithHandlerOptions(opts...),
 	)
-	ticketServiceAssignTicketHandler := connect.NewUnaryHandler(
-		TicketServiceAssignTicketProcedure,
-		svc.AssignTicket,
-		connect.WithSchema(ticketServiceMethods.ByName("AssignTicket")),
+	threadServiceAssignThreadHandler := connect.NewUnaryHandler(
+		ThreadServiceAssignThreadProcedure,
+		svc.AssignThread,
+		connect.WithSchema(threadServiceMethods.ByName("AssignThread")),
 		connect.WithHandlerOptions(opts...),
 	)
-	ticketServiceProposeResolutionHandler := connect.NewUnaryHandler(
-		TicketServiceProposeResolutionProcedure,
-		svc.ProposeResolution,
-		connect.WithSchema(ticketServiceMethods.ByName("ProposeResolution")),
+	threadServiceCloseThreadHandler := connect.NewUnaryHandler(
+		ThreadServiceCloseThreadProcedure,
+		svc.CloseThread,
+		connect.WithSchema(threadServiceMethods.ByName("CloseThread")),
 		connect.WithHandlerOptions(opts...),
 	)
-	ticketServiceCloseTicketHandler := connect.NewUnaryHandler(
-		TicketServiceCloseTicketProcedure,
-		svc.CloseTicket,
-		connect.WithSchema(ticketServiceMethods.ByName("CloseTicket")),
+	threadServiceReopenThreadHandler := connect.NewUnaryHandler(
+		ThreadServiceReopenThreadProcedure,
+		svc.ReopenThread,
+		connect.WithSchema(threadServiceMethods.ByName("ReopenThread")),
 		connect.WithHandlerOptions(opts...),
 	)
-	ticketServiceReopenTicketHandler := connect.NewUnaryHandler(
-		TicketServiceReopenTicketProcedure,
-		svc.ReopenTicket,
-		connect.WithSchema(ticketServiceMethods.ByName("ReopenTicket")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/syntra.v1.TicketService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return "/syntra.v1.ThreadService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case TicketServiceListTicketsProcedure:
-			ticketServiceListTicketsHandler.ServeHTTP(w, r)
-		case TicketServiceGetTicketProcedure:
-			ticketServiceGetTicketHandler.ServeHTTP(w, r)
-		case TicketServiceCreateTicketProcedure:
-			ticketServiceCreateTicketHandler.ServeHTTP(w, r)
-		case TicketServiceUpdateTicketProcedure:
-			ticketServiceUpdateTicketHandler.ServeHTTP(w, r)
-		case TicketServiceAssignTicketProcedure:
-			ticketServiceAssignTicketHandler.ServeHTTP(w, r)
-		case TicketServiceProposeResolutionProcedure:
-			ticketServiceProposeResolutionHandler.ServeHTTP(w, r)
-		case TicketServiceCloseTicketProcedure:
-			ticketServiceCloseTicketHandler.ServeHTTP(w, r)
-		case TicketServiceReopenTicketProcedure:
-			ticketServiceReopenTicketHandler.ServeHTTP(w, r)
+		case ThreadServiceListThreadsProcedure:
+			threadServiceListThreadsHandler.ServeHTTP(w, r)
+		case ThreadServiceGetThreadProcedure:
+			threadServiceGetThreadHandler.ServeHTTP(w, r)
+		case ThreadServiceCreateThreadProcedure:
+			threadServiceCreateThreadHandler.ServeHTTP(w, r)
+		case ThreadServiceUpdateThreadProcedure:
+			threadServiceUpdateThreadHandler.ServeHTTP(w, r)
+		case ThreadServiceAssignThreadProcedure:
+			threadServiceAssignThreadHandler.ServeHTTP(w, r)
+		case ThreadServiceCloseThreadProcedure:
+			threadServiceCloseThreadHandler.ServeHTTP(w, r)
+		case ThreadServiceReopenThreadProcedure:
+			threadServiceReopenThreadHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
 	})
 }
 
-// UnimplementedTicketServiceHandler returns CodeUnimplemented from all methods.
-type UnimplementedTicketServiceHandler struct{}
+// UnimplementedThreadServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedThreadServiceHandler struct{}
 
-func (UnimplementedTicketServiceHandler) ListTickets(context.Context, *connect.Request[v1.ListTicketsRequest]) (*connect.Response[v1.ListTicketsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.ListTickets is not implemented"))
+func (UnimplementedThreadServiceHandler) ListThreads(context.Context, *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.ListThreads is not implemented"))
 }
 
-func (UnimplementedTicketServiceHandler) GetTicket(context.Context, *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.GetTicket is not implemented"))
+func (UnimplementedThreadServiceHandler) GetThread(context.Context, *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.GetThread is not implemented"))
 }
 
-func (UnimplementedTicketServiceHandler) CreateTicket(context.Context, *connect.Request[v1.CreateTicketRequest]) (*connect.Response[v1.CreateTicketResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.CreateTicket is not implemented"))
+func (UnimplementedThreadServiceHandler) CreateThread(context.Context, *connect.Request[v1.CreateThreadRequest]) (*connect.Response[v1.CreateThreadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.CreateThread is not implemented"))
 }
 
-func (UnimplementedTicketServiceHandler) UpdateTicket(context.Context, *connect.Request[v1.UpdateTicketRequest]) (*connect.Response[v1.UpdateTicketResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.UpdateTicket is not implemented"))
+func (UnimplementedThreadServiceHandler) UpdateThread(context.Context, *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.UpdateThread is not implemented"))
 }
 
-func (UnimplementedTicketServiceHandler) AssignTicket(context.Context, *connect.Request[v1.AssignTicketRequest]) (*connect.Response[v1.AssignTicketResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.AssignTicket is not implemented"))
+func (UnimplementedThreadServiceHandler) AssignThread(context.Context, *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.AssignThread is not implemented"))
 }
 
-func (UnimplementedTicketServiceHandler) ProposeResolution(context.Context, *connect.Request[v1.ProposeResolutionRequest]) (*connect.Response[v1.ProposeResolutionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.ProposeResolution is not implemented"))
+func (UnimplementedThreadServiceHandler) CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.CloseThread is not implemented"))
 }
 
-func (UnimplementedTicketServiceHandler) CloseTicket(context.Context, *connect.Request[v1.CloseTicketRequest]) (*connect.Response[v1.CloseTicketResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.CloseTicket is not implemented"))
-}
-
-func (UnimplementedTicketServiceHandler) ReopenTicket(context.Context, *connect.Request[v1.ReopenTicketRequest]) (*connect.Response[v1.ReopenTicketResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.TicketService.ReopenTicket is not implemented"))
+func (UnimplementedThreadServiceHandler) ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.ReopenThread is not implemented"))
 }
 
 // MessageServiceClient is a client for the syntra.v1.MessageService service.
 type MessageServiceClient interface {
 	ListMessages(context.Context, *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error)
-	SaveDraft(context.Context, *connect.Request[v1.SaveDraftRequest]) (*connect.Response[v1.SaveDraftResponse], error)
+	SavePreparedMessage(context.Context, *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error)
 	PublishMessage(context.Context, *connect.Request[v1.PublishMessageRequest]) (*connect.Response[v1.PublishMessageResponse], error)
-	DiscardDraft(context.Context, *connect.Request[v1.DiscardDraftRequest]) (*connect.Response[v1.DiscardDraftResponse], error)
+	DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error)
 	MarkRead(context.Context, *connect.Request[v1.MarkReadRequest]) (*connect.Response[v1.MarkReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
 }
@@ -695,10 +666,10 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(messageServiceMethods.ByName("ListMessages")),
 			connect.WithClientOptions(opts...),
 		),
-		saveDraft: connect.NewClient[v1.SaveDraftRequest, v1.SaveDraftResponse](
+		savePreparedMessage: connect.NewClient[v1.SavePreparedMessageRequest, v1.SavePreparedMessageResponse](
 			httpClient,
-			baseURL+MessageServiceSaveDraftProcedure,
-			connect.WithSchema(messageServiceMethods.ByName("SaveDraft")),
+			baseURL+MessageServiceSavePreparedMessageProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("SavePreparedMessage")),
 			connect.WithClientOptions(opts...),
 		),
 		publishMessage: connect.NewClient[v1.PublishMessageRequest, v1.PublishMessageResponse](
@@ -707,10 +678,10 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(messageServiceMethods.ByName("PublishMessage")),
 			connect.WithClientOptions(opts...),
 		),
-		discardDraft: connect.NewClient[v1.DiscardDraftRequest, v1.DiscardDraftResponse](
+		discardPreparedMessage: connect.NewClient[v1.DiscardPreparedMessageRequest, v1.DiscardPreparedMessageResponse](
 			httpClient,
-			baseURL+MessageServiceDiscardDraftProcedure,
-			connect.WithSchema(messageServiceMethods.ByName("DiscardDraft")),
+			baseURL+MessageServiceDiscardPreparedMessageProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("DiscardPreparedMessage")),
 			connect.WithClientOptions(opts...),
 		),
 		markRead: connect.NewClient[v1.MarkReadRequest, v1.MarkReadResponse](
@@ -730,12 +701,12 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // messageServiceClient implements MessageServiceClient.
 type messageServiceClient struct {
-	listMessages   *connect.Client[v1.ListMessagesRequest, v1.ListMessagesResponse]
-	saveDraft      *connect.Client[v1.SaveDraftRequest, v1.SaveDraftResponse]
-	publishMessage *connect.Client[v1.PublishMessageRequest, v1.PublishMessageResponse]
-	discardDraft   *connect.Client[v1.DiscardDraftRequest, v1.DiscardDraftResponse]
-	markRead       *connect.Client[v1.MarkReadRequest, v1.MarkReadResponse]
-	markReviewed   *connect.Client[v1.MarkReviewedRequest, v1.MarkReviewedResponse]
+	listMessages           *connect.Client[v1.ListMessagesRequest, v1.ListMessagesResponse]
+	savePreparedMessage    *connect.Client[v1.SavePreparedMessageRequest, v1.SavePreparedMessageResponse]
+	publishMessage         *connect.Client[v1.PublishMessageRequest, v1.PublishMessageResponse]
+	discardPreparedMessage *connect.Client[v1.DiscardPreparedMessageRequest, v1.DiscardPreparedMessageResponse]
+	markRead               *connect.Client[v1.MarkReadRequest, v1.MarkReadResponse]
+	markReviewed           *connect.Client[v1.MarkReviewedRequest, v1.MarkReviewedResponse]
 }
 
 // ListMessages calls syntra.v1.MessageService.ListMessages.
@@ -743,9 +714,9 @@ func (c *messageServiceClient) ListMessages(ctx context.Context, req *connect.Re
 	return c.listMessages.CallUnary(ctx, req)
 }
 
-// SaveDraft calls syntra.v1.MessageService.SaveDraft.
-func (c *messageServiceClient) SaveDraft(ctx context.Context, req *connect.Request[v1.SaveDraftRequest]) (*connect.Response[v1.SaveDraftResponse], error) {
-	return c.saveDraft.CallUnary(ctx, req)
+// SavePreparedMessage calls syntra.v1.MessageService.SavePreparedMessage.
+func (c *messageServiceClient) SavePreparedMessage(ctx context.Context, req *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error) {
+	return c.savePreparedMessage.CallUnary(ctx, req)
 }
 
 // PublishMessage calls syntra.v1.MessageService.PublishMessage.
@@ -753,9 +724,9 @@ func (c *messageServiceClient) PublishMessage(ctx context.Context, req *connect.
 	return c.publishMessage.CallUnary(ctx, req)
 }
 
-// DiscardDraft calls syntra.v1.MessageService.DiscardDraft.
-func (c *messageServiceClient) DiscardDraft(ctx context.Context, req *connect.Request[v1.DiscardDraftRequest]) (*connect.Response[v1.DiscardDraftResponse], error) {
-	return c.discardDraft.CallUnary(ctx, req)
+// DiscardPreparedMessage calls syntra.v1.MessageService.DiscardPreparedMessage.
+func (c *messageServiceClient) DiscardPreparedMessage(ctx context.Context, req *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error) {
+	return c.discardPreparedMessage.CallUnary(ctx, req)
 }
 
 // MarkRead calls syntra.v1.MessageService.MarkRead.
@@ -771,9 +742,9 @@ func (c *messageServiceClient) MarkReviewed(ctx context.Context, req *connect.Re
 // MessageServiceHandler is an implementation of the syntra.v1.MessageService service.
 type MessageServiceHandler interface {
 	ListMessages(context.Context, *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error)
-	SaveDraft(context.Context, *connect.Request[v1.SaveDraftRequest]) (*connect.Response[v1.SaveDraftResponse], error)
+	SavePreparedMessage(context.Context, *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error)
 	PublishMessage(context.Context, *connect.Request[v1.PublishMessageRequest]) (*connect.Response[v1.PublishMessageResponse], error)
-	DiscardDraft(context.Context, *connect.Request[v1.DiscardDraftRequest]) (*connect.Response[v1.DiscardDraftResponse], error)
+	DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error)
 	MarkRead(context.Context, *connect.Request[v1.MarkReadRequest]) (*connect.Response[v1.MarkReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
 }
@@ -791,10 +762,10 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 		connect.WithSchema(messageServiceMethods.ByName("ListMessages")),
 		connect.WithHandlerOptions(opts...),
 	)
-	messageServiceSaveDraftHandler := connect.NewUnaryHandler(
-		MessageServiceSaveDraftProcedure,
-		svc.SaveDraft,
-		connect.WithSchema(messageServiceMethods.ByName("SaveDraft")),
+	messageServiceSavePreparedMessageHandler := connect.NewUnaryHandler(
+		MessageServiceSavePreparedMessageProcedure,
+		svc.SavePreparedMessage,
+		connect.WithSchema(messageServiceMethods.ByName("SavePreparedMessage")),
 		connect.WithHandlerOptions(opts...),
 	)
 	messageServicePublishMessageHandler := connect.NewUnaryHandler(
@@ -803,10 +774,10 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 		connect.WithSchema(messageServiceMethods.ByName("PublishMessage")),
 		connect.WithHandlerOptions(opts...),
 	)
-	messageServiceDiscardDraftHandler := connect.NewUnaryHandler(
-		MessageServiceDiscardDraftProcedure,
-		svc.DiscardDraft,
-		connect.WithSchema(messageServiceMethods.ByName("DiscardDraft")),
+	messageServiceDiscardPreparedMessageHandler := connect.NewUnaryHandler(
+		MessageServiceDiscardPreparedMessageProcedure,
+		svc.DiscardPreparedMessage,
+		connect.WithSchema(messageServiceMethods.ByName("DiscardPreparedMessage")),
 		connect.WithHandlerOptions(opts...),
 	)
 	messageServiceMarkReadHandler := connect.NewUnaryHandler(
@@ -825,12 +796,12 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 		switch r.URL.Path {
 		case MessageServiceListMessagesProcedure:
 			messageServiceListMessagesHandler.ServeHTTP(w, r)
-		case MessageServiceSaveDraftProcedure:
-			messageServiceSaveDraftHandler.ServeHTTP(w, r)
+		case MessageServiceSavePreparedMessageProcedure:
+			messageServiceSavePreparedMessageHandler.ServeHTTP(w, r)
 		case MessageServicePublishMessageProcedure:
 			messageServicePublishMessageHandler.ServeHTTP(w, r)
-		case MessageServiceDiscardDraftProcedure:
-			messageServiceDiscardDraftHandler.ServeHTTP(w, r)
+		case MessageServiceDiscardPreparedMessageProcedure:
+			messageServiceDiscardPreparedMessageHandler.ServeHTTP(w, r)
 		case MessageServiceMarkReadProcedure:
 			messageServiceMarkReadHandler.ServeHTTP(w, r)
 		case MessageServiceMarkReviewedProcedure:
@@ -848,16 +819,16 @@ func (UnimplementedMessageServiceHandler) ListMessages(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.ListMessages is not implemented"))
 }
 
-func (UnimplementedMessageServiceHandler) SaveDraft(context.Context, *connect.Request[v1.SaveDraftRequest]) (*connect.Response[v1.SaveDraftResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.SaveDraft is not implemented"))
+func (UnimplementedMessageServiceHandler) SavePreparedMessage(context.Context, *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.SavePreparedMessage is not implemented"))
 }
 
 func (UnimplementedMessageServiceHandler) PublishMessage(context.Context, *connect.Request[v1.PublishMessageRequest]) (*connect.Response[v1.PublishMessageResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.PublishMessage is not implemented"))
 }
 
-func (UnimplementedMessageServiceHandler) DiscardDraft(context.Context, *connect.Request[v1.DiscardDraftRequest]) (*connect.Response[v1.DiscardDraftResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.DiscardDraft is not implemented"))
+func (UnimplementedMessageServiceHandler) DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.DiscardPreparedMessage is not implemented"))
 }
 
 func (UnimplementedMessageServiceHandler) MarkRead(context.Context, *connect.Request[v1.MarkReadRequest]) (*connect.Response[v1.MarkReadResponse], error) {
@@ -940,7 +911,7 @@ func (UnimplementedInboxServiceHandler) ListInboxItems(context.Context, *connect
 
 // ActivityServiceClient is a client for the syntra.v1.ActivityService service.
 type ActivityServiceClient interface {
-	ListTicketEvents(context.Context, *connect.Request[v1.ListTicketEventsRequest]) (*connect.Response[v1.ListTicketEventsResponse], error)
+	ListThreadEvents(context.Context, *connect.Request[v1.ListThreadEventsRequest]) (*connect.Response[v1.ListThreadEventsResponse], error)
 }
 
 // NewActivityServiceClient constructs a client for the syntra.v1.ActivityService service. By
@@ -954,10 +925,10 @@ func NewActivityServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 	baseURL = strings.TrimRight(baseURL, "/")
 	activityServiceMethods := v1.File_syntra_v1_collaboration_proto.Services().ByName("ActivityService").Methods()
 	return &activityServiceClient{
-		listTicketEvents: connect.NewClient[v1.ListTicketEventsRequest, v1.ListTicketEventsResponse](
+		listThreadEvents: connect.NewClient[v1.ListThreadEventsRequest, v1.ListThreadEventsResponse](
 			httpClient,
-			baseURL+ActivityServiceListTicketEventsProcedure,
-			connect.WithSchema(activityServiceMethods.ByName("ListTicketEvents")),
+			baseURL+ActivityServiceListThreadEventsProcedure,
+			connect.WithSchema(activityServiceMethods.ByName("ListThreadEvents")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -965,17 +936,17 @@ func NewActivityServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 
 // activityServiceClient implements ActivityServiceClient.
 type activityServiceClient struct {
-	listTicketEvents *connect.Client[v1.ListTicketEventsRequest, v1.ListTicketEventsResponse]
+	listThreadEvents *connect.Client[v1.ListThreadEventsRequest, v1.ListThreadEventsResponse]
 }
 
-// ListTicketEvents calls syntra.v1.ActivityService.ListTicketEvents.
-func (c *activityServiceClient) ListTicketEvents(ctx context.Context, req *connect.Request[v1.ListTicketEventsRequest]) (*connect.Response[v1.ListTicketEventsResponse], error) {
-	return c.listTicketEvents.CallUnary(ctx, req)
+// ListThreadEvents calls syntra.v1.ActivityService.ListThreadEvents.
+func (c *activityServiceClient) ListThreadEvents(ctx context.Context, req *connect.Request[v1.ListThreadEventsRequest]) (*connect.Response[v1.ListThreadEventsResponse], error) {
+	return c.listThreadEvents.CallUnary(ctx, req)
 }
 
 // ActivityServiceHandler is an implementation of the syntra.v1.ActivityService service.
 type ActivityServiceHandler interface {
-	ListTicketEvents(context.Context, *connect.Request[v1.ListTicketEventsRequest]) (*connect.Response[v1.ListTicketEventsResponse], error)
+	ListThreadEvents(context.Context, *connect.Request[v1.ListThreadEventsRequest]) (*connect.Response[v1.ListThreadEventsResponse], error)
 }
 
 // NewActivityServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -985,16 +956,16 @@ type ActivityServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewActivityServiceHandler(svc ActivityServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	activityServiceMethods := v1.File_syntra_v1_collaboration_proto.Services().ByName("ActivityService").Methods()
-	activityServiceListTicketEventsHandler := connect.NewUnaryHandler(
-		ActivityServiceListTicketEventsProcedure,
-		svc.ListTicketEvents,
-		connect.WithSchema(activityServiceMethods.ByName("ListTicketEvents")),
+	activityServiceListThreadEventsHandler := connect.NewUnaryHandler(
+		ActivityServiceListThreadEventsProcedure,
+		svc.ListThreadEvents,
+		connect.WithSchema(activityServiceMethods.ByName("ListThreadEvents")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/syntra.v1.ActivityService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case ActivityServiceListTicketEventsProcedure:
-			activityServiceListTicketEventsHandler.ServeHTTP(w, r)
+		case ActivityServiceListThreadEventsProcedure:
+			activityServiceListThreadEventsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1004,8 +975,8 @@ func NewActivityServiceHandler(svc ActivityServiceHandler, opts ...connect.Handl
 // UnimplementedActivityServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedActivityServiceHandler struct{}
 
-func (UnimplementedActivityServiceHandler) ListTicketEvents(context.Context, *connect.Request[v1.ListTicketEventsRequest]) (*connect.Response[v1.ListTicketEventsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ActivityService.ListTicketEvents is not implemented"))
+func (UnimplementedActivityServiceHandler) ListThreadEvents(context.Context, *connect.Request[v1.ListThreadEventsRequest]) (*connect.Response[v1.ListThreadEventsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ActivityService.ListThreadEvents is not implemented"))
 }
 
 // DashboardServiceClient is a client for the syntra.v1.DashboardService service.

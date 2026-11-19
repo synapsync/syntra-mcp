@@ -10,7 +10,7 @@ func TestClientDiagnosticClasses(t *testing.T) {
 	const base = `{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"44444444-4444-4444-8444-444444444444","title":"secret-message-content","originalDestinationIntent":"Alex","summary":"ok","contextMarkdown":"","destination":{"unlinkedLabel":"Alex"}}}`
 	cases := []struct{ name, raw, want string }{
 		{"unknown", strings.Replace(base, `"summary":"ok"`, `"unknownKey":"ok"`, 1), "unknownKey"},
-		{"misplaced", strings.Replace(base, `"summary":"ok"`, `"draftId":"ok"`, 1), "it belongs at request.update.draftId"},
+		{"misplaced", strings.Replace(base, `"summary":"ok"`, `"preparedMessageId":"ok"`, 1), "it belongs at request.update.preparedMessageId"},
 		{"duplicate", strings.Replace(base, `"summary":"ok"`, `"summary":"ok","summary":"again"`, 1), "duplicate key summary"},
 		{"type", strings.Replace(base, `"summary":"ok"`, `"summary":12`, 1), "wrong JSON type"},
 		{"null", strings.Replace(base, `"summary":"ok"`, `"summary":null`, 1), "cannot be null"},
@@ -63,7 +63,7 @@ func TestSemanticDiagnostics(t *testing.T) {
 	if e := clientID("workspaceId", "bad"); e == nil || !strings.Contains(e.Error(), "UUID") {
 		t.Fatal(e)
 	}
-	if e := clientRevision("expectedTicketRevision", "bad"); e == nil || !strings.Contains(e.Error(), "syntra ticket") {
+	if e := clientRevision("expectedThreadRevision", "bad"); e == nil || !strings.Contains(e.Error(), "syntra thread") {
 		t.Fatal(e)
 	}
 	c = makeContent()
@@ -78,11 +78,11 @@ func TestExpectationRequiredFields(t *testing.T) {
 	const revision = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	cases := []struct {
 		name   string
-		mutate func(*v1.ContentDraftExpectation)
-	}{{"ticketId", func(x *v1.ContentDraftExpectation) { x.TicketId = "" }}, {"draftId", func(x *v1.ContentDraftExpectation) { x.DraftId = "" }}, {"expectedTicketRevision", func(x *v1.ContentDraftExpectation) { x.ExpectedTicketRevision = "" }}, {"expectedDraftRevision", func(x *v1.ContentDraftExpectation) { x.ExpectedDraftRevision = "" }}, {"expectedContentDigest", func(x *v1.ContentDraftExpectation) { x.ExpectedContentDigest = nil }}}
+		mutate func(*v1.PreparedContentExpectation)
+	}{{"threadId", func(x *v1.PreparedContentExpectation) { x.ThreadId = "" }}, {"preparedMessageId", func(x *v1.PreparedContentExpectation) { x.PreparedMessageId = "" }}, {"expectedThreadRevision", func(x *v1.PreparedContentExpectation) { x.ExpectedThreadRevision = "" }}, {"expectedPreparedMessageRevision", func(x *v1.PreparedContentExpectation) { x.ExpectedPreparedMessageRevision = "" }}, {"expectedContentDigest", func(x *v1.PreparedContentExpectation) { x.ExpectedContentDigest = nil }}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			x := &v1.ContentDraftExpectation{TicketId: id, DraftId: id, ExpectedTicketRevision: revision, ExpectedDraftRevision: revision, ExpectedContentDigest: make([]byte, 32)}
+			x := &v1.PreparedContentExpectation{ThreadId: id, PreparedMessageId: id, ExpectedThreadRevision: revision, ExpectedPreparedMessageRevision: revision, ExpectedContentDigest: make([]byte, 32)}
 			c.mutate(x)
 			err := clientExpectation("current", x)
 			if err == nil || !strings.Contains(err.Error(), c.name) {

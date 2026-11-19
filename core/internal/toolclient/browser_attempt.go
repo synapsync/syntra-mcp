@@ -159,7 +159,7 @@ func (a *PendingBrowserAttempt) ToolAuthorization() (string, error) {
 }
 
 // BrowserConfigMatchesProfile reports whether a browser login request exactly
-// matches the authorization represented by an existing profile. Legacy OTP
+// matches the authorization represented by an existing profile. Previous OTP
 // profiles can be reused too; their provider fields are private implementation
 // details and do not change the connection's requested scope.
 func BrowserConfigMatchesProfile(profile *Profile, config BrowserConfig) bool {
@@ -173,7 +173,7 @@ func BrowserConfigMatchesProfile(profile *Profile, config BrowserConfig) bool {
 }
 
 // ActiveProfile adapts verified issuance metadata to the explicit browser v2
-// profile without inventing legacy provider credentials.
+// profile without inventing previous provider credentials.
 func (a *PendingBrowserAttempt) ActiveProfile(connection *v1.ToolConnection) (*Profile, error) {
 	if a.Validate() != nil {
 		return nil, ErrProfile

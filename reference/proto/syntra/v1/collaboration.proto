@@ -28,24 +28,23 @@ service ProjectTeamService {
   rpc RemoveProjectTeam(RemoveProjectTeamRequest) returns (RemoveProjectTeamResponse);
 }
 
-// TicketService uses current workspace authorization on every request and retry.
-service TicketService {
-  rpc ListTickets(ListTicketsRequest) returns (ListTicketsResponse);
-  rpc GetTicket(GetTicketRequest) returns (GetTicketResponse);
-  rpc CreateTicket(CreateTicketRequest) returns (CreateTicketResponse);
-  rpc UpdateTicket(UpdateTicketRequest) returns (UpdateTicketResponse);
-  rpc AssignTicket(AssignTicketRequest) returns (AssignTicketResponse);
-  rpc ProposeResolution(ProposeResolutionRequest) returns (ProposeResolutionResponse);
-  rpc CloseTicket(CloseTicketRequest) returns (CloseTicketResponse);
-  rpc ReopenTicket(ReopenTicketRequest) returns (ReopenTicketResponse);
+// ThreadService uses current workspace authorization on every request and retry.
+service ThreadService {
+  rpc ListThreads(ListThreadsRequest) returns (ListThreadsResponse);
+  rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
+  rpc CreateThread(CreateThreadRequest) returns (CreateThreadResponse);
+  rpc UpdateThread(UpdateThreadRequest) returns (UpdateThreadResponse);
+  rpc AssignThread(AssignThreadRequest) returns (AssignThreadResponse);
+  rpc CloseThread(CloseThreadRequest) returns (CloseThreadResponse);
+  rpc ReopenThread(ReopenThreadRequest) returns (ReopenThreadResponse);
 }
 
 // MessageService uses current workspace authorization on every request and retry.
 service MessageService {
   rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
-  rpc SaveDraft(SaveDraftRequest) returns (SaveDraftResponse);
+  rpc SavePreparedMessage(SavePreparedMessageRequest) returns (SavePreparedMessageResponse);
   rpc PublishMessage(PublishMessageRequest) returns (PublishMessageResponse);
-  rpc DiscardDraft(DiscardDraftRequest) returns (DiscardDraftResponse);
+  rpc DiscardPreparedMessage(DiscardPreparedMessageRequest) returns (DiscardPreparedMessageResponse);
   rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
   rpc MarkReviewed(MarkReviewedRequest) returns (MarkReviewedResponse);
 }
@@ -57,7 +56,7 @@ service InboxService {
 
 // ActivityService uses current workspace authorization on every request and retry.
 service ActivityService {
-  rpc ListTicketEvents(ListTicketEventsRequest) returns (ListTicketEventsResponse);
+  rpc ListThreadEvents(ListThreadEventsRequest) returns (ListThreadEventsResponse);
 }
 
 // DashboardService uses current workspace authorization on every request and retry.
@@ -65,30 +64,29 @@ service DashboardService {
   rpc GetOverview(GetOverviewRequest) returns (GetOverviewResponse);
 }
 
-enum TicketState {
-  TICKET_STATE_UNSPECIFIED = 0;
-  TICKET_STATE_DRAFT = 1;
-  TICKET_STATE_OPEN = 2;
-  TICKET_STATE_RESOLUTION_PROPOSED = 3;
-  TICKET_STATE_CLOSED = 4;
+enum ThreadState {
+  THREAD_STATE_UNSPECIFIED = 0;
+  THREAD_STATE_PENDING = 1;
+  THREAD_STATE_OPEN = 2;
+  THREAD_STATE_CLOSED = 3;
 }
 
-enum TicketVisibility {
-  TICKET_VISIBILITY_UNSPECIFIED = 0;
-  TICKET_VISIBILITY_PUBLISHED = 1;
-  TICKET_VISIBILITY_OWN_DRAFTS = 2;
+enum ThreadVisibility {
+  THREAD_VISIBILITY_UNSPECIFIED = 0;
+  THREAD_VISIBILITY_PUBLISHED = 1;
+  THREAD_VISIBILITY_OWN_PREPARED = 2;
 }
 
 enum MessageView {
   MESSAGE_VIEW_UNSPECIFIED = 0;
   MESSAGE_VIEW_PUBLISHED = 1;
-  MESSAGE_VIEW_OWN_DRAFTS = 2;
+  MESSAGE_VIEW_OWN_PREPARED = 2;
 }
 
 // InboxView separates private preparation, chronological waiting and review.
 enum InboxView {
   INBOX_VIEW_UNSPECIFIED = 0;
-  INBOX_VIEW_OWN_DRAFTS = 1;
+  INBOX_VIEW_OWN_PREPARED = 1;
   INBOX_VIEW_AWAITING_REPLY = 2;
   INBOX_VIEW_PENDING_REVIEW = 3;
 }
@@ -99,17 +97,16 @@ enum ClosureKind {
   CLOSURE_KIND_WITHOUT_VALIDATION = 2;
 }
 
-enum TicketEventKind {
-  TICKET_EVENT_KIND_UNSPECIFIED = 0;
-  TICKET_EVENT_KIND_TICKET_PUBLISHED = 1;
-  TICKET_EVENT_KIND_TICKET_UPDATED = 2;
-  TICKET_EVENT_KIND_TICKET_ASSIGNED = 3;
-  TICKET_EVENT_KIND_MESSAGE_PUBLISHED = 4;
-  TICKET_EVENT_KIND_MESSAGE_READ = 5;
-  TICKET_EVENT_KIND_MESSAGE_REVIEWED = 6;
-  TICKET_EVENT_KIND_RESOLUTION_PROPOSED = 7;
-  TICKET_EVENT_KIND_TICKET_CLOSED = 8;
-  TICKET_EVENT_KIND_TICKET_REOPENED = 9;
+enum ThreadEventKind {
+  THREAD_EVENT_KIND_UNSPECIFIED = 0;
+  THREAD_EVENT_KIND_THREAD_PUBLISHED = 1;
+  THREAD_EVENT_KIND_THREAD_UPDATED = 2;
+  THREAD_EVENT_KIND_THREAD_ASSIGNED = 3;
+  THREAD_EVENT_KIND_MESSAGE_PUBLISHED = 4;
+  THREAD_EVENT_KIND_MESSAGE_READ = 5;
+  THREAD_EVENT_KIND_MESSAGE_REVIEWED = 6;
+  THREAD_EVENT_KIND_THREAD_CLOSED = 8;
+  THREAD_EVENT_KIND_THREAD_REOPENED = 9;
 }
 
 // Workspace catalog metadata; writes require current ADMIN. Names are 1..120 scalars/480 bytes, descriptions 0..2000 scalars/8000 bytes.
@@ -123,12 +120,11 @@ message Project {
   google.protobuf.Timestamp updated_at = 6;
   // Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
   string revision = 7;
-  // Computed authorized counts exclude every private draft; not revision inputs.
+  // Computed authorized counts exclude every pending thread; not revision inputs.
   uint64 team_count = 8;
-  uint64 published_ticket_count = 9;
-  uint64 open_ticket_count = 10;
-  uint64 resolution_proposed_ticket_count = 11;
-  uint64 closed_ticket_count = 12;
+  uint64 published_thread_count = 9;
+  uint64 open_thread_count = 10;
+  uint64 closed_thread_count = 12;
 }
 
 // A workspace team assigned to a project, with the people of that team who work on this project.
@@ -156,51 +152,45 @@ message ProjectTeamMember {
   bool active = 3;
 }
 
-// Private to creator while DRAFT, workspace-visible after atomic first publication. The opaque revision is internal concurrency data, never a public version label.
-message Ticket {
+// Private to creator while private, workspace-visible after atomic first publication. The opaque revision is internal concurrency data, never a public version label.
+message Thread {
   string id = 1;
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 2;
   string project_id = 3;
-  // The former catalog entry (module, then area) was removed: a ticket belongs to its project.
-  reserved 4;
-  reserved "area_id";
+  // The former catalog entry (module, then area) was removed: a thread belongs to its project.
   string creator_user_id = 5;
   string assignee_user_id = 6;
   string title = 7;
-  reserved 8;
-  reserved "priority";
-  TicketState state = 9;
+  ThreadState state = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
   google.protobuf.Timestamp published_at = 12;
   // Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
   string revision = 13;
-  optional string resolution_proposed_by_user_id = 14;
-  google.protobuf.Timestamp resolution_proposed_at = 15;
   ClosureKind closure_kind = 16;
   optional string closed_by_user_id = 17;
   google.protobuf.Timestamp closed_at = 18;
   string closure_reason = 19;
-  // Display-only preview, filled by ListTickets only (empty everywhere else): the first 240 Unicode scalar values of the
-  // summary of the latest published message (published visibility) or of the caller's own current draft (own-drafts
+  // Display-only preview, filled by ListThreads only (empty everywhere else): the first 240 Unicode scalar values of the
+  // summary of the latest published message (published visibility) or of the caller's own current prepared message (own-prepared
   // visibility). It carries no more authority than the message itself and is never a substitute for reading the message.
   string summary_preview = 20;
 }
 
-// Author-private editable content, including against shared tickets. Draft existence/content is hidden from everyone else, including admins.
-message MessageDraft {
+// Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.
+message PreparedMessage {
   string id = 1;
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 2;
-  string ticket_id = 3;
+  string thread_id = 3;
   // Server-derived application user UUID. Never accepted from a client request.
   string author_user_id = 4;
   // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
   string recipient_user_id = 5;
-  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
   string summary = 6;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
   string context_markdown = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
@@ -214,14 +204,14 @@ message PublishedMessage {
   string id = 1;
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 2;
-  string ticket_id = 3;
+  string thread_id = 3;
   // Server-derived application user UUID. Never accepted from a client request.
   string author_user_id = 4;
   // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
   string recipient_user_id = 5;
-  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
   string summary = 6;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
   string context_markdown = 7;
   google.protobuf.Timestamp published_at = 8;
   RecipientReceipt receipt = 9;
@@ -236,50 +226,51 @@ message RecipientReceipt {
   google.protobuf.Timestamp reviewed_at = 4;
 }
 
-// Immutable server-attributed shared history; no private drafts or their changes. Absent/nonapplicable fields remain defaults.
-message TicketEvent {
+// Immutable server-attributed shared history; no private prepared messages or their changes. Absent/nonapplicable fields remain defaults.
+message ThreadEvent {
   string id = 1;
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 2;
-  string ticket_id = 3;
+  string thread_id = 3;
   string actor_user_id = 4;
-  TicketEventKind kind = 5;
+  ThreadEventKind kind = 5;
   google.protobuf.Timestamp occurred_at = 6;
   optional string message_id = 7;
   optional string previous_assignee_user_id = 8;
   optional string assignee_user_id = 9;
-  TicketState previous_state = 10;
-  TicketState state = 11;
+  ThreadState previous_state = 10;
+  ThreadState state = 11;
   ClosureKind closure_kind = 12;
   // Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
   string reason = 13;
+  // Monotonic per-thread causal order; independent of wall-clock time and UUIDs.
+  int64 sequence = 14;
 }
 
-// Exactly one message OR own draft, selected by the required inbox view.
+// Exactly one published message OR own prepared message, selected by the required inbox view.
 // Waiting is chronological per directed user pair, never a semantic reply verdict.
 message InboxItem {
   PublishedMessage message = 1;
-  Ticket ticket = 2;
-  MessageDraft draft = 3;
+  Thread thread = 2;
+  PreparedMessage prepared_message = 3;
 }
 
-// Current authorized workspace aggregates; only own draft count is private. No simulated metrics or unbounded project arrays.
+// Current authorized workspace aggregates; only own pending/prepared counts are private. No simulated metrics or unbounded project arrays.
 message Overview {
-  uint64 published_ticket_count = 1;
-  uint64 open_ticket_count = 2;
-  uint64 resolution_proposed_ticket_count = 3;
-  uint64 closed_ticket_count = 4;
-  uint64 assigned_active_ticket_count = 5;
+  uint64 published_thread_count = 1;
+  uint64 open_thread_count = 2;
+  uint64 closed_thread_count = 4;
+  uint64 assigned_active_thread_count = 5;
   uint64 pending_review_message_count = 6;
   uint64 unread_message_count = 7;
-  uint64 own_draft_ticket_count = 8;
+  uint64 own_pending_thread_count = 8;
   google.protobuf.Timestamp as_of = 9;
   // Current visible workspace projects, from the same overview snapshot.
   uint64 project_count = 10;
   // Exact count of caller InboxView AWAITING_REPLY items.
   uint64 awaiting_reply_message_count = 11;
-  // Exact count of caller InboxView OWN_DRAFTS, including later reply drafts.
-  uint64 own_draft_message_count = 12;
+  // Exact count of caller InboxView OWN_PREPARED, including later reply prepared messages.
+  uint64 own_prepared_message_count = 12;
 }
 
 message ListProjectsRequest {
@@ -338,7 +329,7 @@ message UpdateProjectResponse {
   Project project = 1;
 }
 
-// Admin-only. Projects with any tickets or team assignments cannot be deleted.
+// Admin-only. Projects with any threads or team assignments cannot be deleted.
 message DeleteProjectRequest {
   string workspace_id = 1;
   string project_id = 2;
@@ -373,8 +364,6 @@ message SetProjectTeamRequest {
   string workspace_id = 1;
   string project_id = 2;
   string team_id = 3;
-  reserved 4;
-  reserved "user_ids";
   string expected_revision = 5;
   // Canonical UUID; retry key binds method/actor/workspace and exact payload for resource lifetime.
   string request_id = 6;
@@ -387,7 +376,7 @@ message SetProjectTeamResponse {
   ProjectTeam project_team = 1;
 }
 
-// Removes the team from the project (current ADMIN only). Tickets and messages are untouched.
+// Removes the team from the project (current ADMIN only). Threads and messages are untouched.
 message RemoveProjectTeamRequest {
   string workspace_id = 1;
   string project_id = 2;
@@ -398,89 +387,81 @@ message RemoveProjectTeamRequest {
 
 message RemoveProjectTeamResponse {}
 
-// Explicit visibility required; PUBLISHED never includes drafts. OWN_DRAFTS is creator-only. Empty query means no title search; state zero means any in that view.
-message ListTicketsRequest {
+// Explicit visibility required; PUBLISHED never includes prepared messages. OWN_PREPARED is creator-only. Empty query means no title search; state zero means any in that view.
+message ListThreadsRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
   optional string project_id = 2;
-  reserved 3;
-  reserved "area_id";
-  TicketState state = 4;
+  ThreadState state = 4;
   optional string assignee_user_id = 5;
   // Exact literal case-sensitive substring of title, 0..120 scalars/480 bytes. No wildcards, ranking or Markdown search.
   string query = 6;
-  TicketVisibility visibility = 7;
+  ThreadVisibility visibility = 7;
   // Zero defaults to 25; explicit 1..100 only.
   int32 page_size = 8;
   // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
   string page_token = 9;
 }
 
-message ListTicketsResponse {
-  repeated Ticket tickets = 1;
+message ListThreadsResponse {
+  repeated Thread threads = 1;
   // Empty at end; same opaque cursor policy as the request.
   string next_page_token = 2;
 }
 
-message GetTicketRequest {
+message GetThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
 }
 
-message GetTicketResponse {
-  Ticket ticket = 1;
+message GetThreadResponse {
+  Thread thread = 1;
 }
 
-// Creates a private ticket and its single initial draft atomically. Required recipient is explicit; the recipient is never inferred from a project team.
-message CreateTicketRequest {
+// Creates a private thread and its single initial prepared message atomically. Required recipient is explicit; the recipient is never inferred from a project team.
+message CreateThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
   string project_id = 2;
-  reserved 3;
-  reserved "area_id";
   string title = 4;
-  reserved 5;
-  reserved "priority";
   // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
   string recipient_user_id = 6;
-  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
   string summary = 7;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
   string context_markdown = 8;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 9;
 }
 
 // Author-private even on retry. After publication/discard, creation retry fails FailedPrecondition rather than returning consumed private content.
-message CreateTicketResponse {
-  Ticket ticket = 1;
-  MessageDraft initial_draft = 2;
+message CreateThreadResponse {
+  Thread thread = 1;
+  PreparedMessage initial_prepared_message = 2;
 }
 
-// Full replacement of title only. The project is immutable; DRAFT creator-only, shared nonclosed creator/admin.
-message UpdateTicketRequest {
+// Full replacement of title only. The project is immutable; Pending creator-only; open creator/admin.
+message UpdateThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   string title = 3;
-  reserved 4;
-  reserved "priority";
   // Required exact current resource revision; stale values fail Aborted without overwriting.
   string expected_revision = 5;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 6;
 }
 
-message UpdateTicketResponse {
-  Ticket ticket = 1;
+message UpdateThreadResponse {
+  Thread thread = 1;
 }
 
-// Explicit assignment of a published nonclosed ticket by creator/admin. Does not rewrite any message recipient.
-message AssignTicketRequest {
+// Explicit assignment of a published nonclosed thread by creator/admin. Does not rewrite any message recipient.
+message AssignThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   string assignee_user_id = 3;
   // Required exact current resource revision; stale values fail Aborted without overwriting.
   string expected_revision = 4;
@@ -488,30 +469,17 @@ message AssignTicketRequest {
   string request_id = 5;
 }
 
-message AssignTicketResponse {
-  Ticket ticket = 1;
+message AssignThreadResponse {
+  Thread thread = 1;
 }
 
-// OPEN to RESOLUTION_PROPOSED by current assignee/admin. Does not mark any message read/reviewed.
-message ProposeResolutionRequest {
+
+
+// Creator/admin only. WITHOUT_VALIDATION requires a reason. Always requires current thread revision.
+message CloseThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
-  // Required exact current resource revision; stale values fail Aborted without overwriting.
-  string expected_revision = 3;
-  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
-  string request_id = 4;
-}
-
-message ProposeResolutionResponse {
-  Ticket ticket = 1;
-}
-
-// Creator/admin only. VALIDATED requires RESOLUTION_PROPOSED; WITHOUT_VALIDATION requires a reason. Always requires current ticket revision.
-message CloseTicketRequest {
-  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
-  string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   ClosureKind kind = 3;
   // Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
   string reason = 4;
@@ -521,15 +489,15 @@ message CloseTicketRequest {
   string request_id = 6;
 }
 
-message CloseTicketResponse {
-  Ticket ticket = 1;
+message CloseThreadResponse {
+  Thread thread = 1;
 }
 
 // CLOSED to OPEN by creator/admin, with nonblank reason; clears current proposal/closure projection, preserves events.
-message ReopenTicketRequest {
+message ReopenThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   // Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
   string reason = 3;
   // Required exact current resource revision; stale values fail Aborted without overwriting.
@@ -538,15 +506,15 @@ message ReopenTicketRequest {
   string request_id = 5;
 }
 
-message ReopenTicketResponse {
-  Ticket ticket = 1;
+message ReopenThreadResponse {
+  Thread thread = 1;
 }
 
-// Explicit view required. PUBLISHED returns only messages; OWN_DRAFTS only caller drafts. No mixed visibility pages.
+// Explicit view required. PUBLISHED returns only messages; OWN_PREPARED only caller prepared messages. No mixed visibility pages.
 message ListMessagesRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   MessageView view = 3;
   // Zero defaults to 25; explicit 1..100 only.
   int32 page_size = 4;
@@ -558,81 +526,81 @@ message ListMessagesRequest {
 
 message ListMessagesResponse {
   repeated PublishedMessage messages = 1;
-  repeated MessageDraft drafts = 2;
+  repeated PreparedMessage prepared_messages = 2;
   // Empty at end; same opaque cursor policy as the request.
   string next_page_token = 3;
 }
 
-// Absent draft_id and expected_draft_revision creates a new draft on a shared nonclosed ticket; both present updates own draft. Tokens bind exact content.
-message SaveDraftRequest {
+// Absent prepared_message_id and expected_prepared_message_revision creates a new prepared message on an open thread; both present updates the author's prepared message. Tokens bind exact content.
+message SavePreparedMessageRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
-  optional string draft_id = 3;
+  string thread_id = 2;
+  optional string prepared_message_id = 3;
   // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
   string recipient_user_id = 4;
-  // UI label Resumen. Draft: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
+  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
   string summary = 5;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in drafts; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
   string context_markdown = 6;
-  // Exact draft revision; absent only on draft creation.
-  optional string expected_draft_revision = 7;
-  // Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
-  string expected_ticket_revision = 8;
+  // Exact prepared message revision; absent only on prepared-message creation.
+  optional string expected_prepared_message_revision = 7;
+  // Required exact thread revision; a new publication invalidates stale lifecycle/publication operations.
+  string expected_thread_revision = 8;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 9;
 }
 
-message SaveDraftResponse {
-  MessageDraft draft = 1;
-  // Current ticket token; changing the initial recipient advances it atomically.
-  Ticket ticket = 2;
+message SavePreparedMessageResponse {
+  PreparedMessage prepared_message = 1;
+  // Current thread token; changing the initial recipient advances it atomically.
+  Thread thread = 2;
 }
 
-// Publishes the persisted exact draft using both opaque revisions. First publication shares ticket+message atomically and assigns its exact recipient.
+// Publishes the persisted exact prepared message using both opaque revisions. First publication opens the pending thread and publishes its message atomically and assigns its exact recipient.
 message PublishMessageRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
-  string draft_id = 3;
-  // Exact draft revision; absent only on draft creation.
-  string expected_draft_revision = 4;
-  // Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
-  string expected_ticket_revision = 5;
+  string thread_id = 2;
+  string prepared_message_id = 3;
+  // Exact prepared message revision; absent only on prepared-message creation.
+  string expected_prepared_message_revision = 4;
+  // Required exact thread revision; a new publication invalidates stale lifecycle/publication operations.
+  string expected_thread_revision = 5;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 6;
 }
 
-// Published content is immutable; later publication preserves nonclosed lifecycle state and advances ticket revision.
+// Published content is immutable; later publication preserves nonclosed lifecycle state and advances thread revision.
 message PublishMessageResponse {
-  Ticket ticket = 1;
+  Thread thread = 1;
   PublishedMessage message = 2;
 }
 
-// Author-only. Discarding the initial draft also discards its still-private ticket atomically. Never deletes published content.
-message DiscardDraftRequest {
+// Author-only. Discarding the initial prepared message also discards its still-private thread atomically. Never deletes published content.
+message DiscardPreparedMessageRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
-  string draft_id = 3;
-  // Exact draft revision; absent only on draft creation.
-  string expected_draft_revision = 4;
-  // Required exact ticket revision; a new publication invalidates stale lifecycle/publication operations.
-  string expected_ticket_revision = 5;
+  string thread_id = 2;
+  string prepared_message_id = 3;
+  // Exact prepared message revision; absent only on prepared-message creation.
+  string expected_prepared_message_revision = 4;
+  // Required exact thread revision; a new publication invalidates stale lifecycle/publication operations.
+  string expected_thread_revision = 5;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 6;
 }
 
-message DiscardDraftResponse {
-  string draft_id = 1;
-  bool ticket_discarded = 2;
+message DiscardPreparedMessageResponse {
+  string prepared_message_id = 1;
+  bool thread_discarded = 2;
 }
 
 // Only exact authenticated message recipient; immutable message ID is the concurrency identity. A repeated read keeps its original timestamp.
 message MarkReadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   string message_id = 3;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 4;
@@ -642,11 +610,11 @@ message MarkReadResponse {
   RecipientReceipt receipt = 1;
 }
 
-// Only exact authenticated message recipient with existing read; cannot affect another message, ticket lifecycle or recipient.
+// Only exact authenticated message recipient with existing read; cannot affect another message, thread lifecycle or recipient.
 message MarkReviewedRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   string message_id = 3;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 4;
@@ -673,11 +641,11 @@ message ListInboxItemsResponse {
   string next_page_token = 2;
 }
 
-// Published history only; owner of a private draft gets an empty page. Other actors receive NotFound.
-message ListTicketEventsRequest {
+// Published history only; owner of a pending thread gets an empty page. Other actors receive NotFound.
+message ListThreadEventsRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
-  string ticket_id = 2;
+  string thread_id = 2;
   // Zero defaults to 25; explicit 1..100 only.
   int32 page_size = 3;
   // Opaque ASCII <=2048 bytes; binds actor/workspace/method/filters/limit, expires after 900 seconds.
@@ -686,8 +654,8 @@ message ListTicketEventsRequest {
   bool newest_first = 5;
 }
 
-message ListTicketEventsResponse {
-  repeated TicketEvent events = 1;
+message ListThreadEventsResponse {
+  repeated ThreadEvent events = 1;
   // Empty at end; same opaque cursor policy as the request.
   string next_page_token = 2;
 }

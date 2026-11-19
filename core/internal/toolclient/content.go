@@ -32,9 +32,9 @@ type attempt struct {
 var attemptKeys = []string{"origin", "account", "connection", "method", "requestId", "request", "expected", "baseId"}
 
 type VerifiedSnapshot struct {
-	Verification string                      `json:"verification"`
-	Snapshot     *v1.AuthoredContentSnapshot `json:"-"`
-	Legacy       *v1.LegacyContentSnapshot   `json:"-"`
+	Verification string                         `json:"verification"`
+	Snapshot     *v1.AuthoredContentSnapshot    `json:"-"`
+	Record       *v1.GetContentSnapshotResponse `json:"-"`
 }
 
 func (a *App) loadAttempt(id string) (*attempt, proto.Message, *v1.AuthoredContent, error) {
@@ -100,12 +100,12 @@ func (a *App) Prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 	return a.prepare(ctx, in, baseID, nil)
 }
 
-// PrepareReply reuses the ticket just read to construct the CLI reply request.
-func (a *App) PrepareReply(ctx context.Context, in *v1.PrepareContentRequest, ticket *v1.Ticket) (*v1.AuthoredContentSnapshot, error) {
-	return a.prepare(ctx, in, "", ticket)
+// PrepareReply reuses the thread just read to construct the CLI reply request.
+func (a *App) PrepareReply(ctx context.Context, in *v1.PrepareContentRequest, thread *v1.Thread) (*v1.AuthoredContentSnapshot, error) {
+	return a.prepare(ctx, in, "", thread)
 }
 
-func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID string, ticket *v1.Ticket) (*v1.AuthoredContentSnapshot, error) {
+func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID string, thread *v1.Thread) (*v1.AuthoredContentSnapshot, error) {
 	if err := checkPreparePlaceholders(in); err != nil {
 		return nil, err
 	}
@@ -120,8 +120,8 @@ func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 		if e := clientExpectation("update", r.Update); e != nil {
 			return nil, e
 		}
-	} else if r.Content.ExistingTicketId != nil {
-		if e := clientRevision("expectedTicketRevision", r.GetExpectedTicketRevision()); e != nil {
+	} else if r.Content.ExistingThreadId != nil {
+		if e := clientRevision("expectedThreadRevision", r.GetExpectedThreadRevision()); e != nil {
 			return nil, e
 		}
 	}
@@ -129,8 +129,8 @@ func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 		return nil, e
 	}
 	if e := ci.ValidatePrepare(r, a.profile.AccountID); e != nil {
-		if strings.Contains(e.Error(), "expectedTicketRevision") {
-			return nil, fmt.Errorf("%w: expectedTicketRevision must be the opaque revision printed by syntra ticket; copy it exactly at the top level beside content", ci.ErrWire)
+		if strings.Contains(e.Error(), "expectedThreadRevision") {
+			return nil, fmt.Errorf("%w: expectedThreadRevision must be the opaque revision printed by syntra thread; copy it exactly at the top level beside content", ci.ErrWire)
 		}
 		return nil, e
 	}
@@ -144,13 +144,13 @@ func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 			return nil, ci.ErrIntegrity
 		}
 		if e = ci.ValidatePrepareUpdate(r, s.Content, a.profile.AccountID); e != nil {
-			return nil, draftValidationError(e)
+			return nil, preparedValidationError(e)
 		}
 	} else if baseID != "" {
 		return nil, ci.ErrWire
 	}
-	if r.Content.ExistingTicketId != nil && slices.Contains(a.profile.Config.Capabilities, methodCap("prepare")) {
-		if err := a.preflightReply(ctx, r, ticket); err != nil {
+	if r.Content.ExistingThreadId != nil && slices.Contains(a.profile.Config.Capabilities, methodCap("prepare")) {
+		if err := a.preflightReply(ctx, r, thread); err != nil {
 			return nil, err
 		}
 	}
@@ -179,7 +179,7 @@ func (a *App) Link(ctx context.Context, in *v1.LinkContentRequest, baseID string
 		return nil, ci.ErrIntegrity
 	}
 	if e = ci.ValidateLink(r, s.Content, a.profile.AccountID); e != nil {
-		return nil, draftValidationError(e)
+		return nil, preparedValidationError(e)
 	}
 	return a.executeNew(ctx, "link", r, r.LinkedContent, r.RequestId, baseID)
 }
@@ -361,25 +361,37 @@ func (a *App) Snapshot(ctx context.Context, r *v1.GetContentSnapshotRequest, anc
 	if e != nil {
 		return nil, a.authoredRPCError(e)
 	}
-	if l := res.Msg.GetLegacy(); l != nil {
-		if local != nil || l.Ticket == nil || l.Ticket.Id != r.TicketId || l.Ticket.WorkspaceId != r.WorkspaceId {
-			return nil, ci.ErrIntegrity
-		}
-		if d := r.GetPrivateDraft(); d != nil {
-			if l.GetPrivateDraft() == nil || l.GetPrivateDraft().Id != d.DraftId || l.GetPrivateDraft().Revision != d.Revision || l.GetPrivateDraft().WorkspaceId != r.WorkspaceId || l.GetPrivateDraft().TicketId != r.TicketId || l.GetPrivateDraft().AuthorUserId != a.profile.AccountID {
-				return nil, ci.ErrIntegrity
-			}
-		} else if l.GetPublishedMessage() == nil || l.GetPublishedMessage().Id != r.GetPublishedMessageId() || l.GetPublishedMessage().WorkspaceId != r.WorkspaceId || l.GetPublishedMessage().TicketId != r.TicketId {
-			return nil, ci.ErrIntegrity
-		}
-		return &VerifiedSnapshot{Verification: "legacy-no-client-integrity", Legacy: l}, nil
-	}
-	s := res.Msg.GetAuthored()
-	if snapshotShape(s) != nil || s.Content.WorkspaceId != r.WorkspaceId || s.Receipt.TicketId != r.TicketId {
+
+	record := res.Msg
+	if record.Thread == nil || record.Thread.Id != r.ThreadId || record.Thread.WorkspaceId != r.WorkspaceId {
 		return nil, ci.ErrIntegrity
 	}
-	if d := r.GetPrivateDraft(); d != nil {
-		if !proto.Equal(d, s.GetPrivateDraft()) || s.Content.ExpectedAuthorUserId != a.profile.AccountID {
+	if d := r.GetPreparedMessage(); d != nil {
+		current := record.GetCurrentPreparedMessage()
+		if current == nil || current.Id != d.PreparedMessageId || current.WorkspaceId != r.WorkspaceId || current.ThreadId != r.ThreadId || current.AuthorUserId != a.profile.AccountID {
+			return nil, ci.ErrIntegrity
+		}
+		if record.Authored == nil && current.Revision != d.Revision {
+			return nil, ci.ErrIntegrity
+		}
+	} else {
+		current := record.GetPublishedMessage()
+		if current == nil || current.Id != r.GetPublishedMessageId() || current.WorkspaceId != r.WorkspaceId || current.ThreadId != r.ThreadId {
+			return nil, ci.ErrIntegrity
+		}
+	}
+	if record.Authored == nil {
+		if local != nil {
+			return nil, ci.ErrIntegrity
+		}
+		return &VerifiedSnapshot{Verification: "server-record", Record: record}, nil
+	}
+	s := res.Msg.GetAuthored()
+	if snapshotShape(s) != nil || s.Content.WorkspaceId != r.WorkspaceId || s.Receipt.ThreadId != r.ThreadId {
+		return nil, ci.ErrIntegrity
+	}
+	if d := r.GetPreparedMessage(); d != nil {
+		if !proto.Equal(d, s.GetPreparedMessage()) || s.Content.ExpectedAuthorUserId != a.profile.AccountID {
 			return nil, ci.ErrIntegrity
 		}
 	} else if s.GetPublishedMessageId() != r.GetPublishedMessageId() {
@@ -410,7 +422,7 @@ func safeAuthoredRPCError(err error) error {
 	return SafeRPCError(err)
 }
 
-func draftValidationError(err error) error {
+func preparedValidationError(err error) error {
 	var reason *actionable.Error
 	if errors.As(err, &reason) {
 		return reason

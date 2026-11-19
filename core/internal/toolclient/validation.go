@@ -27,20 +27,20 @@ func clientID(name, value string) error {
 func clientRevision(name, value string) error {
 	b, e := base64.RawURLEncoding.DecodeString(value)
 	if e != nil || len(b) != 32 || base64.RawURLEncoding.EncodeToString(b) != value {
-		return clientField(name, "must be the opaque revision; copy `revision` exactly from `syntra ticket` (for draft revision use the retained private draft)")
+		return clientField(name, "must be the opaque revision; copy `revision` exactly from `syntra thread` (for prepared revision use the retained private prepared)")
 	}
 	return nil
 }
-func clientExpectation(name string, e *v1.ContentDraftExpectation) error {
+func clientExpectation(name string, e *v1.PreparedContentExpectation) error {
 	if e == nil {
 		return clientField(name, "is required (copy the retained snapshot expectation)")
 	}
-	for _, f := range []struct{ name, value string }{{"ticketId", e.TicketId}, {"draftId", e.DraftId}} {
+	for _, f := range []struct{ name, value string }{{"threadId", e.ThreadId}, {"preparedMessageId", e.PreparedMessageId}} {
 		if err := clientID(name+"."+f.name, f.value); err != nil {
 			return err
 		}
 	}
-	for _, f := range []struct{ name, value string }{{"expectedTicketRevision", e.ExpectedTicketRevision}, {"expectedDraftRevision", e.ExpectedDraftRevision}} {
+	for _, f := range []struct{ name, value string }{{"expectedThreadRevision", e.ExpectedThreadRevision}, {"expectedPreparedMessageRevision", e.ExpectedPreparedMessageRevision}} {
 		if err := clientRevision(name+"."+f.name, f.value); err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 	for _, f := range []struct {
 		name  string
 		value *string
-	}{{"projectId", c.ProjectId}, {"existingTicketId", c.ExistingTicketId}} {
+	}{{"projectId", c.ProjectId}, {"existingThreadId", c.ExistingThreadId}} {
 		if f.value != nil {
 			if err := clientID(name+"."+f.name, *f.value); err != nil {
 				return err
@@ -125,7 +125,7 @@ func ValidateLocalContentRequest(target proto.Message, baseID string) error {
 			return err
 		}
 		if q.Update == nil && baseID != "" {
-			return clientField("base", "is allowed only for an existing draft update")
+			return clientField("base", "is allowed only for an existing prepared update")
 		}
 		if q.Update != nil {
 			if err := clientExpectation("update", q.Update); err != nil {
@@ -134,8 +134,8 @@ func ValidateLocalContentRequest(target proto.Message, baseID string) error {
 			if err := clientID("base", baseID); err != nil {
 				return err
 			}
-		} else if q.Content.ExistingTicketId != nil {
-			if err := clientRevision("expectedTicketRevision", q.GetExpectedTicketRevision()); err != nil {
+		} else if q.Content.ExistingThreadId != nil {
+			if err := clientRevision("expectedThreadRevision", q.GetExpectedThreadRevision()); err != nil {
 				return err
 			}
 		}
@@ -180,11 +180,11 @@ func ValidateLocalContentRequest(target proto.Message, baseID string) error {
 }
 
 // ValidateReplyInput checks locally supplied arguments without touching a profile.
-func ValidateReplyInput(workspace, ticket, summary, context string) error {
+func ValidateReplyInput(workspace, thread, summary, context string) error {
 	if err := clientID("workspace", workspace); err != nil {
 		return err
 	}
-	if err := clientID("ticket", ticket); err != nil {
+	if err := clientID("thread", thread); err != nil {
 		return err
 	}
 	if summary == "" {
@@ -205,7 +205,7 @@ func ValidateReplyInput(workspace, ticket, summary, context string) error {
 }
 
 // ValidateTemplateInput checks the selected template and routing IDs locally.
-func ValidateTemplateInput(kind, workspace, project, ticket string) error {
+func ValidateTemplateInput(kind, workspace, project, thread string) error {
 	if kind != "new" && kind != "reply" {
 		return clientField("template", "must be new or reply")
 	}
@@ -218,7 +218,7 @@ func ValidateTemplateInput(kind, workspace, project, ticket string) error {
 		}
 	}
 	if kind == "reply" {
-		if err := clientID("ticket", ticket); err != nil {
+		if err := clientID("thread", thread); err != nil {
 			return err
 		}
 	}

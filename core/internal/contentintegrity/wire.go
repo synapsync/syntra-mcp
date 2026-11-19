@@ -59,7 +59,7 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 	if m == nil || !noUnknown(m) {
 		return Content{}, ErrWire
 	}
-	c := Content{FormatVersion: m.FormatVersion, ExpectedAuthorUserID: m.ExpectedAuthorUserId, WorkspaceID: m.WorkspaceId, ProjectID: m.ProjectId, ExistingTicketID: m.ExistingTicketId, Title: m.Title, OriginalDestinationIntent: m.OriginalDestinationIntent, Summary: m.Summary, ContextMarkdown: m.ContextMarkdown}
+	c := Content{FormatVersion: m.FormatVersion, ExpectedAuthorUserID: m.ExpectedAuthorUserId, WorkspaceID: m.WorkspaceId, ProjectID: m.ProjectId, ExistingThreadID: m.ExistingThreadId, Title: m.Title, OriginalDestinationIntent: m.OriginalDestinationIntent, Summary: m.Summary, ContextMarkdown: m.ContextMarkdown}
 	if c.FormatVersion != 1 {
 		return Content{}, invalidField("content.formatVersion")
 	}
@@ -86,7 +86,7 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 	for _, f := range []struct {
 		name string
 		id   *string
-	}{{"content.projectId", c.ProjectID}, {"content.existingTicketId", c.ExistingTicketID}} {
+	}{{"content.projectId", c.ProjectID}, {"content.existingThreadId", c.ExistingThreadID}} {
 		if f.id != nil && !validID(*f.id) {
 			return Content{}, invalidField(f.name)
 		}
@@ -146,8 +146,8 @@ func provenance(p *v1.ClientReportedProvenance) bool {
 	}
 	return true
 }
-func expectation(c *v1.ContentDraftExpectation) bool {
-	return c != nil && noUnknown(c) && validID(c.TicketId) && validID(c.DraftId) && validRevision(c.ExpectedTicketRevision) && validRevision(c.ExpectedDraftRevision) && len(c.ExpectedContentDigest) == 32
+func expectation(c *v1.PreparedContentExpectation) bool {
+	return c != nil && noUnknown(c) && validID(c.ThreadId) && validID(c.PreparedMessageId) && validRevision(c.ExpectedThreadRevision) && validRevision(c.ExpectedPreparedMessageRevision) && len(c.ExpectedContentDigest) == 32
 }
 
 // ValidatePrepare is pure input/integrity validation, not authorization or CAS.
@@ -160,24 +160,24 @@ func ValidatePrepare(r *v1.PrepareContentRequest, owner string) error {
 		return e
 	}
 	if r.Update != nil {
-		if !expectation(r.Update) || r.ExpectedTicketRevision != nil {
+		if !expectation(r.Update) || r.ExpectedThreadRevision != nil {
 			return ErrWire
 		}
-		if r.Content.ExistingTicketId != nil && *r.Content.ExistingTicketId != r.Update.TicketId {
+		if r.Content.ExistingThreadId != nil && *r.Content.ExistingThreadId != r.Update.ThreadId {
 			return ErrWire
 		}
-	} else if r.Content.ExistingTicketId != nil {
-		if r.ExpectedTicketRevision == nil || !validRevision(*r.ExpectedTicketRevision) {
-			return invalidField("expectedTicketRevision")
+	} else if r.Content.ExistingThreadId != nil {
+		if r.ExpectedThreadRevision == nil || !validRevision(*r.ExpectedThreadRevision) {
+			return invalidField("expectedThreadRevision")
 		}
-	} else if r.ExpectedTicketRevision != nil {
+	} else if r.ExpectedThreadRevision != nil {
 		return ErrWire
 	}
 	return nil
 }
 
 // ValidatePrepareUpdate verifies both digests against the retained private preimage.
-// Actual revision comparison, ownership and initial ticket-ID binding stay in T2.3.
+// Actual revision comparison, ownership and initial thread-ID binding stay in T2.3.
 func ValidatePrepareUpdate(r *v1.PrepareContentRequest, prior *v1.AuthoredContent, owner string) error {
 	if e := ValidatePrepare(r, owner); e != nil {
 		return e
@@ -192,7 +192,7 @@ func ValidatePrepareUpdate(r *v1.PrepareContentRequest, prior *v1.AuthoredConten
 }
 
 // ValidateReplacement restricts Prepare updates to exact summary/Markdown edits.
-// Changing routing, subject, intent or recipient is not an incidental draft edit.
+// Changing routing, subject, intent or recipient is not an incidental prepared edit.
 func ValidateReplacement(prior, next *v1.AuthoredContent) error {
 	if _, e := FromProto(prior); e != nil {
 		return e
@@ -204,13 +204,13 @@ func ValidateReplacement(prior, next *v1.AuthoredContent) error {
 	copy.Summary = next.Summary
 	copy.ContextMarkdown = next.ContextMarkdown
 	if !proto.Equal(copy, next) {
-		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.DraftRoutingChange))
+		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.PreparedRoutingChange))
 	}
 	return nil
 }
 
 // ValidateLink requires the retained preimage; only destination may change.
-// Membership, private ownership, ticket state and actual revisions are T2.3.
+// Membership, private ownership, thread state and actual revisions are T2.3.
 func ValidateLink(r *v1.LinkContentRequest, prior *v1.AuthoredContent, owner string) error {
 	if r == nil || !noUnknown(r) || !expectation(r.Current) || !validID(r.RequestId) || !provenance(r.ClientReported) {
 		return ErrWire
@@ -221,11 +221,11 @@ func ValidateLink(r *v1.LinkContentRequest, prior *v1.AuthoredContent, owner str
 	if e := verifyContent(r.LinkedContent, r.ExpectedContentDigest, owner); e != nil {
 		return e
 	}
-	if prior.ExistingTicketId != nil && *prior.ExistingTicketId != r.Current.TicketId {
+	if prior.ExistingThreadId != nil && *prior.ExistingThreadId != r.Current.ThreadId {
 		return ErrWire
 	}
 	if _, ok := prior.Destination.Target.(*v1.ContentDestination_UnlinkedLabel); !ok {
-		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.DraftAlreadyLinked))
+		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.PreparedAlreadyLinked))
 	}
 	if _, ok := r.LinkedContent.Destination.Target.(*v1.ContentDestination_LinkedMemberId); !ok {
 		return ErrWire
@@ -248,7 +248,7 @@ func ValidatePublishRequest(r *v1.PublishContentRequest, owner string) error {
 }
 
 // ValidatePublishBinding verifies the exact preimage without checking delivery
-// readiness. The service can report a missing link after locking the own draft.
+// readiness. The service can report a missing link after locking the own prepared.
 func ValidatePublishBinding(r *v1.PublishContentRequest, prior *v1.AuthoredContent, owner string) error {
 	if e := ValidatePublishRequest(r, owner); e != nil {
 		return e
@@ -256,7 +256,7 @@ func ValidatePublishBinding(r *v1.PublishContentRequest, prior *v1.AuthoredConte
 	if e := verifyContent(prior, r.Current.ExpectedContentDigest, owner); e != nil {
 		return e
 	}
-	if prior.WorkspaceId != r.WorkspaceId || (prior.ExistingTicketId != nil && *prior.ExistingTicketId != r.Current.TicketId) {
+	if prior.WorkspaceId != r.WorkspaceId || (prior.ExistingThreadId != nil && *prior.ExistingThreadId != r.Current.ThreadId) {
 		return ErrWire
 	}
 	return nil
@@ -272,12 +272,12 @@ func ValidatePublish(r *v1.PublishContentRequest, prior *v1.AuthoredContent, own
 	return nil
 }
 func ValidateSnapshotRequest(r *v1.GetContentSnapshotRequest) error {
-	if r == nil || !noUnknown(r) || !validID(r.WorkspaceId) || !validID(r.TicketId) {
+	if r == nil || !noUnknown(r) || !validID(r.WorkspaceId) || !validID(r.ThreadId) {
 		return ErrWire
 	}
 	switch s := r.Record.(type) {
-	case *v1.GetContentSnapshotRequest_PrivateDraft:
-		if s == nil || s.PrivateDraft == nil || !validID(s.PrivateDraft.DraftId) || !validRevision(s.PrivateDraft.Revision) {
+	case *v1.GetContentSnapshotRequest_PreparedMessage:
+		if s == nil || s.PreparedMessage == nil || !validID(s.PreparedMessage.PreparedMessageId) || !validRevision(s.PreparedMessage.Revision) {
 			return ErrWire
 		}
 	case *v1.GetContentSnapshotRequest_PublishedMessageId:
