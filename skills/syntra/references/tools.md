@@ -8,9 +8,9 @@
 | `members` | Current authorized directory in one space |
 | `teams` | Assigned teams and their current included members |
 | `resolve` | Unique resolution or clarification; never sends |
-| `tickets` | Explicit published or own-private-draft view |
-| `ticket` | One authorized ticket |
-| `messages` | Explicit published or own-private-draft message view |
+| `threads` | Published threads or the caller’s private pending threads (`own-prepared`) |
+| `thread` | One authorized thread and its current state and revision |
+| `messages` | Published messages or the caller’s private prepared messages (`own-prepared`) |
 | `snapshot` | Read content and report the available integrity evidence |
 | `prepare` | Retain exact private content, no send |
 | `link` | Explicit private destination resolution, no send |
@@ -23,7 +23,9 @@ Example: “Record this question for Pedro in Bimtrazer.” Discover the account
 
 Example: “List my spaces.” Call `workspaces`; do not require choosing a space first. Directory access is checked by Syntra on every request and does not grant membership.
 
-For a reply, read the ticket first and copy its `revision` exactly to
-`expectedTicketRevision`. It is an opaque base64url token encoding 32 bytes,
-not a numeric revision. Use the exact ticket title and project ID; omit
-`projectId` if absent. Do not invent these values.
+For a reply, read the open thread with `thread` first. Set
+`content.existingThreadId` to its ID and copy its `revision` to the top-level
+`expectedThreadRevision` field. The revision is an opaque base64url token
+encoding 32 bytes. Use the thread's exact title and project ID. Omit
+`projectId` if the thread has none. Read the current tool schema for the other
+required fields.
