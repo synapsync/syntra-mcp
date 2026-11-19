@@ -9,7 +9,7 @@ import (
 )
 
 func TestSelfDescribingTools(t *testing.T) {
-	for _, name := range []string{"prepare", "link", "publish", "resolve", "ticket"} {
+	for _, name := range []string{"prepare", "link", "publish", "resolve", "thread"} {
 		t.Run(name, func(t *testing.T) {
 			tool := toolDefinition(name)
 			raw, e := json.Marshal(tool.InputSchema)
@@ -35,7 +35,7 @@ func TestSelfDescribingTools(t *testing.T) {
 				}
 			}
 			inspect(schema, name)
-			if name == "prepare" && (!strings.Contains(string(raw), "top level") || !strings.Contains(string(raw), "expectedTicketRevision")) {
+			if name == "prepare" && (!strings.Contains(string(raw), "top level") || !strings.Contains(string(raw), "expectedThreadRevision")) {
 				t.Fatal("revision placement missing")
 			}
 		})

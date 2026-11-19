@@ -24,7 +24,7 @@ func reportedEqual(a, b *v1.ClientReportedProvenance) bool {
 	return proto.Equal(a, b)
 }
 func snapshotShape(s *v1.AuthoredContentSnapshot) error {
-	if s == nil || s.Receipt == nil || s.Content == nil || !revision(s.TicketRevision) {
+	if s == nil || s.Receipt == nil || s.Content == nil || !revision(s.ThreadRevision) {
 		return ci.ErrIntegrity
 	}
 	r := s.Receipt
@@ -32,25 +32,25 @@ func snapshotShape(s *v1.AuthoredContentSnapshot) error {
 		return ci.ErrIntegrity
 	}
 	h, e := digest(s.Content)
-	if e != nil || !bytes.Equal(h, r.ContentDigest) || r.OwnerUserId != s.Content.ExpectedAuthorUserId || !validUUID(r.RequestId) || !validUUID(r.TicketId) || r.RecordedAt == nil || r.RecordedAt.CheckValid() != nil || r.IntegrityOrigin != v1.ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED {
+	if e != nil || !bytes.Equal(h, r.ContentDigest) || r.OwnerUserId != s.Content.ExpectedAuthorUserId || !validUUID(r.RequestId) || !validUUID(r.ThreadId) || r.RecordedAt == nil || r.RecordedAt.CheckValid() != nil || r.IntegrityOrigin != v1.ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED {
 		return ci.ErrIntegrity
 	}
 	if r.ConnectionId != nil && !validUUID(*r.ConnectionId) {
 		return ci.ErrIntegrity
 	}
-	if s.Content.ExistingTicketId != nil && *s.Content.ExistingTicketId != r.TicketId {
+	if s.Content.ExistingThreadId != nil && *s.Content.ExistingThreadId != r.ThreadId {
 		return ci.ErrIntegrity
 	}
 	check := &v1.PrepareContentRequest{Content: s.Content, ExpectedContentDigest: r.ContentDigest, RequestId: r.RequestId, ClientReported: r.ClientReported}
-	if s.Content.ExistingTicketId != nil {
-		check.ExpectedTicketRevision = &s.TicketRevision
+	if s.Content.ExistingThreadId != nil {
+		check.ExpectedThreadRevision = &s.ThreadRevision
 	}
 	if ci.ValidatePrepare(check, r.OwnerUserId) != nil {
 		return ci.ErrIntegrity
 	}
 	switch x := s.Record.(type) {
-	case *v1.AuthoredContentSnapshot_PrivateDraft:
-		if x == nil || x.PrivateDraft == nil || !validUUID(x.PrivateDraft.DraftId) || !revision(x.PrivateDraft.Revision) || r.MessageId != "" || len(x.PrivateDraft.ProtoReflect().GetUnknown()) != 0 {
+	case *v1.AuthoredContentSnapshot_PreparedMessage:
+		if x == nil || x.PreparedMessage == nil || !validUUID(x.PreparedMessage.PreparedMessageId) || !revision(x.PreparedMessage.Revision) || r.MessageId != "" || len(x.PreparedMessage.ProtoReflect().GetUnknown()) != 0 {
 			return ci.ErrIntegrity
 		}
 	case *v1.AuthoredContentSnapshot_PublishedMessageId:
@@ -62,18 +62,18 @@ func snapshotShape(s *v1.AuthoredContentSnapshot) error {
 	}
 	return nil
 }
-func expectation(s *v1.AuthoredContentSnapshot) (*v1.ContentDraftExpectation, error) {
-	if snapshotShape(s) != nil || s.GetPrivateDraft() == nil {
+func expectation(s *v1.AuthoredContentSnapshot) (*v1.PreparedContentExpectation, error) {
+	if snapshotShape(s) != nil || s.GetPreparedMessage() == nil {
 		return nil, ci.ErrIntegrity
 	}
-	return &v1.ContentDraftExpectation{TicketId: s.Receipt.TicketId, DraftId: s.GetPrivateDraft().DraftId, ExpectedTicketRevision: s.TicketRevision, ExpectedDraftRevision: s.GetPrivateDraft().Revision, ExpectedContentDigest: append([]byte(nil), s.Receipt.ContentDigest...)}, nil
+	return &v1.PreparedContentExpectation{ThreadId: s.Receipt.ThreadId, PreparedMessageId: s.GetPreparedMessage().PreparedMessageId, ExpectedThreadRevision: s.ThreadRevision, ExpectedPreparedMessageRevision: s.GetPreparedMessage().Revision, ExpectedContentDigest: append([]byte(nil), s.Receipt.ContentDigest...)}, nil
 }
 func (a *App) checkResult(t *attempt, req proto.Message, c *v1.AuthoredContent, s *v1.AuthoredContentSnapshot) error {
 	if snapshotShape(s) != nil || !proto.Equal(c, s.Content) || s.Receipt.OwnerUserId != t.Account || s.Receipt.ConnectionId == nil || *s.Receipt.ConnectionId != t.Connection || s.Receipt.RequestId != t.RequestID {
 		return ci.ErrIntegrity
 	}
 	var reported *v1.ClientReportedProvenance
-	var current *v1.ContentDraftExpectation
+	var current *v1.PreparedContentExpectation
 	switch r := req.(type) {
 	case *v1.PrepareContentRequest:
 		if r.RequestId != t.RequestID || ci.ValidatePrepare(r, t.Account) != nil || !proto.Equal(r.Content, c) {
@@ -81,13 +81,13 @@ func (a *App) checkResult(t *attempt, req proto.Message, c *v1.AuthoredContent, 
 		}
 		reported = r.ClientReported
 		current = r.Update
-		if r.Update != nil && s.TicketRevision != r.Update.ExpectedTicketRevision {
+		if r.Update != nil && s.ThreadRevision != r.Update.ExpectedThreadRevision {
 			return ci.ErrIntegrity
 		}
-		if r.Update == nil && r.ExpectedTicketRevision != nil && s.TicketRevision != *r.ExpectedTicketRevision {
+		if r.Update == nil && r.ExpectedThreadRevision != nil && s.ThreadRevision != *r.ExpectedThreadRevision {
 			return ci.ErrIntegrity
 		}
-		if s.GetPrivateDraft() == nil {
+		if s.GetPreparedMessage() == nil {
 			return ci.ErrIntegrity
 		}
 	case *v1.LinkContentRequest:
@@ -99,10 +99,10 @@ func (a *App) checkResult(t *attempt, req proto.Message, c *v1.AuthoredContent, 
 		if current == nil {
 			return ci.ErrIntegrity
 		}
-		if c.ExistingTicketId == nil && s.TicketRevision == current.ExpectedTicketRevision || c.ExistingTicketId != nil && s.TicketRevision != current.ExpectedTicketRevision {
+		if c.ExistingThreadId == nil && s.ThreadRevision == current.ExpectedThreadRevision || c.ExistingThreadId != nil && s.ThreadRevision != current.ExpectedThreadRevision {
 			return ci.ErrIntegrity
 		}
-		if s.GetPrivateDraft() == nil {
+		if s.GetPreparedMessage() == nil {
 			return ci.ErrIntegrity
 		}
 	case *v1.PublishContentRequest:
@@ -111,7 +111,7 @@ func (a *App) checkResult(t *attempt, req proto.Message, c *v1.AuthoredContent, 
 		}
 		reported = r.ClientReported
 		current = r.Current
-		if s.TicketRevision == current.ExpectedTicketRevision {
+		if s.ThreadRevision == current.ExpectedThreadRevision {
 			return ci.ErrIntegrity
 		}
 	default:
@@ -121,10 +121,10 @@ func (a *App) checkResult(t *attempt, req proto.Message, c *v1.AuthoredContent, 
 		return ci.ErrIntegrity
 	}
 	if current != nil {
-		if s.Receipt.TicketId != current.TicketId {
+		if s.Receipt.ThreadId != current.ThreadId {
 			return ci.ErrIntegrity
 		}
-		if t.Method != "publish" && (s.GetPrivateDraft().DraftId != current.DraftId || s.GetPrivateDraft().Revision == current.ExpectedDraftRevision) {
+		if t.Method != "publish" && (s.GetPreparedMessage().PreparedMessageId != current.PreparedMessageId || s.GetPreparedMessage().Revision == current.ExpectedPreparedMessageRevision) {
 			return ci.ErrIntegrity
 		}
 	}

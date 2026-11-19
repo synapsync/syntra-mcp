@@ -39,8 +39,8 @@ const connectionID = "33333333-3333-4333-8333-333333333333"
 const workspaceID = "44444444-4444-4444-8444-444444444444"
 const secondWorkspaceID = "66666666-6666-4666-8666-666666666666"
 const projectID = "55555555-5555-4555-8555-555555555555"
-const ticketID = "77777777-7777-4777-8777-777777777777"
-const draftID = "88888888-8888-4888-8888-888888888888"
+const threadID = "77777777-7777-4777-8777-777777777777"
+const preparedID = "88888888-8888-4888-8888-888888888888"
 const messageID = "99999999-9999-4999-8999-999999999999"
 
 func id() string {
@@ -60,7 +60,7 @@ func contentDigest(c *v1.AuthoredContent) []byte {
 	return d[:]
 }
 func newRequest() *v1.PrepareContentRequest {
-	return &v1.PrepareContentRequest{RequestId: id(), Content: &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: ownerID, WorkspaceId: workspaceID, Title: "Exact e\u0301", OriginalDestinationIntent: "  Pedro e\u0301  ", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_UnlinkedLabel{UnlinkedLabel: "Pedro"}}, Summary: " e\u0301\r\n exact ", ContextMarkdown: "```go\r\nvar endpoint = `/records`;\r\n```\r\n$HOME is ticket data"}, ClientReported: &v1.ClientReportedProvenance{Model: str("first-model"), Tool: str("fixture")}}
+	return &v1.PrepareContentRequest{RequestId: id(), Content: &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: ownerID, WorkspaceId: workspaceID, Title: "Exact e\u0301", OriginalDestinationIntent: "  Pedro e\u0301  ", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_UnlinkedLabel{UnlinkedLabel: "Pedro"}}, Summary: " e\u0301\r\n exact ", ContextMarkdown: "```go\r\nvar endpoint = `/records`;\r\n```\r\n$HOME is thread data"}, ClientReported: &v1.ClientReportedProvenance{Model: str("first-model"), Tool: str("fixture")}}
 }
 
 type apiFixture struct {
@@ -68,8 +68,8 @@ type apiFixture struct {
 	syntrav1connect.UnimplementedAuthoredContentServiceHandler
 	syntrav1connect.UnimplementedProjectServiceHandler
 	syntrav1connect.UnimplementedWorkspaceServiceHandler
-	syntrav1connect.UnimplementedTicketServiceHandler
-	ticketClosed  bool
+	syntrav1connect.UnimplementedThreadServiceHandler
+	threadClosed  bool
 	mutationError error
 	mu            sync.Mutex
 	p             *toolclient.Profile
@@ -156,15 +156,15 @@ func (f *apiFixture) ListProjects(ctx context.Context, r *connect.Request[v1.Lis
 func (f *apiFixture) ListMembers(context.Context, *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error) {
 	return connect.NewResponse(&v1.ListMembersResponse{Members: []*v1.WorkspaceMember{{UserId: recipientID, DisplayName: "Pedro"}}}), nil
 }
-func (f *apiFixture) GetTicket(_ context.Context, r *connect.Request[v1.GetTicketRequest]) (*connect.Response[v1.GetTicketResponse], error) {
+func (f *apiFixture) GetThread(_ context.Context, r *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	state := v1.TicketState_TICKET_STATE_OPEN
-	if f.ticketClosed {
-		state = v1.TicketState_TICKET_STATE_CLOSED
+	state := v1.ThreadState_THREAD_STATE_OPEN
+	if f.threadClosed {
+		state = v1.ThreadState_THREAD_STATE_CLOSED
 	}
-	ticket := &v1.Ticket{Id: r.Msg.TicketId, WorkspaceId: r.Msg.WorkspaceId, Title: "Visible title", State: state, Revision: revision(1)}
-	return connect.NewResponse(&v1.GetTicketResponse{Ticket: ticket}), nil
+	thread := &v1.Thread{Id: r.Msg.ThreadId, WorkspaceId: r.Msg.WorkspaceId, Title: "Visible title", State: state, Revision: revision(1)}
+	return connect.NewResponse(&v1.GetThreadResponse{Thread: thread}), nil
 }
 
 func (f *apiFixture) apply(id string, req proto.Message, c *v1.AuthoredContent, p *v1.ClientReportedProvenance, publish bool) (*v1.AuthoredContentSnapshot, error) {
@@ -184,7 +184,7 @@ func (f *apiFixture) apply(id string, req proto.Message, c *v1.AuthoredContent, 
 	if f.p != nil {
 		owner, connection = f.p.AccountID, f.p.ConnectionID
 	}
-	s := &v1.AuthoredContentSnapshot{Content: proto.Clone(c).(*v1.AuthoredContent), Receipt: &v1.ContentProvenanceReceipt{ContentDigest: contentDigest(c), OwnerUserId: owner, ConnectionId: str(connection), RequestId: id, TicketId: ticketID, RecordedAt: timestamppb.Now(), ClientReported: p, IntegrityOrigin: v1.ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED}, TicketRevision: revision(byte(len(f.snapshots) + 1)), Record: &v1.AuthoredContentSnapshot_PrivateDraft{PrivateDraft: &v1.PrivateContentRevision{DraftId: draftID, Revision: revision(byte(len(f.snapshots) + 1))}}}
+	s := &v1.AuthoredContentSnapshot{Content: proto.Clone(c).(*v1.AuthoredContent), Receipt: &v1.ContentProvenanceReceipt{ContentDigest: contentDigest(c), OwnerUserId: owner, ConnectionId: str(connection), RequestId: id, ThreadId: threadID, RecordedAt: timestamppb.Now(), ClientReported: p, IntegrityOrigin: v1.ContentIntegrityOrigin_CONTENT_INTEGRITY_ORIGIN_CLIENT_EXPECTED}, ThreadRevision: revision(byte(len(f.snapshots) + 1)), Record: &v1.AuthoredContentSnapshot_PreparedMessage{PreparedMessage: &v1.PrivateContentRevision{PreparedMessageId: preparedID, Revision: revision(byte(len(f.snapshots) + 1))}}}
 	if publish {
 		s.Receipt.MessageId = messageID
 		s.Record = &v1.AuthoredContentSnapshot_PublishedMessageId{PublishedMessageId: messageID}
@@ -213,7 +213,7 @@ func (f *apiFixture) PublishContent(_ context.Context, r *connect.Request[v1.Pub
 	}
 	f.mu.Unlock()
 	if c == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("private-no-draft"))
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("private-no-prepared"))
 	}
 	s, e := f.apply(r.Msg.RequestId, r.Msg, c, r.Msg.ClientReported, true)
 	return connect.NewResponse(&v1.PublishContentResponse{Snapshot: s}), e
@@ -223,7 +223,7 @@ func (f *apiFixture) GetContentSnapshot(_ context.Context, r *connect.Request[v1
 	defer f.mu.Unlock()
 	for _, s := range f.snapshots {
 		if s.GetPublishedMessageId() == r.Msg.GetPublishedMessageId() && s.GetPublishedMessageId() != "" {
-			return connect.NewResponse(&v1.GetContentSnapshotResponse{Representation: &v1.GetContentSnapshotResponse_Authored{Authored: s}}), nil
+			return connect.NewResponse(snapshotRecord(s)), nil
 		}
 	}
 	return nil, connect.NewError(connect.CodeNotFound, errors.New("private-not-found"))
@@ -429,7 +429,7 @@ func fixture(t *testing.T) *setup {
 	mux.Handle(syntrav1connect.NewAuthoredContentServiceHandler(f))
 	mux.Handle(syntrav1connect.NewProjectServiceHandler(f))
 	mux.Handle(syntrav1connect.NewWorkspaceServiceHandler(f))
-	mux.Handle(syntrav1connect.NewTicketServiceHandler(f))
+	mux.Handle(syntrav1connect.NewThreadServiceHandler(f))
 	server := httptest.NewTLSServer(mux)
 	t.Cleanup(server.Close)
 	cfg := toolclient.Config{APIOrigin: server.URL, ProviderOrigin: "https://provider.invalid", PublishableKey: "sb_publishable_fixture_public", Label: "Shared fixture", Capabilities: []v1.ToolCapability{1, 2, 3}, LifetimeSeconds: 300}
@@ -617,8 +617,8 @@ func rpcArgs(t *testing.T, r proto.Message, base string) map[string]any {
 	}
 	return out
 }
-func expect(s *v1.AuthoredContentSnapshot) *v1.ContentDraftExpectation {
-	return &v1.ContentDraftExpectation{TicketId: s.Receipt.TicketId, DraftId: s.GetPrivateDraft().DraftId, ExpectedTicketRevision: s.TicketRevision, ExpectedDraftRevision: s.GetPrivateDraft().Revision, ExpectedContentDigest: s.Receipt.ContentDigest}
+func expect(s *v1.AuthoredContentSnapshot) *v1.PreparedContentExpectation {
+	return &v1.PreparedContentExpectation{ThreadId: s.Receipt.ThreadId, PreparedMessageId: s.GetPreparedMessage().PreparedMessageId, ExpectedThreadRevision: s.ThreadRevision, ExpectedPreparedMessageRevision: s.GetPreparedMessage().Revision, ExpectedContentDigest: s.Receipt.ContentDigest}
 }
 
 func TestMCPConnectionDiagnosticCLIParity(t *testing.T) {
@@ -694,7 +694,7 @@ func TestMCPConnectionDiagnosticCLIParity(t *testing.T) {
 	}
 	store.Close()
 	assertParity("workspaces", map[string]any{}, []string{"workspaces"}, nil,
-		"No Syntra connection. Run: syntra login --profile-dir '"+f.dir+"' (choose permissions in the browser; use --prepare for drafts, --prepare --publish to send, or --mark-read for read receipts).")
+		"No Syntra connection. Run: syntra login --profile-dir '"+f.dir+"' (choose permissions in the browser; use --prepare for prepared_messages, --prepare --publish to send, or --mark-read for read receipts).")
 }
 
 func TestMCPActionableErrorCLIParity(t *testing.T) {
@@ -718,13 +718,13 @@ func TestMCPActionableErrorCLIParity(t *testing.T) {
 	}
 	t.Run("local_preflight", func(t *testing.T) {
 		f.api.mu.Lock()
-		f.api.ticketClosed = true
+		f.api.threadClosed = true
 		f.api.mu.Unlock()
 		r := newRequest()
-		r.Content.ExistingTicketId = str(ticketID)
-		r.ExpectedTicketRevision = str(revision(1))
+		r.Content.ExistingThreadId = str(threadID)
+		r.ExpectedThreadRevision = str(revision(1))
 		got := string(toolResult(t, p.call(t, "prepare", rpcArgs(t, r, "")), true))
-		want := actionable.New(actionable.TicketClosed).Error()
+		want := actionable.New(actionable.ThreadClosed).Error()
 		if got != want {
 			t.Fatalf("MCP output differs: %q, wanted %q", got, want)
 		}
@@ -736,15 +736,15 @@ func TestMCPActionableErrorCLIParity(t *testing.T) {
 		}
 	})
 	t.Run("server_rejection", func(t *testing.T) {
-		remote := actionable.New(actionable.StaleTicketRevision)
+		remote := actionable.New(actionable.StaleThreadRevision)
 		f.api.mu.Lock()
-		f.api.ticketClosed = false
+		f.api.threadClosed = false
 		f.api.mutationError = remote.Connect()
 		f.api.mu.Unlock()
 		r := newRequest()
-		r.Content.ExistingTicketId = str(ticketID)
+		r.Content.ExistingThreadId = str(threadID)
 		r.Content.Title = "Visible title"
-		r.ExpectedTicketRevision = str(revision(1))
+		r.ExpectedThreadRevision = str(revision(1))
 		got := string(toolResult(t, p.call(t, "prepare", rpcArgs(t, r, "")), true))
 		want := remote.Error() + " (retained request " + r.RequestId + ")"
 		if got != want {
@@ -765,7 +765,7 @@ func TestMCPActionableErrorCLIParity(t *testing.T) {
 }
 
 func TestMCPActualProcessCLIParity(t *testing.T) {
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "tickets", "ticket", "messages", "snapshot", "prepare", "link", "publish", "retry"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "retry"}
 	f := fixture(t)
 	p := spawn(t, f)
 	p.init(t)
@@ -835,7 +835,7 @@ func TestMCPActualProcessCLIParity(t *testing.T) {
 	if protojson.Unmarshal(raw, &published) != nil || published.GetPublishedMessageId() != messageID {
 		t.Fatal("explicit MCP publish failed")
 	}
-	snapshot := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, TicketId: ticketID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}
+	snapshot := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, ThreadId: threadID, Record: &v1.GetContentSnapshotRequest_PublishedMessageId{PublishedMessageId: messageID}}
 	raw = toolResult(t, p.call(t, "snapshot", rpcArgs(t, snapshot, pub.RequestId)), false)
 	if !bytes.Contains(raw, []byte("retained-client-expectation")) {
 		t.Fatal("retained snapshot verification absent")
@@ -969,7 +969,7 @@ func TestBrowserCLIRecoveryThenMCPProcess(t *testing.T) {
 	process.next++
 	process.send(t, []byte(fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":"tools/list","params":{}}`, process.next)))
 	listed := process.receive(t)
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "tickets", "ticket", "messages", "snapshot", "prepare", "link", "publish", "retry"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "retry"}
 	var catalog struct {
 		Tools []struct {
 			Name string `json:"name"`
@@ -1301,4 +1301,17 @@ func TestMCPInheritedSlowReaderDeadline(t *testing.T) {
 	if strings.Contains(stderr.String(), f.api.secret()) {
 		t.Fatal("slow reader stderr leaked credential")
 	}
+}
+
+func snapshotRecord(s *v1.AuthoredContentSnapshot) *v1.GetContentSnapshotResponse {
+	if s == nil {
+		return &v1.GetContentSnapshotResponse{}
+	}
+	out := &v1.GetContentSnapshotResponse{Authored: s, Thread: &v1.Thread{Id: s.Receipt.ThreadId, WorkspaceId: s.Content.WorkspaceId}}
+	if d := s.GetPreparedMessage(); d != nil {
+		out.Record = &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: &v1.PreparedMessage{Id: d.PreparedMessageId, Revision: d.Revision, WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+	} else {
+		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+	}
+	return out
 }

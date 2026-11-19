@@ -11,7 +11,7 @@ import (
 	"syntra.local/mcp/internal/toolclient"
 )
 
-func printTemplate(kind, workspace, project, account string, ticket *v1.Ticket) error {
+func printTemplate(kind, workspace, project, account string, thread *v1.Thread) error {
 	if workspace == "" {
 		return errors.New("--workspace is required for a template")
 	}
@@ -25,22 +25,22 @@ func printTemplate(kind, workspace, project, account string, ticket *v1.Ticket) 
 		content["projectId"] = project
 	}
 	if kind == "reply" {
-		if ticket == nil {
-			return errors.New("--ticket is required for a reply template")
+		if thread == nil {
+			return errors.New("--thread is required for a reply template")
 		}
-		if err := toolclient.CheckReplyState(ticket); err != nil {
+		if err := toolclient.CheckReplyState(thread); err != nil {
 			return err
 		}
-		content["existingTicketId"] = ticket.Id
-		content["title"] = ticket.Title
-		request["expectedTicketRevision"] = ticket.Revision
-		if ticket.ProjectId != "" {
-			content["projectId"] = ticket.ProjectId
+		content["existingThreadId"] = thread.Id
+		content["title"] = thread.Title
+		request["expectedThreadRevision"] = thread.Revision
+		if thread.ProjectId != "" {
+			content["projectId"] = thread.ProjectId
 		} else {
 			delete(content, "projectId")
 		}
-		if ticket.CreatorUserId != account && ticket.CreatorUserId != "" {
-			content["destination"] = map[string]any{"linkedMemberId": ticket.CreatorUserId}
+		if thread.CreatorUserId != account && thread.CreatorUserId != "" {
+			content["destination"] = map[string]any{"linkedMemberId": thread.CreatorUserId}
 			content["originalDestinationIntent"] = "TODO: SYNTRA recipient name"
 		}
 	} else if kind != "new" {

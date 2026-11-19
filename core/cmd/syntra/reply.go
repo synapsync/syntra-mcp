@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -14,11 +15,11 @@ import (
 )
 
 type replyOptions struct {
-	Account, Workspace, TicketID, Summary, ContextMarkdown, ProfileDir string
+	Account, Workspace, ThreadID, Summary, ContextMarkdown, ProfileDir string
 }
 
 func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
-	t, e := app.Ticket(ctx, opts.Workspace, opts.TicketID)
+	t, e := app.Thread(ctx, opts.Workspace, opts.ThreadID)
 	if e != nil {
 		return e
 	}
@@ -26,7 +27,7 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 		return e
 	}
 	if t.CreatorUserId == "" || t.CreatorUserId == opts.Account {
-		return errors.New("cannot infer a different recipient from ticket creator; use the prepare template and select a recipient")
+		return errors.New("cannot infer a different recipient from thread creator; use the prepare template and select a recipient")
 	}
 	members, e := app.Members(ctx, opts.Workspace)
 	if e != nil {
@@ -43,7 +44,7 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 		return actionable.New(actionable.RecipientNotEligible)
 	}
 	if creator.DisplayName == "" {
-		return errors.New("the ticket creator has no display name; use the prepare template and provide the recipient name")
+		return errors.New("the thread creator has no display name; use the prepare template and provide the recipient name")
 	}
 	id, e := toolclient.NewRequestID()
 	if e != nil {
@@ -53,25 +54,29 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 	if e != nil {
 		return e
 	}
-	content := &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: opts.Account, WorkspaceId: opts.Workspace, ExistingTicketId: &t.Id, Title: t.Title, OriginalDestinationIntent: creator.DisplayName, Destination: &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: t.CreatorUserId}}, Summary: opts.Summary, ContextMarkdown: opts.ContextMarkdown}
+	content := &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: opts.Account, WorkspaceId: opts.Workspace, ExistingThreadId: &t.Id, Title: t.Title, OriginalDestinationIntent: creator.DisplayName, Destination: &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: t.CreatorUserId}}, Summary: opts.Summary, ContextMarkdown: opts.ContextMarkdown}
 	if t.ProjectId != "" {
 		content.ProjectId = &t.ProjectId
 	}
-	snap, e := app.PrepareReply(ctx, &v1.PrepareContentRequest{Content: content, RequestId: id, ExpectedTicketRevision: &t.Revision}, t)
+	snap, e := app.PrepareReply(ctx, &v1.PrepareContentRequest{Content: content, RequestId: id, ExpectedThreadRevision: &t.Revision}, t)
 	if e != nil {
 		return e
 	}
-	if snap.GetPrivateDraft() == nil || snap.Receipt == nil {
-		return errors.New("prepared snapshot lacks private draft; retain requestId for retry")
+	if snap.GetPreparedMessage() == nil || snap.Receipt == nil {
+		return errors.New("prepared snapshot lacks a prepared message; retain requestId for retry")
 	}
-	request := &v1.PublishContentRequest{WorkspaceId: opts.Workspace, ExpectedAuthorUserId: opts.Account, RequestId: next, Current: &v1.ContentDraftExpectation{TicketId: snap.Receipt.TicketId, DraftId: snap.GetPrivateDraft().DraftId, ExpectedTicketRevision: snap.TicketRevision, ExpectedDraftRevision: snap.GetPrivateDraft().Revision, ExpectedContentDigest: snap.Receipt.ContentDigest}}
+	request := &v1.PublishContentRequest{WorkspaceId: opts.Workspace, ExpectedAuthorUserId: opts.Account, RequestId: next, Current: &v1.PreparedContentExpectation{ThreadId: snap.Receipt.ThreadId, PreparedMessageId: snap.GetPreparedMessage().PreparedMessageId, ExpectedThreadRevision: snap.ThreadRevision, ExpectedPreparedMessageRevision: snap.GetPreparedMessage().Revision, ExpectedContentDigest: snap.Receipt.ContentDigest}}
 	raw, e := protojson.Marshal(request)
 	if e != nil {
-		return fmt.Errorf("draft prepared; retain requestId %s for recovery: cannot encode publish command", id)
+		return fmt.Errorf("prepared message %s retained; requestId %s for recovery: cannot encode publish command", snap.GetPreparedMessage().PreparedMessageId, id)
 	}
+	return writePreparedReply(os.Stdout, snap.GetPreparedMessage().PreparedMessageId, id, raw, opts.ProfileDir)
+}
+
+func writePreparedReply(writer io.Writer, messageID, requestID string, raw []byte, profileDir string) error {
 	quote := func(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'" }
-	if _, e = fmt.Fprintf(os.Stdout, "Draft %s prepared; request %s.\nPublish explicitly with:\nprintf '%%s' %s | syntra publish --file - --base %s --profile-dir %s\n", snap.GetPrivateDraft().DraftId, id, quote(string(raw)), quote(id), quote(opts.ProfileDir)); e != nil {
-		return fmt.Errorf("draft prepared; retain requestId %s for recovery: output failed", id)
+	if _, e := fmt.Fprintf(writer, "Prepared message %s; retained request %s.\nPublish explicitly with:\nprintf '%%s' %s | syntra publish --file - --base %s --profile-dir %s\n", messageID, requestID, quote(string(raw)), quote(requestID), quote(profileDir)); e != nil {
+		return fmt.Errorf("prepared message %s retained; requestId %s for recovery: output failed", messageID, requestID)
 	}
 	return nil
 }

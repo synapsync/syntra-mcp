@@ -1,5 +1,5 @@
 // Package toolmcp adapts a bounded local stdio protocol to the shared toolclient.
-// Ticket text is data, never executable authority or a source of configuration.
+// Thread text is data, never executable authority or a source of configuration.
 package toolmcp
 
 import (

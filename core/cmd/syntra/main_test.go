@@ -427,7 +427,7 @@ func TestCompiledCLIHumanTTYAndProcessRecovery(t *testing.T) {
 		cmd.Env = f.env()
 		output, err := cmd.CombinedOutput()
 		if err != nil || !bytes.Contains(output, []byte("Connected account")) {
-			t.Fatalf("matching legacy profile was not verified and reused: %v %s", err, output)
+			t.Fatalf("matching previous profile was not verified and reused: %v %s", err, output)
 		}
 		after, err := os.ReadFile(filepath.Join(f.dir, "profile.json"))
 		if err != nil || !bytes.Equal(before, after) {

@@ -10,7 +10,7 @@ import (
 const capabilityDenied = "capability_denied: "
 
 // DeniedCapability identifies only a tool-scope denial, separate from other
-// permission errors such as workspace membership or ticket visibility.
+// permission errors such as workspace membership or thread visibility.
 func DeniedCapability(cap v1.ToolCapability) error {
 	return connect.NewError(connect.CodePermissionDenied, errors.New(capabilityDenied+cap.String()))
 }

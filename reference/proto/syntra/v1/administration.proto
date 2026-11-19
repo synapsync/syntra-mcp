@@ -34,10 +34,10 @@ message ChangeMemberRequest {
   WorkspaceRole expected_role = 5; bool expected_revoked = 6; string request_id = 7;
 }
 message GetMemberDependenciesRequest { string workspace_id = 1; string user_id = 2; int32 page_size = 3; string page_token = 4; }
-message MemberDependency { string kind = 1; string id = 2; string label = 3; string project_id = 4; reserved 5; reserved "area_id"; MemberDependencyType type = 6; }
+message MemberDependency { string kind = 1; string id = 2; string label = 3; string project_id = 4; MemberDependencyType type = 6; }
 message GetMemberDependenciesResponse {
   repeated MemberDependency dependencies = 1; string next_page_token = 2;
-  bool private_responsibility_blocked = 3; MemberState member = 4;
+  MemberState member = 4;
 }
 // UUID keyset pagination; page token is signed and actor/method/workspace bound.
 message AdministrationPageRequest { string workspace_id = 1; int32 page_size = 2; string page_token = 3; }
@@ -51,7 +51,7 @@ message SaveTeamRequest { string workspace_id = 1; string team_id = 2; string na
 message AuditEntry { string id = 1; string actor_user_id = 2; string action = 3; string target_id = 4; string detail = 5; string occurred_at = 6; AdministrativeAction typed_action = 7; AdministrativeDetail typed_detail = 8; google.protobuf.Timestamp timestamp = 9; string actor_display_name = 10; bool actor_is_operator = 11; }
 message ListAuditResponse { repeated AuditEntry entries = 1; string next_page_token = 2; }
 // Operator only. Existing admitted application account; no persisted email claim.
-// Missing confirmation fails closed after authorization; legacy subject is validated too.
+// Missing confirmation fails closed after authorization; subject confirmation is validated too.
 message SetCreationPermissionRequest { string provider_subject = 1; bool allowed = 2; string user_id = 3; optional bool expected_allowed = 4; string expected_revision = 5; string request_id = 6; }
 message CreateManagedWorkspaceRequest { string name = 1; string email = 2; string request_id = 3; bool send_email = 4; }
 message OperationalWorkspace { string id = 1; string name = 2; int64 active_members = 3; string created_at = 4; }
@@ -70,9 +70,7 @@ message ListDirectoryMembersResponse { repeated WorkspaceMember members = 1; str
 message MemberState { WorkspaceMember member = 1; bool revoked = 2; bool disabled = 3; }
 enum MemberDependencyType {
   MEMBER_DEPENDENCY_TYPE_UNSPECIFIED = 0;
-  reserved 1;
-  reserved "MEMBER_DEPENDENCY_TYPE_AREA";
-  MEMBER_DEPENDENCY_TYPE_TICKET = 2;
+  MEMBER_DEPENDENCY_TYPE_THREAD = 2;
 }
 enum MemberChangeFailure {
   MEMBER_CHANGE_FAILURE_UNSPECIFIED = 0;
