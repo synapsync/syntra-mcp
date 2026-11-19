@@ -218,6 +218,11 @@ async function checkLocalLaunch({ scratch, installedRoot, installedTarget, versi
   const home = path.join(scratch, 'local-host-home');
   fs.mkdirSync(home, { mode: 0o700 });
   const fixtureEnv = { ...env, HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: path.join(home, 'xdg') };
+  if (windows) {
+    // The local registration uses the default profile; Go resolves it via APPDATA.
+    fixtureEnv.APPDATA = path.join(home, 'AppData', 'Roaming');
+    fs.mkdirSync(fixtureEnv.APPDATA, { recursive: true, mode: 0o700 });
+  }
   const config = path.join(home, '.claude.json');
   const setup = (...args) => run(process.execPath, [launcher, 'setup', '--agent', 'claude-code', ...args], { cwd: root, env: fixtureEnv });
   assert.equal(setup().status, 0, 'latest setup failed');
