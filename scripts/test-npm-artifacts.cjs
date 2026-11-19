@@ -32,7 +32,7 @@ const TARGETS = Object.freeze({
 });
 const EXPECTED_TOOLS = Object.freeze([
   'identity', 'workspaces', 'projects', 'teams', 'members', 'resolve',
-  'tickets', 'ticket', 'messages', 'snapshot', 'prepare', 'link', 'publish', 'retry',
+  'threads', 'thread', 'messages', 'snapshot', 'prepare', 'link', 'publish', 'retry',
 ]);
 const EXPECTED_EMPTY_PROFILE_ERROR = /No Syntra connection\. Run: syntra login/;
 
