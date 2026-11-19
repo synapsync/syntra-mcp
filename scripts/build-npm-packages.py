@@ -69,6 +69,7 @@ ROOT_FILES = (
     "bin/launcher.cjs",
     "bin/setup.cjs",
     "bin/update.cjs",
+    "bin/npm-installation.cjs",
     "bin/vendor/dependencies.json",
     *VENDOR_FILE_HASHES.keys(),
     "skills/syntra/SKILL.md",
@@ -199,7 +200,7 @@ def validate_manifests() -> tuple[dict[str, Any], dict[Path, bytes]]:
         fail("root manifest bin must point only to bin/launcher.cjs")
     root_files = root_manifest.get("files")
     if not isinstance(root_files, list) or set(root_files) != {
-        "README.md", "bin/launcher.cjs", "bin/setup.cjs", "bin/update.cjs", "bin/vendor/**", "skills/syntra/**"
+        "README.md", "bin/launcher.cjs", "bin/setup.cjs", "bin/update.cjs", "bin/npm-installation.cjs", "bin/vendor/**", "skills/syntra/**"
     }:
         fail("root manifest files must include only README, the launcher/setup adapters, vendored parsers, and skill")
     optional = {target["package"]: version for target in TARGETS}

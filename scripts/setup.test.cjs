@@ -10,8 +10,7 @@ const setup = require('../bin/setup.cjs');
 
 const root = path.resolve(__dirname, '..');
 const launcherPath = path.join(root, 'bin', 'launcher.cjs');
-const packageManifest = require('../package.json');
-const pinnedPackage = `@synapsync/syntra-mcp@${packageManifest.version}`;
+const latestPackage = '@synapsync/syntra-mcp@latest';
 const secretMarker = 'unrelated-user-setting-must-not-be-printed';
 
 function sandbox(t) {
@@ -75,7 +74,7 @@ function writeConfig(agent, env, contents, extension) {
 }
 
 function jsonRegistration(agent, env) {
-  return setup.hostPlan(agent, env, process.platform).registration;
+  return setup.buildPlan(agent, env, process.platform).targetRegistration;
 }
 
 function snapshotTree(rootPath) {
@@ -111,7 +110,7 @@ function backupFilesFor(configPath) {
     .map(name => path.join(directory, name));
 }
 
-test('all host previews show pinned registration and skill paths without writing', t => {
+test('all host previews show latest registration and skill paths without writing', t => {
   for (const agent of setup.AGENT_NAMES) {
     const fixture = sandbox(t);
     const plan = setup.buildPlan(agent, fixture.env, process.platform);
@@ -123,7 +122,7 @@ test('all host previews show pinned registration and skill paths without writing
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
     assert.match(result.stdout, /Syntra setup preview/);
-    assert.match(result.stdout, new RegExp(pinnedPackage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(result.stdout, new RegExp(latestPackage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     assert.ok(result.stdout.includes(configPath));
     assert.ok(result.stdout.includes(plan.skillPath));
     assert.match(result.stdout, /Dry run only: no files were changed\./);
@@ -164,7 +163,7 @@ test('setup validates flags before inspecting host files', t => {
 test('config roots honor environment overrides while user skill roots follow host discovery', t => {
   const fixture = sandbox(t);
   const codex = setup.hostPlan('codex', fixture.env, process.platform);
-  const claude = setup.hostPlan('claude-code', fixture.env, process.platform);
+  const claude = setup.buildPlan('claude-code', fixture.env, process.platform);
   const opencode = setup.hostPlan('opencode', fixture.env, process.platform);
   assert.equal(codex.configPath, path.join(fixture.codexHome, 'config.toml'));
   assert.equal(codex.skillPath, path.join(fixture.home, '.agents', 'skills', 'syntra'));
@@ -208,8 +207,8 @@ test('explicit setup applies all host registrations and exact skill bytes, creat
     assert.equal(first.status, 0, first.stderr);
     assert.equal(first.stderr, '');
     assert.match(first.stdout, /Syntra setup complete/);
-    assert.ok(first.stdout.includes(`npx -y ${pinnedPackage} login`));
-    assert.ok(first.stdout.includes(`npx -y ${pinnedPackage} status`));
+    assert.ok(first.stdout.includes(`npx -y ${latestPackage} login`));
+    assert.ok(first.stdout.includes(`npx -y ${latestPackage} status`));
     assert.match(first.stdout, /share that login/);
     assert.equal(first.stdout.includes(secretMarker), false);
     assert.equal(fs.readFileSync(configPath).equals(Buffer.from(source)), false);
@@ -335,7 +334,7 @@ test('failure after skill install rolls back owned files and retry completes cle
   const oldText = configTextFor('codex');
   const configPath = writeConfig('codex', fixture.env, oldText);
   fs.chmodSync(configPath, 0o640);
-  const plan = setup.hostPlan('codex', fixture.env, process.platform);
+  const plan = setup.buildPlan('codex', fixture.env, process.platform);
 
   assert.throws(() => setup.runSetup(['--agent', 'codex'], {
     env: fixture.env,
@@ -476,11 +475,11 @@ test('JSON and JSONC insertion preserves unrelated inline bytes, comments, comma
   ];
 
   for (const entry of cases) {
-    const plan = setup.hostPlan(entry.agent, fixture.env, process.platform);
+    const plan = setup.buildPlan(entry.agent, fixture.env, process.platform);
     const candidate = setup.computeJsonCandidate(
       entry.source,
       plan.registrationPath,
-      plan.registration,
+      plan.targetRegistration,
       plan.format,
     );
     for (const text of entry.preserved) assert.ok(candidate.includes(text), `${entry.agent} should preserve ${text}`);
@@ -492,15 +491,15 @@ test('JSON and JSONC insertion preserves unrelated inline bytes, comments, comma
   }
 
   const commentOnly = '{\n  "mcp": { "servers": { /* retain object comment */ } }\n}\n';
-  const openCode = setup.hostPlan('opencode', fixture.env, process.platform);
-  const withComment = setup.computeJsonCandidate(commentOnly, openCode.registrationPath, openCode.registration, openCode.format);
+  const openCode = setup.buildPlan('opencode', fixture.env, process.platform);
+  const withComment = setup.computeJsonCandidate(commentOnly, openCode.registrationPath, openCode.targetRegistration, openCode.format);
   assert.ok(withComment.includes('/* retain object comment */'));
   const commentPath = writeConfig('opencode', fixture.env, withComment, '.jsonc');
   assert.equal(setup.buildPlan('opencode', fixture.env).registration.status, 'matching');
   fs.unlinkSync(commentPath);
-  const claude = setup.hostPlan('claude-code', fixture.env, process.platform);
-  const emptyCandidate = setup.computeJsonCandidate('', claude.registrationPath, claude.registration, claude.format);
-  assert.deepEqual(JSON.parse(emptyCandidate).mcpServers.syntra, claude.registration);
+  const claude = setup.buildPlan('claude-code', fixture.env, process.platform);
+  const emptyCandidate = setup.computeJsonCandidate('', claude.registrationPath, claude.targetRegistration, claude.format);
+  assert.deepEqual(JSON.parse(emptyCandidate).mcpServers.syntra, claude.targetRegistration);
 });
 
 test('Codex TOML appends only the Syntra table and preserves all existing bytes', t => {
@@ -512,17 +511,17 @@ test('Codex TOML appends only the Syntra table and preserves all existing bytes'
 
   assert.equal(candidate.slice(0, config.length), config);
   assert.match(candidate, /\[mcp_servers\.syntra\]/);
-  assert.ok(candidate.includes(`args = ["-y", "${pinnedPackage}", "mcp"]`));
+  assert.ok(candidate.includes(`args = ["--yes", "--prefer-online", "${latestPackage}", "mcp"]`));
   assert.equal(fs.readFileSync(configPath, 'utf8'), config);
   const output = setup.renderPlan(plan);
-  assert.match(output, /Proposed Syntra-only config change/);
+  assert.match(output, /Syntra MCP registration (?:addition|migration)/);
   assert.equal(output.includes('hidden-existing-value'), false);
 });
 
 test('Codex TOML addition follows a consistent CRLF file without rewriting its prefix', t => {
   const fixture = sandbox(t);
   const config = '# keep this line\r\n[profiles]\r\nname = "private"';
-  const plan = setup.hostPlan('codex', fixture.env, process.platform);
+  const plan = setup.buildPlan('codex', fixture.env, process.platform);
   const candidate = setup.computeTomlCandidate(config, plan.tomlSnippet);
   const addition = candidate.slice(config.length);
 
@@ -533,7 +532,7 @@ test('Codex TOML addition follows a consistent CRLF file without rewriting its p
 
 test('Codex recognizes equivalent table, quoted table, and dotted-key TOML declarations', t => {
   const fixture = sandbox(t);
-  const registration = setup.hostPlan('codex', fixture.env, process.platform).registration;
+  const registration = setup.buildPlan('codex', fixture.env, process.platform).targetRegistration;
   const args = JSON.stringify(registration.args);
   const declarations = [
     `[mcp_servers.syntra]\ncommand = "${registration.command}"\nargs = ${args}\n`,
@@ -554,12 +553,12 @@ test('Claude strict JSON preview preserves unrelated values and displays only th
   const source = `${JSON.stringify({ model: secretMarker, custom: { retain: true }, mcpServers: {} }, null, 2)}\n`;
   const configPath = writeConfig('claude-code', fixture.env, source);
   const plan = setup.buildPlan('claude-code', fixture.env, process.platform);
-  const candidate = setup.computeJsonCandidate(source, plan.registrationPath, plan.registration, 'json');
+  const candidate = setup.computeJsonCandidate(source, plan.registrationPath, plan.targetRegistration, 'json');
   const parsed = JSON.parse(candidate);
 
   assert.deepEqual(parsed.model, secretMarker);
   assert.deepEqual(parsed.custom, { retain: true });
-  assert.deepEqual(parsed.mcpServers.syntra, plan.registration);
+  assert.deepEqual(parsed.mcpServers.syntra, plan.targetRegistration);
   assert.equal(fs.readFileSync(configPath, 'utf8'), source);
   const output = setup.renderPlan(plan);
   assert.match(output, /mcpServers\.syntra/);
@@ -582,14 +581,14 @@ test('OpenCode JSONC preview preserves comments, spacing and trailing commas', t
   ].join('\n');
   fs.writeFileSync(configPath, source, 'utf8');
   const plan = setup.buildPlan('opencode', fixture.env, process.platform);
-  const candidate = setup.computeJsonCandidate(source, plan.registrationPath, plan.registration, 'jsonc');
+  const candidate = setup.computeJsonCandidate(source, plan.registrationPath, plan.targetRegistration, 'jsonc');
   const parsed = require('../bin/vendor/jsonc-parser/lib/umd/main.js').parse(candidate, [], {
     allowTrailingComma: true,
     disallowComments: false,
   });
 
   assert.equal(parsed.model, secretMarker);
-  assert.deepEqual(parsed.mcp.servers.syntra, plan.registration);
+  assert.deepEqual(parsed.mcp.servers.syntra, plan.targetRegistration);
   assert.ok(candidate.includes('  // retain this comment and exact spacing\n'));
   assert.ok(candidate.includes(`  "model": "${secretMarker}",\n`));
   assert.equal(fs.readFileSync(configPath, 'utf8'), source);
@@ -609,7 +608,7 @@ test('exact existing registrations are idempotent and conflicting registrations 
     const configPath = writeConfig(agent, fixture.env, `${JSON.stringify(contents, null, 2)}\n`);
     const exactPlan = setup.buildPlan(agent, fixture.env, process.platform);
     assert.equal(exactPlan.registration.status, 'matching');
-    assert.match(setup.renderPlan(exactPlan), /exact pinned Syntra entry is already present/);
+    assert.match(setup.renderPlan(exactPlan), /MCP registration preserved/);
     const exactBytes = fs.readFileSync(configPath);
 
     target[plan.registrationPath.at(-1)] = { ...registration, command: 'different-command' };
@@ -625,7 +624,7 @@ test('exact existing registrations are idempotent and conflicting registrations 
   }
 
   const fixture = sandbox(t);
-  const conflictToml = `[mcp_servers.syntra]\ncommand = "different-command"\nargs = ["-y", "${pinnedPackage}", "mcp"]\n`;
+  const conflictToml = `[mcp_servers.syntra]\ncommand = "different-command"\nargs = ["-y", "${latestPackage}", "mcp"]\n`;
   const configPath = writeConfig('codex', fixture.env, conflictToml);
   assert.throws(() => setup.buildPlan('codex', fixture.env), /different Syntra host registration/);
   assert.equal(fs.readFileSync(configPath, 'utf8'), conflictToml);
@@ -683,7 +682,7 @@ test('a UTF-8 BOM is rejected explicitly without modifying the host config', t =
 
 test('existing bundled skills are recognized; modified and extra-content skills are preserved and refused', t => {
   const fixture = sandbox(t);
-  const plan = setup.hostPlan('codex', fixture.env, process.platform);
+  const plan = setup.buildPlan('codex', fixture.env, process.platform);
   const sourceSkill = path.join(root, 'skills', 'syntra');
   fs.mkdirSync(path.join(plan.skillPath, 'references'), { recursive: true });
   for (const relative of ['SKILL.md', 'references/tools.md']) {
@@ -738,19 +737,18 @@ test('symbolic links, hard-linked configs, relative overrides, and unsafe skill 
   );
 });
 
-test('Windows host commands use only fixed cmd.exe tokens and exact package metadata', () => {
-  const command = setup.shellCommand('win32');
-  assert.equal(command.command, 'cmd.exe');
-  assert.deepEqual(command.args, ['/d', '/c', 'npx', '-y', pinnedPackage, 'mcp']);
+test('Windows latest launch uses a Node argv array instead of cmd.exe', () => {
+  const node = 'C:\\Program Files\\nodejs\\node.exe';
+  const npxCli = 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js';
+  const command = setup.shellCommand('win32', 'latest', { node, npxCli });
+  assert.equal(command.command, node);
+  assert.deepEqual(command.args, [npxCli, '--yes', '--prefer-online', latestPackage, 'mcp']);
   const plan = setup.hostPlan('claude-code', {
     USERPROFILE: 'C:\\Users\\fixture',
     CLAUDE_CONFIG_DIR: 'C:\\Users\\fixture\\claude-data',
   }, 'win32');
   assert.equal(plan.configPath, 'C:\\Users\\fixture\\claude-data\\.claude.json');
   assert.equal(plan.skillPath, 'C:\\Users\\fixture\\claude-data\\skills\\syntra');
-  assert.equal(plan.registration.command, 'cmd.exe');
-  assert.deepEqual(plan.registration.args, command.args);
-  assert.equal(JSON.stringify(plan.registration).includes(secretMarker), false);
 });
 
 test('the setup dispatch bypasses native binary lookup while existing launcher tests own normal delegation', t => {
@@ -779,43 +777,47 @@ test('recognizes and previews stale Syntra registrations, then replaces them wit
     const fixture = sandbox(t);
     const plan = setup.hostPlan(agent, fixture.env, process.platform);
     const before = agent === 'codex'
-      ? `model = "keep"\r\n[mcp_servers."syntra"]\r\ncommand = "/fixtures/build/syntra" # old executable\r\nargs = [\r\n  "mcp", "--profile-dir", "${secretMarker}"\r\n]\r\n[mcp_servers.other]\r\ncommand = "keep"\r\n`
+      ? `model = "keep"\r\n[mcp_servers."syntra"]\r\ncommand = "syntra" # old executable\r\nargs = [\r\n  "mcp", "--profile-dir", "${secretMarker}"\r\n]\r\n[mcp_servers.other]\r\ncommand = "keep"\r\n`
       : agent === 'claude-code'
         ? `{"model":"keep","mcpServers":{"syntra":{"type":"stdio","command":"npx","args":["--yes","@synapsync/syntra-mcp@0.1.1","mcp","--call-timeout=1m"],"env":{"PRIVATE":"${secretMarker}"}},"other":{"command":"keep"}}}\n`
         : `{ // preserve this line\n  "mcp": {"servers": {"syntra":{"type":"local","command":["npx","-y","@synapsync/syntra-mcp@0.1.1","mcp","--profile-dir=custom"]}, "other":{"command":["keep"]},}},\n}\n`;
     const configPath = writeConfig(agent, fixture.env, before);
     fs.mkdirSync(plan.skillPath, { recursive: true });
     fs.writeFileSync(path.join(plan.skillPath, 'SKILL.md'), 'existing skill');
-    const preview = dryRun(agent, fixture.env);
-    assert.equal(preview.status, 0, preview.stderr);
-    assert.match(preview.stdout, /- (?:npx @synapsync\/syntra-mcp@0.1.1|syntra) mcp/);
-    assert.ok(preview.stdout.includes(pinnedPackage));
-    assert.ok(!preview.stdout.includes(secretMarker));
-    assert.equal(fs.readFileSync(configPath, 'utf8'), before);
-
     const invoke = (...extra) => spawnSync(process.execPath, [launcherPath, 'setup', '--agent', agent, ...extra], {
       env: fixture.env, encoding: 'utf8', timeout: 10000,
     });
-    const refused = invoke();
-    assert.equal(refused.status, 1);
-    assert.ok(refused.stderr.includes(`syntra setup --agent ${agent} --replace`));
-    assert.match(refused.stdout, /Proposed Syntra-only config change/);
+    const preserved = invoke();
+    assert.equal(preserved.status, 0, preserved.stderr);
+    assert.equal(fs.readFileSync(configPath, 'utf8'), before);
+    const preview = invoke('--mode', 'latest', '--dry-run');
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.match(preview.stdout, /Current mode: (?:direct|pinned @0.1.1)/);
+    assert.ok(preview.stdout.includes(latestPackage));
+    assert.ok(!preview.stdout.includes(secretMarker));
     assert.equal(fs.readFileSync(configPath, 'utf8'), before);
 
-    const applied = invoke('--replace');
+    const refused = invoke('--mode', 'latest');
+    assert.equal(refused.status, 1);
+    assert.ok(refused.stderr.includes(`syntra setup --agent ${agent} --mode latest --replace`));
+    assert.match(refused.stdout, /Syntra MCP registration (?:addition|migration)/);
+    assert.equal(fs.readFileSync(configPath, 'utf8'), before);
+
+    const applied = invoke('--mode', 'latest', '--replace');
     assert.equal(applied.status, 0, applied.stderr);
     assert.match(applied.stdout, /MCP registration updated/);
     const backupPath = applied.stdout.match(/Private config backup: (.+)/)[1];
     assert.equal(fs.readFileSync(backupPath, 'utf8'), before);
     if (process.platform !== 'win32') assert.equal(fs.statSync(backupPath).mode & 0o777, 0o600);
     const after = fs.readFileSync(configPath, 'utf8');
-    assert.ok(after.includes(pinnedPackage));
-    assert.ok(!after.includes(secretMarker));
+    assert.ok(after.includes(latestPackage));
+    if (agent !== 'opencode') assert.ok(after.includes(secretMarker));
+    assert.ok(after.includes(agent === 'claude-code' ? '--call-timeout=1m' : '--profile-dir'));
     assert.ok(after.includes('keep'));
     if (agent === 'codex') assert.ok(after.includes('[mcp_servers.other]\r\ncommand = "keep"\r\n'));
     if (agent === 'opencode') assert.ok(after.includes('// preserve this line'));
     assert.equal(fs.readFileSync(path.join(plan.skillPath, 'SKILL.md'), 'utf8'), 'existing skill');
-    assert.equal(setup.registrationPin(agent, fixture.env), packageManifest.version);
+    assert.equal(setup.registrationState(agent, fixture.env).mode, 'latest');
   }
 });
 
@@ -828,11 +830,11 @@ test('Codex replaces dotted and inline TOML registrations without touching neigh
     const fixture = sandbox(t);
     const source = `# outside\n${entry}\n[mcp_servers.other]\ncommand = "keep"\n`;
     const configPath = writeConfig('codex', fixture.env, source);
-    const output = setup.runSetup(['--agent', 'codex', '--replace'], { env: fixture.env });
+    const output = setup.runSetup(['--agent', 'codex', '--mode', 'latest', '--replace'], { env: fixture.env });
     assert.match(output, /MCP registration updated/);
     const after = fs.readFileSync(configPath, 'utf8');
     assert.ok(after.includes('[mcp_servers.other]\ncommand = "keep"\n'));
-    assert.ok(after.includes(pinnedPackage));
+    assert.ok(after.includes(latestPackage));
     assert.ok(after.startsWith('# outside\n'));
   }
 });
@@ -843,21 +845,21 @@ test('replacement confirmation is bound to the reviewed snapshot and leaves unkn
   const configPath = writeConfig('codex', fixture.env, source);
   const output = [];
   const options = { env: fixture.env, tty: true, out: line => output.push(line) };
-  await setup.setupCLI(['--agent', 'codex'], { ...options, prompt: async () => 'no' });
+  await setup.setupCLI(['--agent', 'codex', '--mode', 'latest'], { ...options, prompt: async () => 'no' });
   assert.match(output.join(''), /Setup cancelled/);
   assert.equal(fs.readFileSync(configPath, 'utf8'), source);
 
   const changed = source + '# user edit\n';
-  await assert.rejects(setup.setupCLI(['--agent', 'codex'], {
+  await assert.rejects(setup.setupCLI(['--agent', 'codex', '--mode', 'latest'], {
     ...options, prompt: async () => { fs.writeFileSync(configPath, changed); return 'yes'; },
   }), /changed after the setup preview/);
   assert.equal(fs.readFileSync(configPath, 'utf8'), changed);
-  await setup.setupCLI(['--agent', 'codex'], { ...options, prompt: async () => 'yes' });
+  await setup.setupCLI(['--agent', 'codex', '--mode', 'latest'], { ...options, prompt: async () => 'yes' });
   assert.match(fs.readFileSync(configPath, 'utf8'), /@synapsync\/syntra-mcp@/);
 
-  const unknown = `[mcp_servers.syntra]\ncommand = "unrelated"\nargs = ["${pinnedPackage}", "mcp"]\n`;
+  const unknown = `[mcp_servers.syntra]\ncommand = "unrelated"\nargs = ["${latestPackage}", "mcp"]\n`;
   fs.writeFileSync(configPath, unknown);
-  assert.throws(() => setup.runSetup(['--agent', 'codex', '--replace'], { env: fixture.env }), /could not be identified/);
+  assert.throws(() => setup.runSetup(['--agent', 'codex', '--mode', 'latest', '--replace'], { env: fixture.env }), /could not be identified/);
   assert.equal(fs.readFileSync(configPath, 'utf8'), unknown);
 });
 
@@ -865,63 +867,64 @@ test('replaces the Syntra value inside a shared TOML inline table', t => {
   const fixture = sandbox(t);
   const source = 'mcp_servers = { syntra = { command = "syntra", args = ["mcp"] }, other = {command="keep"} }\n';
   const configPath = writeConfig('codex', fixture.env, source);
-  assert.match(setup.runSetup(['--agent', 'codex', '--replace'], { env: fixture.env }), /MCP registration updated/);
+  assert.match(setup.runSetup(['--agent', 'codex', '--mode', 'latest', '--replace'], { env: fixture.env }), /MCP registration updated/);
   const after = fs.readFileSync(configPath, 'utf8');
   assert.ok(after.startsWith('mcp_servers = { syntra = { command = '));
   assert.ok(after.endsWith(', other = {command="keep"} }\n'));
-  assert.ok(after.includes(pinnedPackage));
+  assert.ok(after.includes(latestPackage));
 });
 
 test('retains the existing OpenCode layout when refreshing a legacy V1 entry', t => {
   const fixture = sandbox(t);
   const source = '{"mcp":{"syntra":{"type":"local","command":["npx","-y","@synapsync/syntra-mcp@0.1.1","mcp"]},"other":{"command":["keep"]}}}';
   const configPath = writeConfig('opencode', fixture.env, source);
-  assert.equal(setup.registrationPin('opencode', fixture.env), '0.1.1');
-  assert.match(setup.runSetup(['--agent', 'opencode', '--replace'], { env: fixture.env }), /MCP registration updated/);
+  assert.equal(setup.registrationState('opencode', fixture.env).pin, '0.1.1');
+  assert.match(setup.runSetup(['--agent', 'opencode', '--mode', 'latest', '--replace'], { env: fixture.env }), /MCP registration updated/);
   const { mcp } = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  assert.ok(mcp.syntra.command.includes(pinnedPackage));
+  assert.ok(mcp.syntra.command.includes(latestPackage));
   assert.deepEqual(mcp.other, { command: ['keep'] });
   assert.equal(mcp.servers, undefined);
 });
 
-test('Codex replaces the stale table in place with one blank line between tables', t => {
+test('Codex changes only launch fields and preserves nested tables and spacing', t => {
   for (const eol of ['\n', '\r\n']) {
     const fixture = sandbox(t);
-    const plan = setup.hostPlan('codex', fixture.env, process.platform);
+    const plan = setup.buildPlan('codex', fixture.env, process.platform);
     const before = [
       'model = "keep"', '', '[mcp_servers.other]', 'command = "keep"', '',
-      '[mcp_servers.syntra]', 'command = "/fixtures/old/syntra"',
+      '[mcp_servers.syntra]', 'command = "syntra"',
       'args = [', '  "mcp", "--profile-dir", "/fixture/profile"', ']',
       '', '[mcp_servers.syntra.env]', 'DEPRECATED = "remove"', '', '',
       '[projects."/x"]', 'trust_level = "trusted"', '', '',
     ].join(eol);
     const configPath = writeConfig('codex', fixture.env, before);
-    const result = spawnSync(process.execPath, [launcherPath, 'setup', '--agent', 'codex', '--replace'], {
+    const result = spawnSync(process.execPath, [launcherPath, 'setup', '--agent', 'codex', '--mode', 'latest', '--replace'], {
       env: fixture.env, encoding: 'utf8', timeout: 10000,
     });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(fs.readFileSync(configPath, 'utf8'), [
       'model = "keep"', '', '[mcp_servers.other]', 'command = "keep"', '',
-      '[mcp_servers.syntra]', `command = ${JSON.stringify(plan.registration.command)}`,
-      `args = [${plan.registration.args.map(arg => JSON.stringify(arg)).join(', ')}]`,
-      '', '[projects."/x"]', 'trust_level = "trusted"', '',
+      '[mcp_servers.syntra]', `command = ${JSON.stringify(plan.targetRegistration.command)}`,
+      `args = [${[...plan.targetRegistration.args, '--profile-dir', '/fixture/profile'].map(arg => JSON.stringify(arg)).join(', ')}]`,
+      '', '[mcp_servers.syntra.env]', 'DEPRECATED = "remove"', '', '',
+      '[projects."/x"]', 'trust_level = "trusted"', '', '',
     ].join(eol));
   }
 });
 
 test('Codex append keeps one separator and a single terminal newline', t => {
   const fixture = sandbox(t);
-  const plan = setup.hostPlan('codex', fixture.env, process.platform);
+  const plan = setup.buildPlan('codex', fixture.env, process.platform);
   const base = '[projects."/x"]\ntrust_level = "trusted"';
   for (const end of ['', '\n', '\n\n', '\n  \n\n']) {
     assert.equal(setup.computeTomlCandidate(base + end, plan.tomlSnippet), base + '\n\n' + plan.tomlSnippet);
   }
 });
 
-test('JSON host replacements use two-space indentation and retain surrounding key order', t => {
+test('JSON host replacements edit only launch values and retain surrounding formatting', t => {
   for (const agent of ['claude-code', 'opencode']) {
     const fixture = sandbox(t);
-    const plan = setup.hostPlan(agent, fixture.env, process.platform);
+    const plan = setup.buildPlan(agent, fixture.env, process.platform);
     const legacy = agent === 'claude-code'
       ? { type: 'stdio', command: 'syntra', args: ['mcp'] }
       : { type: 'local', command: ['syntra', 'mcp'] };
@@ -933,7 +936,56 @@ test('JSON host replacements use two-space indentation and retain surrounding ke
       return JSON.stringify(config, null, 2) + '\n';
     };
     const configPath = writeConfig(agent, fixture.env, tree('inline-stale').replace('"inline-stale"', JSON.stringify(legacy)) + '\n');
-    assert.match(setup.runSetup(['--agent', agent, '--replace'], { env: fixture.env }), /MCP registration updated/);
-    assert.equal(fs.readFileSync(configPath, 'utf8'), tree(plan.registration));
+    assert.match(setup.runSetup(['--agent', agent, '--mode', 'latest', '--replace'], { env: fixture.env }), /MCP registration updated/);
+    assert.equal(fs.readFileSync(configPath, 'utf8'), tree('inline-stale').replace('"inline-stale"', JSON.stringify(plan.targetRegistration)) + '\n');
   }
+});
+
+test('local setup binds every host to the verified npm global launcher and keeps that path across version changes', t => {
+  for (const agent of setup.AGENT_NAMES) {
+    const fixture = sandbox(t);
+    const prefix = path.join(fixture.root, 'selected global prefix');
+    const modules = path.join(prefix, ...(process.platform === 'win32' ? [] : ['lib']), 'node_modules');
+    const packageDir = path.join(modules, '@synapsync', 'syntra-mcp');
+    const launcher = path.join(packageDir, 'bin', 'launcher.cjs');
+    fs.mkdirSync(path.dirname(launcher), { recursive: true });
+    fs.writeFileSync(launcher, '/* fake installed version 1 */');
+    const calls = [];
+    const opts = { env: { ...fixture.env, PATH: '' }, packageDir, npm: args => {
+      calls.push(args);
+      return { status: 0, stdout: modules };
+    } };
+    const args = ['--agent', agent, '--mode', 'local'];
+    const preview = setup.runSetup([...args, '--dry-run'], opts);
+    assert.match(preview, /Proposed mode: local/);
+    assert.ok(preview.includes(JSON.stringify(launcher)));
+    const config = configFor(agent, fixture.env);
+    assert.equal(fs.existsSync(config), false);
+    assert.match(setup.runSetup(args, opts), /MCP registration updated/);
+    const registered = fs.readFileSync(config, 'utf8');
+    assert.deepEqual(setup.registrationState(agent, fixture.env, process.platform, packageDir), { mode: 'local', target: 'current' });
+    fs.writeFileSync(launcher, '/* fake installed version 2 */');
+    assert.match(setup.runSetup(args, opts), /No files were changed/);
+    assert.equal(fs.readFileSync(config, 'utf8'), registered);
+    assert.ok(calls.length >= 3);
+    assert.ok(calls.every(call => JSON.stringify(call) === JSON.stringify(['root', '-g', '--prefix', prefix])));
+    fs.unlinkSync(launcher);
+    assert.deepEqual(setup.registrationState(agent, fixture.env, process.platform, packageDir), { mode: 'local', target: 'unresolved' });
+    assert.throws(() => setup.runSetup(args, opts), /requires running setup from the selected npm-global installation/);
+    assert.equal(fs.readFileSync(config, 'utf8'), registered);
+  }
+});
+
+test('local setup fails without a verified global installation and unknown wrappers require manual resolution', t => {
+  const fixture = sandbox(t);
+  assert.throws(() => setup.runSetup(['--agent', 'codex', '--mode', 'local'], {
+    env: fixture.env,
+  }), /requires running setup from the selected npm-global installation/);
+  assert.equal(fs.existsSync(configFor('codex', fixture.env)), false);
+  const custom = '[mcp_servers.syntra]\ncommand = "/custom/bin/syntra"\nargs = ["mcp"]\n';
+  const config = writeConfig('codex', fixture.env, custom);
+  assert.throws(() => setup.runSetup(['--agent', 'codex', '--mode', 'latest', '--replace'], {
+    env: fixture.env,
+  }), /could not be identified/);
+  assert.equal(fs.readFileSync(config, 'utf8'), custom);
 });
