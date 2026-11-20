@@ -112,5 +112,90 @@
     },
     "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b73706163650000000000000850726567756e746100000005506564726f0200000005506564726f00000009526576697369c3b36e0000001b60606074730d0a09636f6e73742078203d20313b20200d0a606060",
     "sha256": "347e7cba4672118b4a70bd228205ad16987a4f0ce4d59802c4eb6d2acee22543"
+  },
+  {
+    "name": "linked-set-three",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Equipo",
+      "destination": {
+        "kind": "linkedSet",
+        "memberIds": [
+          "pedro",
+          "justina",
+          "carlos"
+        ]
+      },
+      "summary": "Resumen",
+      "contextMarkdown": "Contexto\n"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a65637400000000000850726567756e74610000000645717569706f030000000300000005706564726f000000076a757374696e61000000066361726c6f7300000007526573756d656e00000009436f6e746578746f0a",
+    "sha256": "b783fb621ef4b16ff0b24f3bda7dc58591e63b8222bd8dbfcf71e1d0ebee72d7"
+  },
+  {
+    "name": "linked-set-order-significant",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Equipo",
+      "destination": {
+        "kind": "linkedSet",
+        "memberIds": [
+          "justina",
+          "pedro",
+          "carlos"
+        ]
+      },
+      "summary": "Resumen",
+      "contextMarkdown": "Contexto\n"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a65637400000000000850726567756e74610000000645717569706f0300000003000000076a757374696e6100000005706564726f000000066361726c6f7300000007526573756d656e00000009436f6e746578746f0a",
+    "sha256": "2d0eb456319f4e38e25b8599b66f8df2ff78a4c95a213b7bfe7f46bdfc85a272"
+  },
+  {
+    "name": "team",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Equipo",
+      "destination": {
+        "kind": "team",
+        "teamId": "platform"
+      },
+      "summary": "Resumen",
+      "contextMarkdown": "Contexto\n"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a65637400000000000850726567756e74610000000645717569706f0400000008706c6174666f726d00000007526573756d656e00000009436f6e746578746f0a",
+    "sha256": "3e083fc7505e9de41c3ea239c0a6115e66c240d8dc4fcff9cde034f75a948bd6"
+  },
+  {
+    "name": "reply-all",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": "project",
+      "existingThreadId": "thread",
+      "title": "Pregunta",
+      "originalDestinationIntent": "everyone",
+      "destination": {
+        "kind": "replyAll",
+        "replyAll": true
+      },
+      "summary": "Resumen",
+      "contextMarkdown": "Contexto\n"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365010000000770726f6a6563740001000000067468726561640000000850726567756e74610000000865766572796f6e650500000007526573756d656e00000009436f6e746578746f0a",
+    "sha256": "35f2ec71b5a5c14e35cd2c62d9c793be50265aa71fdd0288a7d351dfd8642fc2"
   }
 ]

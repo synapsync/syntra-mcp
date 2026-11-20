@@ -11,6 +11,7 @@ import (
 
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	"syntra.local/mcp/gen/syntra/v1/syntrav1connect"
+	ci "syntra.local/mcp/internal/contentintegrity"
 )
 
 type Candidate struct {
@@ -36,13 +37,21 @@ type Selection struct {
 	Project   string `json:"project,omitempty"`
 	Team      string `json:"team,omitempty"`
 	Recipient string `json:"recipient,omitempty"`
+	// Recipients names several people (at most MaxRecipients). Mutually exclusive with Recipient and AsTeam.
+	Recipients []string `json:"recipients,omitempty"`
+	// AsTeam addresses the whole selected project team (expanded to its active members when sent).
+	AsTeam bool `json:"asTeam,omitempty"`
 }
 type Resolution struct {
-	WorkspaceID             string  `json:"workspaceId"`
-	ProjectID               *string `json:"projectId,omitempty"`
-	TeamID                  *string `json:"teamId,omitempty"`
-	RecipientID             *string `json:"recipientId,omitempty"`
-	OriginalRecipientIntent string  `json:"originalRecipientIntent"`
+	WorkspaceID             string   `json:"workspaceId"`
+	ProjectID               *string  `json:"projectId,omitempty"`
+	TeamID                  *string  `json:"teamId,omitempty"`
+	RecipientID             *string  `json:"recipientId,omitempty"`
+	RecipientIDs            []string `json:"recipientIds,omitempty"`
+	OriginalRecipientIntent string   `json:"originalRecipientIntent"`
+	// Destination is the exact, unambiguous value to place in content.destination: one person
+	// (linkedMemberId), several people (linkedMemberSet) or an explicit team (teamId).
+	Destination map[string]any `json:"destination,omitempty"`
 }
 
 // pages restarts ONCE on an expired cursor; partial output never proves unique.
@@ -266,7 +275,24 @@ func (a *App) Resolve(ctx context.Context, s Selection) (*Resolution, error) {
 		}
 		r.TeamID = &id
 	}
+	if s.AsTeam && (s.Team == "" || s.Recipient != "" || len(s.Recipients) > 0) {
+		return nil, errors.New("asTeam requires team and excludes recipient and recipients")
+	}
+	if s.Recipient != "" && len(s.Recipients) > 0 {
+		return nil, errors.New("use either recipient or recipients, not both")
+	}
+	if s.AsTeam {
+		r.Destination = map[string]any{"teamId": *r.TeamID}
+		return r, nil
+	}
+	intents := s.Recipients
 	if s.Recipient != "" {
+		intents = []string{s.Recipient}
+	}
+	if len(intents) > ci.MaxRecipients {
+		return nil, errors.New("too many recipients")
+	}
+	if len(intents) > 0 {
 		c = nil
 		var recipientErr error
 		switch {
@@ -283,11 +309,47 @@ func (a *App) Resolve(ctx context.Context, s Selection) (*Resolution, error) {
 				c = append(c, Candidate{x.UserId, x.DisplayName, "member"})
 			}
 		}
-		id, e := choose("member", s.Recipient, c, recipientErr)
-		if e != nil {
-			return nil, e
+		// A single recipient may also name a whole team of the project: teams are destinations too.
+		withTeams := c
+		if len(intents) == 1 && s.Recipient != "" && team == nil && teamsErr == nil {
+			for _, x := range teams {
+				withTeams = append(withTeams, Candidate{x.TeamId, x.TeamName, "team"})
+			}
 		}
-		r.RecipientID = &id
+		ids := []string{}
+		seen := map[string]bool{}
+		for _, intent := range intents {
+			pool := c
+			if len(intents) == 1 && s.Recipient != "" {
+				pool = withTeams
+			}
+			kind := "member"
+			id, e := choose(kind, intent, pool, recipientErr)
+			if e != nil {
+				return nil, e
+			}
+			if seen[id] {
+				return nil, errors.New("recipients must be distinct people")
+			}
+			seen[id] = true
+			ids = append(ids, id)
+		}
+		if len(ids) == 1 && s.Recipient != "" {
+			for _, x := range teams {
+				if x.TeamId == ids[0] {
+					r.TeamID = &ids[0]
+					r.Destination = map[string]any{"teamId": ids[0]}
+					return r, nil
+				}
+			}
+		}
+		if len(ids) == 1 {
+			r.RecipientID = &ids[0]
+			r.Destination = map[string]any{"linkedMemberId": ids[0]}
+		} else {
+			r.RecipientIDs = ids
+			r.Destination = map[string]any{"linkedMemberSet": map[string]any{"memberIds": ids}}
+		}
 	}
 	return r, nil
 }

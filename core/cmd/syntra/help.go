@@ -13,7 +13,7 @@ type helpEntry struct{ purpose, flags, example, output string }
 
 var helpEntries = map[string]helpEntry{
 	"version":    {"Print native binary version.", "", "syntra version", "Native binary version."},
-	"login":      {"Connect a human account.", "[--method browser|otp] [--api URL] [--browser-origin URL] [--provider URL] [--publishable-key KEY] [--no-browser] [--reauthorize] [--prepare] [--publish] [--mark-read] [--label TEXT] [--lifetime-seconds N]", "syntra login --prepare", "Connection metadata; browser consent or human OTP authentication."},
+	"login":      {"Connect a human account.", "[--method browser|otp] [--api URL] [--browser-origin URL] [--provider URL] [--publishable-key KEY] [--no-browser] [--reauthorize] [--prepare] [--publish] [--label TEXT] [--lifetime-seconds N]", "syntra login --prepare", "Connection metadata; browser consent or human OTP authentication."},
 	"status":     {"Show local connection status.", "", "syntra status", "Local profile metadata."},
 	"identity":   {"Verify the current identity.", "", "syntra identity", "Account and connection metadata."},
 	"disconnect": {"Revoke the connection and remove the profile.", "", "syntra disconnect", "Confirmation."},
@@ -23,11 +23,11 @@ var helpEntries = map[string]helpEntry{
 	"projects":   {"List workspace projects.", "--workspace UUID", "syntra projects --workspace WORKSPACE_UUID", "Project JSON."},
 	"teams":      {"List project teams.", "--workspace UUID --project UUID", "syntra teams --workspace WORKSPACE_UUID --project PROJECT_UUID", "Team JSON."},
 	"members":    {"List workspace members.", "--workspace UUID", "syntra members --workspace WORKSPACE_UUID", "Member JSON."},
-	"resolve":    {"Resolve workspace, project, team and recipient names.", "--workspace NAME [--project NAME] [--team NAME] [--recipient NAME]", "syntra resolve --workspace Acme --recipient Alex", "Resolved IDs or clarification JSON."},
+	"resolve":    {"Resolve workspace, project, team and recipient names.", "--workspace NAME [--project NAME] [--team NAME] [--recipient NAME | --recipients A,B,C | --as-team]", "syntra resolve --workspace Acme --recipients Alex,Sam", "Resolved IDs, the exact content.destination to use (one person, several people or an explicit team), or clarification JSON."},
 	"threads":    {"List threads.", "--workspace UUID [--view published|own-prepared]", "syntra threads --workspace WORKSPACE_UUID", "Thread JSON."},
 	"thread":     {"Read one thread, its state and its opaque revision. Closed threads accept no replies.", "--workspace UUID --thread UUID", "syntra thread --workspace WORKSPACE_UUID --thread THREAD_UUID", "Thread JSON, including state and revision."},
 	"messages":   {"Read thread messages.", "--workspace UUID --thread UUID [--view published|own-prepared]", "syntra messages --workspace WORKSPACE_UUID --thread THREAD_UUID", "Message JSON."},
-	"reply":      {"Prepare a reply to the creator of a published, nonclosed thread.", "--workspace UUID --thread UUID --summary TEXT --context-file PATH|-", "syntra reply --workspace WORKSPACE_UUID --thread THREAD_UUID --summary Done --context-file context.md", "Prepared ID and an exact command for explicit publication."},
+	"reply":      {"Prepare a reply to every other participant of a published, nonclosed thread (reply to all).", "--workspace UUID --thread UUID --summary TEXT --context-file PATH|-", "syntra reply --workspace WORKSPACE_UUID --thread THREAD_UUID --summary Done --context-file context.md", "Prepared ID and an exact command for explicit publication."},
 	"prepare":    {"Prepare private content without publishing.", "--file PATH|- [--base REQUEST_UUID] | --template new|reply --workspace UUID [--project UUID] [--thread UUID]", "syntra prepare --template reply --workspace WORKSPACE_UUID --thread THREAD_UUID", "Template JSON for --template (reply requires a published, nonclosed thread); private prepared message snapshot JSON for --file."},
 	"link":       {"Link a private prepared message to a member without publishing.", "--file PATH|- --base REQUEST_UUID", "syntra link --file link.json --base REQUEST_UUID", "Private prepared snapshot JSON."},
 	"publish":    {"Publish an exact retained private prepared message.", "--file PATH|- --base REQUEST_UUID", "syntra publish --file publish.json --base REQUEST_UUID", "Published snapshot JSON."},
@@ -66,7 +66,6 @@ Supply permission flags to request only the listed optional permissions.
 OTP login without permission flags grants read only.
   --prepare    Create threads and prepare or link private prepared messages.
   --publish    Publish explicitly. Requires --prepare.
-  --mark-read  Allow explicit read receipts. This does not mark items reviewed.
 Use --reauthorize to request new permissions for the installed connection.
 Include any optional permissions you want to keep and approve in the browser.`)
 	}

@@ -34,7 +34,7 @@ func TestConnectionRecoveryGuidance(t *testing.T) {
 		{read, []v1.ToolCapability{read}, ""},
 		{prepare, []v1.ToolCapability{read}, " --prepare"},
 		{publish, []v1.ToolCapability{read}, " --prepare --publish"},
-		{mark, []v1.ToolCapability{read, prepare, publish}, " --prepare --publish --mark-read"},
+		{mark, []v1.ToolCapability{read, prepare, publish}, " --prepare --publish"},
 	} {
 		t.Run(capabilityName(tc.need), func(t *testing.T) {
 			profile := &Profile{Config: Config{Capabilities: tc.granted}}

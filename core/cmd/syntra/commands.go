@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -39,7 +40,9 @@ func runContent(parent context.Context, args []string) error {
 	workspace := f.String("workspace", "", "workspace ID or resolve name")
 	project := f.String("project", "", "project ID or resolve name")
 	team := f.String("team", "", "project team name or ID for resolve")
-	recipient := f.String("recipient", "", "recipient name for resolve")
+	recipient := f.String("recipient", "", "recipient name for resolve (a person, or a team of the project)")
+	recipients := f.String("recipients", "", "comma-separated people (at most 10) for resolve")
+	asTeam := f.Bool("as-team", false, "resolve: address the whole selected --team")
 	thread := f.String("thread", "", "thread ID")
 	view := f.String("view", "published", "messages: published or own-prepared")
 	if err := f.Parse(args[1:]); err != nil {
@@ -67,7 +70,7 @@ func runContent(parent context.Context, args []string) error {
 		allowed["workspace"] = true
 		allowed["thread"] = true
 	case "resolve":
-		for _, s := range []string{"workspace", "project", "team", "recipient"} {
+		for _, s := range []string{"workspace", "project", "team", "recipient", "recipients", "as-team"} {
 			allowed[s] = true
 		}
 	case "retry":
@@ -245,7 +248,7 @@ func runContent(parent context.Context, args []string) error {
 		}
 		message = t
 	case "resolve":
-		result, e = app.Resolve(ctx, toolclient.Selection{Workspace: *workspace, Project: *project, Team: *team, Recipient: *recipient})
+		result, e = app.Resolve(ctx, toolclient.Selection{Workspace: *workspace, Project: *project, Team: *team, Recipient: *recipient, Recipients: splitRecipients(*recipients), AsTeam: *asTeam})
 	case "retry":
 		message, e = app.Retry(ctx, *request)
 	default:
@@ -261,18 +264,7 @@ func runContent(parent context.Context, args []string) error {
 			var s *toolclient.VerifiedSnapshot
 			s, e = app.Snapshot(ctx, q, *base)
 			if e == nil {
-				var raw []byte
-				if s.Snapshot != nil {
-					raw, e = protojson.Marshal(s.Snapshot)
-				} else {
-					raw, e = protojson.Marshal(s.Record)
-				}
-				if e == nil {
-					result = struct {
-						Verification string          `json:"verification"`
-						Record       json.RawMessage `json:"record"`
-					}{s.Verification, raw}
-				}
+				result, e = s.Output()
 			}
 		}
 	}
@@ -354,4 +346,16 @@ func readReplyContext(ctx context.Context, path string) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+// splitRecipients parses the comma-separated --recipients value; empty items are kept so validation rejects them.
+func splitRecipients(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	for i := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
+	}
+	return parts
 }

@@ -76,6 +76,19 @@ func diagnoseObject(raw []byte, desc protoreflect.MessageDescriptor, path string
 		if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
 			return fmt.Errorf("%w: %s.%s cannot be null", ci.ErrWire, path, name)
 		}
+		if f.IsList() {
+			// Only repeated strings (a recipient set) exist; each item must be a string.
+			var items []any
+			if json.Unmarshal(value, &items) != nil {
+				return fmt.Errorf("%w: %s.%s has the wrong JSON type (expected an array of %s)", ci.ErrWire, path, name, f.Kind())
+			}
+			for _, item := range items {
+				if _, ok := item.(string); !ok {
+					return fmt.Errorf("%w: %s.%s must contain only strings", ci.ErrWire, path, name)
+				}
+			}
+			continue
+		}
 		if f.Kind() == protoreflect.MessageKind {
 			if e := diagnoseObject(value, f.Message(), path+"."+name, locations); e != nil {
 				return e
