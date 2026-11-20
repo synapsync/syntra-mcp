@@ -69,12 +69,19 @@ func (ContentIntegrityOrigin) EnumDescriptor() ([]byte, []int) {
 }
 
 // Exactly one variant. Unlinked content remains owner-private and undelivered.
+// linked_member_id addresses exactly one person. linked_member_set addresses 2..10
+// distinct people; order is significant and is preserved as the display order.
+// team_id is an EXPLICIT team destination (never inferred): at send time the team is
+// expanded to its active members and those people are recorded as the recipients.
 type ContentDestination struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Target:
 	//
 	//	*ContentDestination_LinkedMemberId
 	//	*ContentDestination_UnlinkedLabel
+	//	*ContentDestination_LinkedMemberSet
+	//	*ContentDestination_TeamId
+	//	*ContentDestination_ReplyAll
 	Target        isContentDestination_Target `protobuf_oneof:"target"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -135,6 +142,33 @@ func (x *ContentDestination) GetUnlinkedLabel() string {
 	return ""
 }
 
+func (x *ContentDestination) GetLinkedMemberSet() *LinkedMemberSet {
+	if x != nil {
+		if x, ok := x.Target.(*ContentDestination_LinkedMemberSet); ok {
+			return x.LinkedMemberSet
+		}
+	}
+	return nil
+}
+
+func (x *ContentDestination) GetTeamId() string {
+	if x != nil {
+		if x, ok := x.Target.(*ContentDestination_TeamId); ok {
+			return x.TeamId
+		}
+	}
+	return ""
+}
+
+func (x *ContentDestination) GetReplyAll() bool {
+	if x != nil {
+		if x, ok := x.Target.(*ContentDestination_ReplyAll); ok {
+			return x.ReplyAll
+		}
+	}
+	return false
+}
+
 type isContentDestination_Target interface {
 	isContentDestination_Target()
 }
@@ -147,9 +181,73 @@ type ContentDestination_UnlinkedLabel struct {
 	UnlinkedLabel string `protobuf:"bytes,2,opt,name=unlinked_label,json=unlinkedLabel,proto3,oneof"`
 }
 
+type ContentDestination_LinkedMemberSet struct {
+	LinkedMemberSet *LinkedMemberSet `protobuf:"bytes,3,opt,name=linked_member_set,json=linkedMemberSet,proto3,oneof"`
+}
+
+type ContentDestination_TeamId struct {
+	TeamId string `protobuf:"bytes,4,opt,name=team_id,json=teamId,proto3,oneof"`
+}
+
+type ContentDestination_ReplyAll struct {
+	// Existing-thread replies only, and only the value true: every other participant of the thread (the creator and the
+	// authors and recipients of its published messages, excluding the author). Expanded at send time like a team.
+	ReplyAll bool `protobuf:"varint,5,opt,name=reply_all,json=replyAll,proto3,oneof"`
+}
+
 func (*ContentDestination_LinkedMemberId) isContentDestination_Target() {}
 
 func (*ContentDestination_UnlinkedLabel) isContentDestination_Target() {}
+
+func (*ContentDestination_LinkedMemberSet) isContentDestination_Target() {}
+
+func (*ContentDestination_TeamId) isContentDestination_Target() {}
+
+func (*ContentDestination_ReplyAll) isContentDestination_Target() {}
+
+type LinkedMemberSet struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MemberIds     []string               `protobuf:"bytes,1,rep,name=member_ids,json=memberIds,proto3" json:"member_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LinkedMemberSet) Reset() {
+	*x = LinkedMemberSet{}
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LinkedMemberSet) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinkedMemberSet) ProtoMessage() {}
+
+func (x *LinkedMemberSet) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinkedMemberSet.ProtoReflect.Descriptor instead.
+func (*LinkedMemberSet) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_authored_content_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *LinkedMemberSet) GetMemberIds() []string {
+	if x != nil {
+		return x.MemberIds
+	}
+	return nil
+}
 
 // Authored envelope with exact client-supplied UTF-8 content.
 // Digest encoding is specified in CONTENT-INTEGRITY.md, never protobuf bytes.
@@ -171,7 +269,7 @@ type AuthoredContent struct {
 
 func (x *AuthoredContent) Reset() {
 	*x = AuthoredContent{}
-	mi := &file_syntra_v1_authored_content_proto_msgTypes[1]
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -183,7 +281,7 @@ func (x *AuthoredContent) String() string {
 func (*AuthoredContent) ProtoMessage() {}
 
 func (x *AuthoredContent) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_authored_content_proto_msgTypes[1]
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -196,7 +294,7 @@ func (x *AuthoredContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthoredContent.ProtoReflect.Descriptor instead.
 func (*AuthoredContent) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_authored_content_proto_rawDescGZIP(), []int{1}
+	return file_syntra_v1_authored_content_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *AuthoredContent) GetFormatVersion() uint32 {
@@ -282,7 +380,7 @@ type ClientReportedProvenance struct {
 
 func (x *ClientReportedProvenance) Reset() {
 	*x = ClientReportedProvenance{}
-	mi := &file_syntra_v1_authored_content_proto_msgTypes[2]
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -294,7 +392,7 @@ func (x *ClientReportedProvenance) String() string {
 func (*ClientReportedProvenance) ProtoMessage() {}
 
 func (x *ClientReportedProvenance) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_authored_content_proto_msgTypes[2]
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -307,7 +405,7 @@ func (x *ClientReportedProvenance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientReportedProvenance.ProtoReflect.Descriptor instead.
 func (*ClientReportedProvenance) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_authored_content_proto_rawDescGZIP(), []int{2}
+	return file_syntra_v1_authored_content_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ClientReportedProvenance) GetProvider() string {
@@ -357,7 +455,7 @@ type ContentProvenanceReceipt struct {
 
 func (x *ContentProvenanceReceipt) Reset() {
 	*x = ContentProvenanceReceipt{}
-	mi := &file_syntra_v1_authored_content_proto_msgTypes[3]
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -369,7 +467,7 @@ func (x *ContentProvenanceReceipt) String() string {
 func (*ContentProvenanceReceipt) ProtoMessage() {}
 
 func (x *ContentProvenanceReceipt) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_authored_content_proto_msgTypes[3]
+	mi := &file_syntra_v1_authored_content_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -382,7 +480,7 @@ func (x *ContentProvenanceReceipt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContentProvenanceReceipt.ProtoReflect.Descriptor instead.
 func (*ContentProvenanceReceipt) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_authored_content_proto_rawDescGZIP(), []int{3}
+	return file_syntra_v1_authored_content_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ContentProvenanceReceipt) GetContentDigest() []byte {
@@ -452,11 +550,17 @@ var File_syntra_v1_authored_content_proto protoreflect.FileDescriptor
 
 const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	"\n" +
-	" syntra/v1/authored_content.proto\x12\tsyntra.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"s\n" +
+	" syntra/v1/authored_content.proto\x12\tsyntra.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf7\x01\n" +
 	"\x12ContentDestination\x12*\n" +
 	"\x10linked_member_id\x18\x01 \x01(\tH\x00R\x0elinkedMemberId\x12'\n" +
-	"\x0eunlinked_label\x18\x02 \x01(\tH\x00R\runlinkedLabelB\b\n" +
-	"\x06target\"\xeb\x03\n" +
+	"\x0eunlinked_label\x18\x02 \x01(\tH\x00R\runlinkedLabel\x12H\n" +
+	"\x11linked_member_set\x18\x03 \x01(\v2\x1a.syntra.v1.LinkedMemberSetH\x00R\x0flinkedMemberSet\x12\x19\n" +
+	"\ateam_id\x18\x04 \x01(\tH\x00R\x06teamId\x12\x1d\n" +
+	"\treply_all\x18\x05 \x01(\bH\x00R\breplyAllB\b\n" +
+	"\x06target\"0\n" +
+	"\x0fLinkedMemberSet\x12\x1d\n" +
+	"\n" +
+	"member_ids\x18\x01 \x03(\tR\tmemberIds\"\xeb\x03\n" +
 	"\x0fAuthoredContent\x12%\n" +
 	"\x0eformat_version\x18\x01 \x01(\rR\rformatVersion\x125\n" +
 	"\x17expected_author_user_id\x18\x02 \x01(\tR\x14expectedAuthorUserId\x12!\n" +
@@ -512,25 +616,27 @@ func file_syntra_v1_authored_content_proto_rawDescGZIP() []byte {
 }
 
 var file_syntra_v1_authored_content_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_syntra_v1_authored_content_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_syntra_v1_authored_content_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_syntra_v1_authored_content_proto_goTypes = []any{
 	(ContentIntegrityOrigin)(0),      // 0: syntra.v1.ContentIntegrityOrigin
 	(*ContentDestination)(nil),       // 1: syntra.v1.ContentDestination
-	(*AuthoredContent)(nil),          // 2: syntra.v1.AuthoredContent
-	(*ClientReportedProvenance)(nil), // 3: syntra.v1.ClientReportedProvenance
-	(*ContentProvenanceReceipt)(nil), // 4: syntra.v1.ContentProvenanceReceipt
-	(*timestamppb.Timestamp)(nil),    // 5: google.protobuf.Timestamp
+	(*LinkedMemberSet)(nil),          // 2: syntra.v1.LinkedMemberSet
+	(*AuthoredContent)(nil),          // 3: syntra.v1.AuthoredContent
+	(*ClientReportedProvenance)(nil), // 4: syntra.v1.ClientReportedProvenance
+	(*ContentProvenanceReceipt)(nil), // 5: syntra.v1.ContentProvenanceReceipt
+	(*timestamppb.Timestamp)(nil),    // 6: google.protobuf.Timestamp
 }
 var file_syntra_v1_authored_content_proto_depIdxs = []int32{
-	1, // 0: syntra.v1.AuthoredContent.destination:type_name -> syntra.v1.ContentDestination
-	5, // 1: syntra.v1.ContentProvenanceReceipt.recorded_at:type_name -> google.protobuf.Timestamp
-	3, // 2: syntra.v1.ContentProvenanceReceipt.client_reported:type_name -> syntra.v1.ClientReportedProvenance
-	0, // 3: syntra.v1.ContentProvenanceReceipt.integrity_origin:type_name -> syntra.v1.ContentIntegrityOrigin
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	2, // 0: syntra.v1.ContentDestination.linked_member_set:type_name -> syntra.v1.LinkedMemberSet
+	1, // 1: syntra.v1.AuthoredContent.destination:type_name -> syntra.v1.ContentDestination
+	6, // 2: syntra.v1.ContentProvenanceReceipt.recorded_at:type_name -> google.protobuf.Timestamp
+	4, // 3: syntra.v1.ContentProvenanceReceipt.client_reported:type_name -> syntra.v1.ClientReportedProvenance
+	0, // 4: syntra.v1.ContentProvenanceReceipt.integrity_origin:type_name -> syntra.v1.ContentIntegrityOrigin
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_syntra_v1_authored_content_proto_init() }
@@ -541,17 +647,20 @@ func file_syntra_v1_authored_content_proto_init() {
 	file_syntra_v1_authored_content_proto_msgTypes[0].OneofWrappers = []any{
 		(*ContentDestination_LinkedMemberId)(nil),
 		(*ContentDestination_UnlinkedLabel)(nil),
+		(*ContentDestination_LinkedMemberSet)(nil),
+		(*ContentDestination_TeamId)(nil),
+		(*ContentDestination_ReplyAll)(nil),
 	}
-	file_syntra_v1_authored_content_proto_msgTypes[1].OneofWrappers = []any{}
 	file_syntra_v1_authored_content_proto_msgTypes[2].OneofWrappers = []any{}
 	file_syntra_v1_authored_content_proto_msgTypes[3].OneofWrappers = []any{}
+	file_syntra_v1_authored_content_proto_msgTypes[4].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_authored_content_proto_rawDesc), len(file_syntra_v1_authored_content_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

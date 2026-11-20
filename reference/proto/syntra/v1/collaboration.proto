@@ -34,7 +34,6 @@ service ThreadService {
   rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
   rpc CreateThread(CreateThreadRequest) returns (CreateThreadResponse);
   rpc UpdateThread(UpdateThreadRequest) returns (UpdateThreadResponse);
-  rpc AssignThread(AssignThreadRequest) returns (AssignThreadResponse);
   rpc CloseThread(CloseThreadRequest) returns (CloseThreadResponse);
   rpc ReopenThread(ReopenThreadRequest) returns (ReopenThreadResponse);
 }
@@ -45,7 +44,7 @@ service MessageService {
   rpc SavePreparedMessage(SavePreparedMessageRequest) returns (SavePreparedMessageResponse);
   rpc PublishMessage(PublishMessageRequest) returns (PublishMessageResponse);
   rpc DiscardPreparedMessage(DiscardPreparedMessageRequest) returns (DiscardPreparedMessageResponse);
-  rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
+  rpc MarkThreadRead(MarkThreadReadRequest) returns (MarkThreadReadResponse);
   rpc MarkReviewed(MarkReviewedRequest) returns (MarkReviewedResponse);
 }
 
@@ -101,6 +100,7 @@ enum ThreadEventKind {
   THREAD_EVENT_KIND_UNSPECIFIED = 0;
   THREAD_EVENT_KIND_THREAD_PUBLISHED = 1;
   THREAD_EVENT_KIND_THREAD_UPDATED = 2;
+  // Historical only: assignment was removed. Old events remain listed (kind and actor); nothing records new ones.
   THREAD_EVENT_KIND_THREAD_ASSIGNED = 3;
   THREAD_EVENT_KIND_MESSAGE_PUBLISHED = 4;
   THREAD_EVENT_KIND_MESSAGE_READ = 5;
@@ -152,6 +152,12 @@ message ProjectTeamMember {
   bool active = 3;
 }
 
+// One participant of a thread: its creator, or the author or a recipient of any published message in it.
+message ThreadParticipant {
+  string user_id = 1;
+  bool departed = 2;
+}
+
 // Private to creator while private, workspace-visible after atomic first publication. The opaque revision is internal concurrency data, never a public version label.
 message Thread {
   string id = 1;
@@ -160,7 +166,8 @@ message Thread {
   string project_id = 3;
   // The former catalog entry (module, then area) was removed: a thread belongs to its project.
   string creator_user_id = 5;
-  string assignee_user_id = 6;
+  reserved 6;
+  reserved "assignee_user_id";
   string title = 7;
   ThreadState state = 9;
   google.protobuf.Timestamp created_at = 10;
@@ -176,6 +183,13 @@ message Thread {
   // summary of the latest published message (published visibility) or of the caller's own current prepared message (own-prepared
   // visibility). It carries no more authority than the message itself and is never a substitute for reading the message.
   string summary_preview = 20;
+  // Published ListThreads only. Up to three distinct participant IDs, with the creator first.
+  repeated string participant_preview_user_ids = 21;
+  // Published ListThreads only. Counts the creator and the authors and recipients of published messages once each.
+  int32 participant_count = 22;
+  // GetThread and published ListThreads: the creator, then every author and recipient of a published message, each once.
+  // A person who later left stays listed and is flagged departed. Any participant may close and reopen the thread.
+  repeated ThreadParticipant participants = 23;
 }
 
 // Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.
@@ -186,8 +200,8 @@ message PreparedMessage {
   string thread_id = 3;
   // Server-derived application user UUID. Never accepted from a client request.
   string author_user_id = 4;
-  // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
-  string recipient_user_id = 5;
+  reserved 5;
+  reserved "recipient_user_id";
   // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
   string summary = 6;
   // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
@@ -197,6 +211,15 @@ message PreparedMessage {
   // Opaque concurrency token: 43 canonical unpadded base64url characters, 32 random bytes; never display as a version.
   string revision = 10;
   bool initial = 11;
+  // The full recipient set in display order, with a derived departed flag per recipient. Empty for unlinked prepared messages.
+  repeated MessageRecipient recipients = 12;
+  // Set only when the destination was an explicit team; recipients then hold that team's members at preparation time.
+  optional string origin_team_id = 13;
+  // Only when origin_team_id is set: the team's active members right now, in stable order. Publication expands the team at send
+  // time and records exactly these people, so clients can warn when this differs from recipients.
+  repeated string current_team_user_ids = 14;
+  // True when current_team_user_ids is not the same set as recipients (the roster changed after preparation).
+  bool team_recipients_differ = 15;
 }
 
 // Immutable exact published content and server-derived author. Receipt is separate per message/recipient; no global reviewed flag.
@@ -207,14 +230,30 @@ message PublishedMessage {
   string thread_id = 3;
   // Server-derived application user UUID. Never accepted from a client request.
   string author_user_id = 4;
-  // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
-  string recipient_user_id = 5;
+  reserved 5;
+  reserved "recipient_user_id";
   // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
   string summary = 6;
   // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
   string context_markdown = 7;
   google.protobuf.Timestamp published_at = 8;
+  // The receipt of the caller when the caller is a recipient, otherwise the primary recipient's receipt.
   RecipientReceipt receipt = 9;
+  // Every recipient in the order recorded at publication. Recorded at publication and never changed;
+  // a recipient who later leaves is kept and flagged departed. Every reader sees the whole set.
+  repeated MessageRecipient recipients = 10;
+  // Set only when the message was sent to an explicit team that was expanded at send time.
+  optional string origin_team_id = 11;
+}
+
+// One member of a message's recipient set. Receipt facts are per recipient and independent.
+message MessageRecipient {
+  string user_id = 1;
+  // True when the person is no longer an active enabled workspace member or left the origin team after the message was sent.
+  bool departed = 2;
+  // Published messages only; never set on prepared messages.
+  google.protobuf.Timestamp read_at = 3;
+  google.protobuf.Timestamp reviewed_at = 4;
 }
 
 // Only the authenticated exact recipient may set these independent facts. Review requires an existing read, never auto-reads.
@@ -236,8 +275,8 @@ message ThreadEvent {
   ThreadEventKind kind = 5;
   google.protobuf.Timestamp occurred_at = 6;
   optional string message_id = 7;
-  optional string previous_assignee_user_id = 8;
-  optional string assignee_user_id = 9;
+  reserved 8, 9;
+  reserved "previous_assignee_user_id", "assignee_user_id";
   ThreadState previous_state = 10;
   ThreadState state = 11;
   ClosureKind closure_kind = 12;
@@ -260,7 +299,8 @@ message Overview {
   uint64 published_thread_count = 1;
   uint64 open_thread_count = 2;
   uint64 closed_thread_count = 4;
-  uint64 assigned_active_thread_count = 5;
+  // Open threads in which the caller participates.
+  uint64 participating_open_thread_count = 5;
   uint64 pending_review_message_count = 6;
   uint64 unread_message_count = 7;
   uint64 own_pending_thread_count = 8;
@@ -393,7 +433,8 @@ message ListThreadsRequest {
   string workspace_id = 1;
   optional string project_id = 2;
   ThreadState state = 4;
-  optional string assignee_user_id = 5;
+  // Only threads in which this person participates (creator, or author/recipient of a published message).
+  optional string participant_user_id = 5;
   // Exact literal case-sensitive substring of title, 0..120 scalars/480 bytes. No wildcards, ranking or Markdown search.
   string query = 6;
   ThreadVisibility visibility = 7;
@@ -457,25 +498,7 @@ message UpdateThreadResponse {
   Thread thread = 1;
 }
 
-// Explicit assignment of a published nonclosed thread by creator/admin. Does not rewrite any message recipient.
-message AssignThreadRequest {
-  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
-  string workspace_id = 1;
-  string thread_id = 2;
-  string assignee_user_id = 3;
-  // Required exact current resource revision; stale values fail Aborted without overwriting.
-  string expected_revision = 4;
-  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
-  string request_id = 5;
-}
-
-message AssignThreadResponse {
-  Thread thread = 1;
-}
-
-
-
-// Creator/admin only. WITHOUT_VALIDATION requires a reason. Always requires current thread revision.
+// Any participant of the thread (creator, or author/recipient of a published message). WITHOUT_VALIDATION requires a reason. Always requires current thread revision.
 message CloseThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
@@ -493,7 +516,7 @@ message CloseThreadResponse {
   Thread thread = 1;
 }
 
-// CLOSED to OPEN by creator/admin, with nonblank reason; clears current proposal/closure projection, preserves events.
+// CLOSED to OPEN by any participant, with nonblank reason; clears current proposal/closure projection, preserves events.
 message ReopenThreadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
@@ -557,7 +580,7 @@ message SavePreparedMessageResponse {
   Thread thread = 2;
 }
 
-// Publishes the persisted exact prepared message using both opaque revisions. First publication opens the pending thread and publishes its message atomically and assigns its exact recipient.
+// Publishes the persisted exact prepared message using both opaque revisions. First publication opens the pending thread and publishes its message atomically.
 message PublishMessageRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
@@ -596,21 +619,23 @@ message DiscardPreparedMessageResponse {
   bool thread_discarded = 2;
 }
 
-// Only exact authenticated message recipient; immutable message ID is the concurrency identity. A repeated read keeps its original timestamp.
-message MarkReadRequest {
+// Called by the web app when a human opens a published thread: marks the caller's OWN unread received messages in
+// that thread read, once each, with one read event each. Human sessions only: agent/CLI/MCP credentials are refused and
+// never mark anything read. A caller who is not a recipient (or has nothing unread) changes nothing and records nothing.
+// Reading one message never marks later messages read. Safe to repeat: only unread receipts change.
+message MarkThreadReadRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;
   string thread_id = 2;
-  string message_id = 3;
-  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
-  string request_id = 4;
 }
 
-message MarkReadResponse {
-  RecipientReceipt receipt = 1;
+// Only the receipts this call changed, in publication order. Empty when nothing was unread.
+message MarkThreadReadResponse {
+  repeated RecipientReceipt receipts = 1;
 }
 
-// Only exact authenticated message recipient with existing read; cannot affect another message, thread lifecycle or recipient.
+// Manual review by the exact authenticated message recipient. Reviewed implies read: an unread message becomes read in the same
+// transaction. Cannot affect another message, thread lifecycle or recipient. Publishing a reply also reviews the replier's received messages.
 message MarkReviewedRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
   string workspace_id = 1;

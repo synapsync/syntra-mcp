@@ -50,7 +50,7 @@ func TestReplyTemplate(t *testing.T) {
 	if err = toolclient.ReadContentInput(strings.NewReader(string(data)), &q); err != nil {
 		t.Fatal(err)
 	}
-	if q.Content.GetExistingThreadId() != id || q.Content.GetDestination().GetLinkedMemberId() != creator {
+	if q.Content.GetExistingThreadId() != id || !q.Content.GetDestination().GetReplyAll() {
 		t.Fatal("wrong thread or destination")
 	}
 }
