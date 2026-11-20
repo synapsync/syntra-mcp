@@ -1266,7 +1266,7 @@ func TestCompiledTemplateToPrepare(t *testing.T) {
 		t.Fatal(err)
 	}
 	content := raw["content"].(map[string]any)
-	if raw["expectedThreadRevision"] != rev(88) || content["originalDestinationIntent"] != "TODO: SYNTRA recipient name" {
+	if raw["expectedThreadRevision"] != rev(88) || content["originalDestinationIntent"] != "everyone in the thread" {
 		t.Fatalf("incorrect template: %s", out)
 	}
 	input := filepath.Join(t.TempDir(), "reply.json")
@@ -1274,7 +1274,7 @@ func TestCompiledTemplateToPrepare(t *testing.T) {
 		t.Fatal(err)
 	}
 	rejected, err := cliCall(t, binary, "prepare", "--profile-dir", dir, "--file", input)
-	if err == nil || !bytes.Contains(rejected, []byte("originalDestinationIntent")) {
+	if err == nil || !bytes.Contains(rejected, []byte("TODO: SYNTRA")) {
 		t.Fatalf("placeholder: %v %s", err, rejected)
 	}
 	content["originalDestinationIntent"] = "Pedro"
@@ -1327,5 +1327,42 @@ func TestHistoricalAuthoredEvidenceIsSeparateFromCurrentPrivateRecord(t *testing
 	got, e := a.Snapshot(ctx, r, "")
 	if e != nil || !proto.Equal(got.Snapshot, old) || got.Snapshot.Content.Summary == response.GetCurrentPreparedMessage().Summary {
 		t.Fatal("historical authored evidence conflated with current record", e)
+	}
+}
+
+func TestResolveTeamAndSeveralPeopleDestinations(t *testing.T) {
+	a, _, _, _ := setupContent(t)
+	ctx := context.Background()
+	// An explicit team destination: the whole selected project team, never inferred.
+	r, e := a.Resolve(ctx, Selection{Workspace: "Labs", Project: "App", Team: "QA", AsTeam: true})
+	if e != nil || r.Destination["teamId"] != qaTeamID || r.RecipientID != nil {
+		t.Fatalf("team destination: %+v %v", r, e)
+	}
+	// A recipient name that is a project team resolves to that team as a destination.
+	r, e = a.Resolve(ctx, Selection{Workspace: "Labs", Project: "App", Recipient: "QA"})
+	if e != nil || r.Destination["teamId"] != qaTeamID || *r.TeamID != qaTeamID {
+		t.Fatalf("team by recipient name: %+v %v", r, e)
+	}
+	// Several people resolve to one set destination with unambiguous identifiers, in the given order.
+	r, e = a.Resolve(ctx, Selection{Workspace: "Labs", Project: "App", Recipients: []string{"Pedro", "Roimer"}})
+	set, _ := r.Destination["linkedMemberSet"].(map[string]any)
+	if e != nil || set == nil || len(r.RecipientIDs) != 2 || r.RecipientIDs[0] != accountB || r.RecipientIDs[1] != accountA {
+		t.Fatalf("set destination: %+v %v", r, e)
+	}
+	// One person keeps the single destination form.
+	r, e = a.Resolve(ctx, Selection{Workspace: "Labs", Project: "App", Recipients: []string{"Pedro"}})
+	if e != nil || r.Destination["linkedMemberId"] != accountB {
+		t.Fatalf("single destination: %+v %v", r, e)
+	}
+	for name, s := range map[string]Selection{
+		"duplicate":        {Workspace: "Labs", Project: "App", Recipients: []string{"Pedro", accountB}},
+		"both forms":       {Workspace: "Labs", Project: "App", Recipient: "Pedro", Recipients: []string{"Roimer"}},
+		"as team no team":  {Workspace: "Labs", Project: "App", AsTeam: true},
+		"as team and name": {Workspace: "Labs", Project: "App", Team: "QA", AsTeam: true, Recipient: "Pedro"},
+		"too many":         {Workspace: "Labs", Project: "App", Recipients: []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"}},
+	} {
+		if _, e = a.Resolve(ctx, s); e == nil {
+			t.Fatalf("%s accepted", name)
+		}
 	}
 }

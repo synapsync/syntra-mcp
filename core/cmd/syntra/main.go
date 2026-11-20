@@ -82,13 +82,16 @@ func run(parent context.Context, args []string) error {
 	lifetime := flags.Int("lifetime-seconds", 2592000, "absolute lifetime 300..7776000 (login)")
 	prepare := flags.Bool("prepare", false, "enable preparation (login)")
 	publish := flags.Bool("publish", false, "enable publication, requires --prepare (login)")
-	markRead := flags.Bool("mark-read", false, "enable explicit mark-read (login)")
+	markRead := flags.Bool("mark-read", false, "removed: agents never mark threads read")
 	timeout := flags.Duration("timeout", 5*time.Minute, "operation/lock deadline")
 	if err := flags.Parse(args[1:]); err != nil {
 		return optionError(command, err)
 	}
 	if flags.NArg() != 0 {
 		return optionError(command, nil)
+	}
+	if *markRead {
+		return errors.New("--mark-read was removed: agents never mark threads read; a thread is read when a person opens it in the Syntra web app")
 	}
 	if *timeout <= 0 || *timeout > 10*time.Minute {
 		return fmt.Errorf("--timeout must be positive and at most 10m. %s", usage(command))

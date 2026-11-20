@@ -89,11 +89,34 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 		}
 	}
 	if c.Destination == nil || c.Destination.Target == nil {
-		return clientField(name+".destination", "is required (exactly one of linkedMemberId or unlinkedLabel)")
+		return clientField(name+".destination", "is required (exactly one of linkedMemberId, linkedMemberSet, teamId, replyAll or unlinkedLabel)")
 	}
 	switch x := c.Destination.Target.(type) {
 	case *v1.ContentDestination_LinkedMemberId:
 		if err := clientID(name+".destination.linkedMemberId", x.LinkedMemberId); err != nil {
+			return err
+		}
+	case *v1.ContentDestination_LinkedMemberSet:
+		ids := x.LinkedMemberSet.GetMemberIds()
+		if len(ids) < 2 || len(ids) > ci.MaxRecipients {
+			return clientField(name+".destination.linkedMemberSet.memberIds", fmt.Sprintf("must list 2 to %d distinct member UUIDs (use linkedMemberId for one person)", ci.MaxRecipients))
+		}
+		seen := map[string]bool{}
+		for i, id := range ids {
+			if err := clientID(fmt.Sprintf("%s.destination.linkedMemberSet.memberIds[%d]", name, i), id); err != nil {
+				return err
+			}
+			if seen[id] {
+				return clientField(name+".destination.linkedMemberSet.memberIds", "must not repeat a member")
+			}
+			seen[id] = true
+		}
+	case *v1.ContentDestination_ReplyAll:
+		if !x.ReplyAll || c.ExistingThreadId == nil {
+			return clientField(name+".destination.replyAll", "must be true and is only valid for a reply (existingThreadId present)")
+		}
+	case *v1.ContentDestination_TeamId:
+		if err := clientID(name+".destination.teamId", x.TeamId); err != nil {
 			return err
 		}
 	case *v1.ContentDestination_UnlinkedLabel:
