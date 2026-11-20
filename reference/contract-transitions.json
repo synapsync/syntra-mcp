@@ -223,6 +223,51 @@
           "toSha256": "9dc69642f2498c41f52aefabbc35c4829d587511239fff5112e53170e0bea7a9"
         }
       ]
+    },
+    {
+      "sourceCommit": "a3577996a5169d135fba5fae7d864b9537490c49",
+      "files": [
+        {
+          "path": "core/fixtures/content-integrity-v1.json",
+          "fromSha256": "a7de45ce92c0682da78a007d38554d19281511b9051c38c90b93caf39872712a",
+          "toSha256": "f19514e261d724dc3501a2a08ca423fc106831150c296bbd3e4ef94277d8b4a3"
+        },
+        {
+          "path": "core/gen/syntra/v1/administration.pb.go",
+          "fromSha256": "d420448725f01b3a5eb0a1aa8bdd8062296fc2e938ec05b2a3da3eb5713fe9d2",
+          "toSha256": "238f7ea84c6a23c02c529c8b89b43dc31899ead7569d4296e8531e3ddb87e4ff"
+        },
+        {
+          "path": "core/gen/syntra/v1/authored_content.pb.go",
+          "fromSha256": "20e2bb79390aa5374b5f1eed75f73a113e88425f1592dfe9e046d871332e37ba",
+          "toSha256": "488f2928eb3f21456c51a933635db772978e7c5fd7109dea3306e9a778572ee3"
+        },
+        {
+          "path": "core/gen/syntra/v1/collaboration.pb.go",
+          "fromSha256": "77c6ac9f9ca52358eb1969ebd32e649df009f32503ec10d21a03b215e5535f0a",
+          "toSha256": "022c036d4bc8c925ebac8873e5776e3cabd2135bf016634a17b74839b2954c3c"
+        },
+        {
+          "path": "core/gen/syntra/v1/syntrav1connect/collaboration.connect.go",
+          "fromSha256": "85e8fc4bc16e9892b8a021da48d540260ae24eedad5bfc06ee7f27395f200b3b",
+          "toSha256": "f4718e1b92be8d799d92c929e871afd4ed5eac628715a14afce6e9cb06eb7da0"
+        },
+        {
+          "path": "reference/proto/syntra/v1/administration.proto",
+          "fromSha256": "9d26ff93d0219bbce72a3b413aa289713912d652c88b82da0ed836ff4ac1440c",
+          "toSha256": "78de15a6950327fc2d427caffba33cb779407ddef44e2c9ba029492a1f82cf7c"
+        },
+        {
+          "path": "reference/proto/syntra/v1/authored_content.proto",
+          "fromSha256": "e980144ec37c7b23b2ae4f885adb0971ff068e48c0b388bceb4ed6cc48ab94e3",
+          "toSha256": "67e27445cbf3b79fad9f2a4bc47ac755095129e85a7eb5d0945529dd540743d3"
+        },
+        {
+          "path": "reference/proto/syntra/v1/collaboration.proto",
+          "fromSha256": "b4cb887664fb164af3586b8e04fcc20d7e4b2e87d7c6a43b695dc11d1bb24033",
+          "toSha256": "6a631ea614546662ce60172a539e48509dad677ace3010ce8e9d9f72e04c7ce4"
+        }
+      ]
     }
   ]
 }

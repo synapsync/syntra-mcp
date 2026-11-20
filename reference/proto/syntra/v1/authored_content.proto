@@ -4,11 +4,23 @@ import "google/protobuf/timestamp.proto";
 option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
 
 // Exactly one variant. Unlinked content remains owner-private and undelivered.
+// linked_member_id addresses exactly one person. linked_member_set addresses 2..10
+// distinct people; order is significant and is preserved as the display order.
+// team_id is an EXPLICIT team destination (never inferred): at send time the team is
+// expanded to its active members and those people are recorded as the recipients.
 message ContentDestination {
   oneof target {
     string linked_member_id = 1;
     string unlinked_label = 2;
+    LinkedMemberSet linked_member_set = 3;
+    string team_id = 4;
+    // Existing-thread replies only, and only the value true: every other participant of the thread (the creator and the
+    // authors and recipients of its published messages, excluding the author). Expanded at send time like a team.
+    bool reply_all = 5;
   }
+}
+message LinkedMemberSet {
+  repeated string member_ids = 1;
 }
 // Authored envelope with exact client-supplied UTF-8 content.
 // Digest encoding is specified in CONTENT-INTEGRITY.md, never protobuf bytes.

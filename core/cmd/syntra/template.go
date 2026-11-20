@@ -39,10 +39,9 @@ func printTemplate(kind, workspace, project, account string, thread *v1.Thread) 
 		} else {
 			delete(content, "projectId")
 		}
-		if thread.CreatorUserId != account && thread.CreatorUserId != "" {
-			content["destination"] = map[string]any{"linkedMemberId": thread.CreatorUserId}
-			content["originalDestinationIntent"] = "TODO: SYNTRA recipient name"
-		}
+		// A reply goes to every other participant of the thread by default; replying to a subset is not supported.
+		content["destination"] = map[string]any{"replyAll": true}
+		content["originalDestinationIntent"] = "everyone in the thread"
 	} else if kind != "new" {
 		return errors.New("--template must be reply or new")
 	}

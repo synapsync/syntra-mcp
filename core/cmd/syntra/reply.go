@@ -10,7 +10,6 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 	v1 "syntra.local/mcp/gen/syntra/v1"
-	"syntra.local/mcp/internal/contentintegrity/actionable"
 	"syntra.local/mcp/internal/toolclient"
 )
 
@@ -26,26 +25,6 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 	if e = toolclient.CheckReplyState(t); e != nil {
 		return e
 	}
-	if t.CreatorUserId == "" || t.CreatorUserId == opts.Account {
-		return errors.New("cannot infer a different recipient from thread creator; use the prepare template and select a recipient")
-	}
-	members, e := app.Members(ctx, opts.Workspace)
-	if e != nil {
-		return e
-	}
-	var creator *v1.WorkspaceMember
-	for _, m := range members {
-		if m.UserId == t.CreatorUserId {
-			creator = m
-			break
-		}
-	}
-	if creator == nil {
-		return actionable.New(actionable.RecipientNotEligible)
-	}
-	if creator.DisplayName == "" {
-		return errors.New("the thread creator has no display name; use the prepare template and provide the recipient name")
-	}
 	id, e := toolclient.NewRequestID()
 	if e != nil {
 		return e
@@ -54,7 +33,7 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 	if e != nil {
 		return e
 	}
-	content := &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: opts.Account, WorkspaceId: opts.Workspace, ExistingThreadId: &t.Id, Title: t.Title, OriginalDestinationIntent: creator.DisplayName, Destination: &v1.ContentDestination{Target: &v1.ContentDestination_LinkedMemberId{LinkedMemberId: t.CreatorUserId}}, Summary: opts.Summary, ContextMarkdown: opts.ContextMarkdown}
+	content := &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: opts.Account, WorkspaceId: opts.Workspace, ExistingThreadId: &t.Id, Title: t.Title, OriginalDestinationIntent: "everyone in the thread", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_ReplyAll{ReplyAll: true}}, Summary: opts.Summary, ContextMarkdown: opts.ContextMarkdown}
 	if t.ProjectId != "" {
 		content.ProjectId = &t.ProjectId
 	}

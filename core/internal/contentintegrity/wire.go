@@ -41,9 +41,13 @@ func noUnknown(m proto.Message) bool {
 	}
 	ok := true
 	r.Range(func(f protoreflect.FieldDescriptor, v protoreflect.Value) bool {
-		if f.IsList() || f.IsMap() {
+		// Only repeated strings (a recipient set) are a deliberately supported collection.
+		if f.IsMap() || (f.IsList() && f.Kind() != protoreflect.StringKind) {
 			ok = false
 			return false
+		}
+		if f.IsList() {
+			return true
 		}
 		if f.Kind() == protoreflect.MessageKind {
 			ok = noUnknown(v.Message().Interface())
@@ -105,6 +109,29 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 			return Content{}, invalidField("content.destination.unlinkedLabel")
 		}
 		c.Destination = Destination{Kind: "unlinked", Label: d.UnlinkedLabel}
+	case *v1.ContentDestination_LinkedMemberSet:
+		if d == nil || d.LinkedMemberSet == nil || len(d.LinkedMemberSet.MemberIds) < 2 || len(d.LinkedMemberSet.MemberIds) > MaxRecipients {
+			return Content{}, invalidField("content.destination.linkedMemberSet")
+		}
+		seen := map[string]bool{}
+		for _, id := range d.LinkedMemberSet.MemberIds {
+			if !validID(id) || seen[id] {
+				return Content{}, invalidField("content.destination.linkedMemberSet")
+			}
+			seen[id] = true
+		}
+		c.Destination = Destination{Kind: "linkedSet", MemberIDs: append([]string(nil), d.LinkedMemberSet.MemberIds...)}
+	case *v1.ContentDestination_TeamId:
+		if d == nil || !validID(d.TeamId) {
+			return Content{}, invalidField("content.destination.teamId")
+		}
+		c.Destination = Destination{Kind: "team", TeamID: d.TeamId}
+	case *v1.ContentDestination_ReplyAll:
+		// Only true, and only as a reply: there must be an existing thread whose participants are addressed.
+		if d == nil || !d.ReplyAll || c.ExistingThreadID == nil {
+			return Content{}, invalidField("content.destination.replyAll")
+		}
+		c.Destination = Destination{Kind: "replyAll", ReplyAll: true}
 	default:
 		return Content{}, invalidField("content.destination")
 	}
@@ -227,7 +254,7 @@ func ValidateLink(r *v1.LinkContentRequest, prior *v1.AuthoredContent, owner str
 	if _, ok := prior.Destination.Target.(*v1.ContentDestination_UnlinkedLabel); !ok {
 		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.PreparedAlreadyLinked))
 	}
-	if _, ok := r.LinkedContent.Destination.Target.(*v1.ContentDestination_LinkedMemberId); !ok {
+	if !LinkedDestination(r.LinkedContent.Destination) {
 		return ErrWire
 	}
 	copy := proto.Clone(prior).(*v1.AuthoredContent)
@@ -266,10 +293,20 @@ func ValidatePublish(r *v1.PublishContentRequest, prior *v1.AuthoredContent, own
 	if e := ValidatePublishBinding(r, prior, owner); e != nil {
 		return e
 	}
-	if _, ok := prior.Destination.Target.(*v1.ContentDestination_LinkedMemberId); !ok {
+	if !LinkedDestination(prior.Destination) {
 		return ErrWire
 	}
 	return nil
+}
+
+// LinkedDestination reports whether the destination names deliverable recipients (one person, several people
+// or an explicit team), as opposed to an unlinked private label.
+func LinkedDestination(d *v1.ContentDestination) bool {
+	switch d.GetTarget().(type) {
+	case *v1.ContentDestination_LinkedMemberId, *v1.ContentDestination_LinkedMemberSet, *v1.ContentDestination_TeamId, *v1.ContentDestination_ReplyAll:
+		return true
+	}
+	return false
 }
 func ValidateSnapshotRequest(r *v1.GetContentSnapshotRequest) error {
 	if r == nil || !noUnknown(r) || !validID(r.WorkspaceId) || !validID(r.ThreadId) {

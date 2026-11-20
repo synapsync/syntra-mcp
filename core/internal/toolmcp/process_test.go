@@ -1311,7 +1311,28 @@ func snapshotRecord(s *v1.AuthoredContentSnapshot) *v1.GetContentSnapshotRespons
 	if d := s.GetPreparedMessage(); d != nil {
 		out.Record = &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: &v1.PreparedMessage{Id: d.PreparedMessageId, Revision: d.Revision, WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
 	} else {
-		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown, Recipients: fixtureRecipients(s.Content.Destination)}}
+	}
+	return out
+}
+
+// teamMembers is what the fixture API "expands" an explicit team to at send time.
+var teamMembers = []string{"aaaaaaaa-0000-4000-8000-000000000001", "aaaaaaaa-0000-4000-8000-000000000002", "aaaaaaaa-0000-4000-8000-000000000003", "aaaaaaaa-0000-4000-8000-000000000004"}
+
+// fixtureRecipients mirrors the server's recording of the recipient set for a destination.
+func fixtureRecipients(d *v1.ContentDestination) []*v1.MessageRecipient {
+	var ids []string
+	switch t := d.GetTarget().(type) {
+	case *v1.ContentDestination_LinkedMemberId:
+		ids = []string{t.LinkedMemberId}
+	case *v1.ContentDestination_LinkedMemberSet:
+		ids = t.LinkedMemberSet.MemberIds
+	case *v1.ContentDestination_TeamId:
+		ids = teamMembers
+	}
+	out := make([]*v1.MessageRecipient, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, &v1.MessageRecipient{UserId: id})
 	}
 	return out
 }
