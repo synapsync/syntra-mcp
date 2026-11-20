@@ -48,7 +48,8 @@ For first-time setup without a global install, use
 
 You can also use the CLI directly. Replace the placeholder UUIDs with IDs
 returned by Syntra. The reply shortcut prepares a private message addressed to
-the active thread creator and prints a separate command for publication.
+every other participant of the thread (reply to all) and prints a separate
+command for publication. Check who will receive it before publishing.
 
 ```sh
 syntra threads --workspace WORKSPACE_UUID
