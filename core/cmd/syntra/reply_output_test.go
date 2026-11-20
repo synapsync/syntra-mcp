@@ -17,7 +17,7 @@ func TestPreparedReplyGuidanceRetainsBothIdentifiers(t *testing.T) {
 	if e := writePreparedReply(&output, message, request, []byte(`{}`), "profile's directory"); e != nil {
 		t.Fatal(e)
 	}
-	for _, part := range []string{"Prepared message " + message, "retained request " + request, "syntra publish"} {
+	for _, part := range []string{"Prepared message " + message, "retained request " + request, "every other participant of the thread", "syntra publish"} {
 		if !strings.Contains(output.String(), part) {
 			t.Fatal("missing recovery guidance", output.String())
 		}

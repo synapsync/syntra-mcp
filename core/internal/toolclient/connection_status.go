@@ -59,7 +59,7 @@ func (e *ConnectionUnavailable) Error() string {
 	if e.renew {
 		return "Syntra connection is expired or unavailable. Run: syntra login --reauthorize" + profileFlag(e.dir) + " (approve in the browser)."
 	}
-	return "No Syntra connection. Run: syntra login" + profileFlag(e.dir) + " (choose permissions in the browser; use --prepare for prepared_messages, --prepare --publish to send, or --mark-read for read receipts)."
+	return "No Syntra connection. Run: syntra login" + profileFlag(e.dir) + " (choose permissions in the browser; use --prepare for prepared_messages, or --prepare --publish to send)."
 }
 
 // IsConnectionDiagnostic reports whether err contains shared human guidance.
@@ -100,7 +100,6 @@ func (e *MissingCapability) Error() string {
 	const (
 		prepare = v1.ToolCapability_TOOL_CAPABILITY_PREPARE
 		publish = v1.ToolCapability_TOOL_CAPABILITY_PUBLISH
-		mark    = v1.ToolCapability_TOOL_CAPABILITY_MARK_READ
 	)
 	command := "syntra login --reauthorize"
 	if e.Required == prepare || e.Required == publish || slices.Contains(e.granted, prepare) {
@@ -108,9 +107,6 @@ func (e *MissingCapability) Error() string {
 	}
 	if e.Required == publish || slices.Contains(e.granted, publish) {
 		command += " --publish"
-	}
-	if e.Required == mark || slices.Contains(e.granted, mark) {
-		command += " --mark-read"
 	}
 	permission := strings.ToUpper(capabilityName(e.Required))
 	state := "the server denied this permission for the connection"

@@ -145,7 +145,7 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		rows, e = app.Members(ctx, args.workspace)
 		out = &v1.ListMembersResponse{Members: rows}
 	case "resolve":
-		out, e = app.Resolve(ctx, toolclient.Selection{Workspace: args.workspace, Project: args.project, Team: args.team, Recipient: args.recipient})
+		out, e = app.Resolve(ctx, toolclient.Selection{Workspace: args.workspace, Project: args.project, Team: args.team, Recipient: args.recipient, Recipients: args.recipients, AsTeam: args.asTeam})
 	case "threads":
 		var rows []*v1.Thread
 		view := v1.ThreadVisibility_THREAD_VISIBILITY_PUBLISHED
@@ -174,16 +174,7 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		var s *toolclient.VerifiedSnapshot
 		s, e = app.Snapshot(ctx, args.request.(*v1.GetContentSnapshotRequest), args.base)
 		if e == nil {
-			var data []byte
-			if s.Snapshot != nil {
-				data, e = protojson.Marshal(s.Snapshot)
-			} else {
-				data, e = protojson.Marshal(s.Record)
-			}
-			out = struct {
-				Verification string          `json:"verification"`
-				Record       json.RawMessage `json:"record"`
-			}{s.Verification, data}
+			out, e = s.Output()
 		}
 	default:
 		return toolError("unsupported tool")
@@ -230,6 +221,8 @@ func identityStatus(connection *v1.ToolConnection, status toolclient.ConnectionS
 
 type arguments struct {
 	workspace, project, team, recipient, thread, view, base, requestID string
+	recipients                                                         []string
+	asTeam                                                             bool
 	request                                                            proto.Message
 }
 
@@ -247,7 +240,7 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 		required = []string{"workspaceId", "projectId"}
 	case "resolve":
 		required = []string{"workspace"}
-		optional = []string{"project", "team", "recipient"}
+		optional = []string{"project", "team", "recipient", "recipients", "asTeam"}
 	case "threads":
 		required = []string{"workspaceId"}
 		optional = []string{"view"}
@@ -301,6 +294,19 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 				return a, e
 			}
 		}
+	}
+	if raw, ok := m["recipients"]; ok {
+		if json.Unmarshal(raw, &a.recipients) != nil || len(a.recipients) == 0 || len(a.recipients) > ci.MaxRecipients {
+			return a, errArguments
+		}
+		for _, r := range a.recipients {
+			if r == "" || len(r) > 2048 {
+				return a, errArguments
+			}
+		}
+	}
+	if raw, ok := m["asTeam"]; ok && json.Unmarshal(raw, &a.asTeam) != nil {
+		return a, errArguments
 	}
 	if a.view != "" && a.view != "published" && a.view != "own-prepared" {
 		return a, errArguments

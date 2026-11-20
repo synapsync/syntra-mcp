@@ -54,7 +54,7 @@ func snapshotShape(s *v1.AuthoredContentSnapshot) error {
 			return ci.ErrIntegrity
 		}
 	case *v1.AuthoredContentSnapshot_PublishedMessageId:
-		if x == nil || !validUUID(x.PublishedMessageId) || r.MessageId != x.PublishedMessageId || s.Content.Destination.GetLinkedMemberId() == "" {
+		if x == nil || !validUUID(x.PublishedMessageId) || r.MessageId != x.PublishedMessageId || !ci.LinkedDestination(s.Content.Destination) {
 			return ci.ErrIntegrity
 		}
 	default:

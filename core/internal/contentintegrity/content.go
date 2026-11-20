@@ -8,10 +8,21 @@ import (
 	"unicode/utf8"
 )
 
+// MaxRecipients is the structural ceiling of one message's recipient set (also enforced by the database).
+// The configured limit may only lower it.
+const MaxRecipients = 10
+
+// Destination kinds: "linked" is one person, "linkedSet" two to MaxRecipients distinct people in display
+// order, "team" one explicit team expanded to its active members at send time, "replyAll" every other participant
+// of the thread expanded at send time, "unlinked" a private label.
 type Destination struct {
-	Kind     string `json:"kind"`
-	MemberID string `json:"memberId,omitempty"`
-	Label    string `json:"label,omitempty"`
+	Kind      string   `json:"kind"`
+	MemberID  string   `json:"memberId,omitempty"`
+	MemberIDs []string `json:"memberIds,omitempty"`
+	TeamID    string   `json:"teamId,omitempty"`
+	Label     string   `json:"label,omitempty"`
+	// ReplyAll marks the destination "every other participant of the thread" (existing-thread replies only).
+	ReplyAll bool `json:"replyAll,omitempty"`
 }
 type Content struct {
 	FormatVersion             uint32      `json:"formatVersion"`
@@ -59,19 +70,45 @@ func Encode(c Content) ([]byte, error) {
 	optional(c.ExistingThreadID)
 	field(c.Title, 1024, false)
 	field(c.OriginalDestinationIntent, 1024, false)
-	switch c.Destination.Kind {
+	d := c.Destination
+	switch d.Kind {
 	case "linked":
-		if c.Destination.Label != "" {
+		if d.Label != "" || len(d.MemberIDs) != 0 || d.TeamID != "" || d.ReplyAll {
 			return nil, errors.New("inactive destination variant")
 		}
 		out = append(out, 1)
-		field(c.Destination.MemberID, 128, false)
+		field(d.MemberID, 128, false)
 	case "unlinked":
-		if c.Destination.MemberID != "" {
+		if d.MemberID != "" || len(d.MemberIDs) != 0 || d.TeamID != "" || d.ReplyAll {
 			return nil, errors.New("inactive destination variant")
 		}
 		out = append(out, 2)
-		field(c.Destination.Label, 1024, false)
+		field(d.Label, 1024, false)
+	case "linkedSet":
+		if d.MemberID != "" || d.Label != "" || d.TeamID != "" || d.ReplyAll || len(d.MemberIDs) < 2 || len(d.MemberIDs) > MaxRecipients {
+			return nil, errors.New("invalid destination")
+		}
+		seen := map[string]bool{}
+		out = append(out, 3)
+		out = binary.BigEndian.AppendUint32(out, uint32(len(d.MemberIDs)))
+		for _, id := range d.MemberIDs {
+			if seen[id] {
+				return nil, errors.New("duplicate recipient")
+			}
+			seen[id] = true
+			field(id, 128, false)
+		}
+	case "team":
+		if d.MemberID != "" || d.Label != "" || len(d.MemberIDs) != 0 || d.ReplyAll {
+			return nil, errors.New("inactive destination variant")
+		}
+		out = append(out, 4)
+		field(d.TeamID, 128, false)
+	case "replyAll":
+		if d.MemberID != "" || d.Label != "" || len(d.MemberIDs) != 0 || d.TeamID != "" || !d.ReplyAll || c.ExistingThreadID == nil {
+			return nil, errors.New("invalid destination")
+		}
+		out = append(out, 5)
 	default:
 		return nil, errors.New("invalid destination")
 	}

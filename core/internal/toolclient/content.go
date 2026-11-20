@@ -31,6 +31,51 @@ type attempt struct {
 
 var attemptKeys = []string{"origin", "account", "connection", "method", "requestId", "request", "expected", "baseId"}
 
+// SnapshotOutput is the CLI/MCP rendering of a verified snapshot. Recipients lists every recipient of the
+// referenced message, with each person's departed flag and receipt times, when the server record carries them.
+type SnapshotOutput struct {
+	Verification string          `json:"verification"`
+	Record       json.RawMessage `json:"record"`
+	Recipients   json.RawMessage `json:"recipients,omitempty"`
+}
+
+// Output renders the snapshot exactly as the authored snapshot (or server record), plus the full recipient set.
+func (s *VerifiedSnapshot) Output() (*SnapshotOutput, error) {
+	var raw []byte
+	var e error
+	if s.Snapshot != nil {
+		raw, e = protojson.Marshal(s.Snapshot)
+	} else {
+		raw, e = protojson.Marshal(s.Record)
+	}
+	if e != nil {
+		return nil, e
+	}
+	out := &SnapshotOutput{Verification: s.Verification, Record: raw}
+	var recipients []*v1.MessageRecipient
+	if s.Record != nil {
+		if m := s.Record.GetPublishedMessage(); m != nil {
+			recipients = m.Recipients
+		} else if m := s.Record.GetCurrentPreparedMessage(); m != nil {
+			recipients = m.Recipients
+		}
+	}
+	if len(recipients) > 0 {
+		list := make([]json.RawMessage, 0, len(recipients))
+		for _, r := range recipients {
+			item, e := protojson.Marshal(r)
+			if e != nil {
+				return nil, e
+			}
+			list = append(list, item)
+		}
+		if out.Recipients, e = json.Marshal(list); e != nil {
+			return nil, e
+		}
+	}
+	return out, nil
+}
+
 type VerifiedSnapshot struct {
 	Verification string                         `json:"verification"`
 	Snapshot     *v1.AuthoredContentSnapshot    `json:"-"`
@@ -208,7 +253,7 @@ func (a *App) Publish(ctx context.Context, in *v1.PublishContentRequest, baseID 
 	if e != nil || !proto.Equal(x, r.Current) || ci.ValidatePublishBinding(r, s.Content, a.profile.AccountID) != nil {
 		return nil, ci.ErrIntegrity
 	}
-	if s.Content.Destination.GetLinkedMemberId() == "" {
+	if !ci.LinkedDestination(s.Content.Destination) {
 		return nil, actionable.New(actionable.RecipientNotLinked)
 	}
 	return a.executeNew(ctx, "publish", r, s.Content, r.RequestId, baseID)
@@ -404,7 +449,7 @@ func (a *App) Snapshot(ctx context.Context, r *v1.GetContentSnapshotRequest, anc
 		}
 		mode = "retained-client-expectation"
 	}
-	return &VerifiedSnapshot{Verification: mode, Snapshot: s}, nil
+	return &VerifiedSnapshot{Verification: mode, Snapshot: s, Record: record}, nil
 }
 
 func (a *App) authoredRPCError(err error) error {

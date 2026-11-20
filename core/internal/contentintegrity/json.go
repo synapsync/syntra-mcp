@@ -65,7 +65,7 @@ func jsonObject(data []byte, desc protoreflect.MessageDescriptor) error {
 				break
 			}
 		}
-		if f == nil || f.IsList() || f.IsMap() {
+		if f == nil || f.IsMap() || (f.IsList() && f.Kind() != protoreflect.StringKind) {
 			return ErrWire
 		}
 		if o := f.ContainingOneof(); o != nil && !o.IsSynthetic() {
@@ -78,7 +78,19 @@ func jsonObject(data []byte, desc protoreflect.MessageDescriptor) error {
 		if d.Decode(&raw) != nil || bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
 			return ErrWire
 		}
-		if f.Kind() == protoreflect.MessageKind {
+		if f.IsList() {
+			// Only an array of non-null strings: a recipient set. Anything else is ambiguous.
+			var items []json.RawMessage
+			if json.Unmarshal(raw, &items) != nil {
+				return ErrWire
+			}
+			for _, item := range items {
+				var text string
+				if json.Unmarshal(item, &text) != nil {
+					return ErrWire
+				}
+			}
+		} else if f.Kind() == protoreflect.MessageKind {
 			if e := jsonObject(raw, f.Message()); e != nil {
 				return e
 			}

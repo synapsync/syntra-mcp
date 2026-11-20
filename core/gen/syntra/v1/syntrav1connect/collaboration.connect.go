@@ -80,9 +80,6 @@ const (
 	// ThreadServiceUpdateThreadProcedure is the fully-qualified name of the ThreadService's
 	// UpdateThread RPC.
 	ThreadServiceUpdateThreadProcedure = "/syntra.v1.ThreadService/UpdateThread"
-	// ThreadServiceAssignThreadProcedure is the fully-qualified name of the ThreadService's
-	// AssignThread RPC.
-	ThreadServiceAssignThreadProcedure = "/syntra.v1.ThreadService/AssignThread"
 	// ThreadServiceCloseThreadProcedure is the fully-qualified name of the ThreadService's CloseThread
 	// RPC.
 	ThreadServiceCloseThreadProcedure = "/syntra.v1.ThreadService/CloseThread"
@@ -101,8 +98,9 @@ const (
 	// MessageServiceDiscardPreparedMessageProcedure is the fully-qualified name of the MessageService's
 	// DiscardPreparedMessage RPC.
 	MessageServiceDiscardPreparedMessageProcedure = "/syntra.v1.MessageService/DiscardPreparedMessage"
-	// MessageServiceMarkReadProcedure is the fully-qualified name of the MessageService's MarkRead RPC.
-	MessageServiceMarkReadProcedure = "/syntra.v1.MessageService/MarkRead"
+	// MessageServiceMarkThreadReadProcedure is the fully-qualified name of the MessageService's
+	// MarkThreadRead RPC.
+	MessageServiceMarkThreadReadProcedure = "/syntra.v1.MessageService/MarkThreadRead"
 	// MessageServiceMarkReviewedProcedure is the fully-qualified name of the MessageService's
 	// MarkReviewed RPC.
 	MessageServiceMarkReviewedProcedure = "/syntra.v1.MessageService/MarkReviewed"
@@ -419,7 +417,6 @@ type ThreadServiceClient interface {
 	GetThread(context.Context, *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error)
 	CreateThread(context.Context, *connect.Request[v1.CreateThreadRequest]) (*connect.Response[v1.CreateThreadResponse], error)
 	UpdateThread(context.Context, *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error)
-	AssignThread(context.Context, *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error)
 	CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error)
 	ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error)
 }
@@ -459,12 +456,6 @@ func NewThreadServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(threadServiceMethods.ByName("UpdateThread")),
 			connect.WithClientOptions(opts...),
 		),
-		assignThread: connect.NewClient[v1.AssignThreadRequest, v1.AssignThreadResponse](
-			httpClient,
-			baseURL+ThreadServiceAssignThreadProcedure,
-			connect.WithSchema(threadServiceMethods.ByName("AssignThread")),
-			connect.WithClientOptions(opts...),
-		),
 		closeThread: connect.NewClient[v1.CloseThreadRequest, v1.CloseThreadResponse](
 			httpClient,
 			baseURL+ThreadServiceCloseThreadProcedure,
@@ -486,7 +477,6 @@ type threadServiceClient struct {
 	getThread    *connect.Client[v1.GetThreadRequest, v1.GetThreadResponse]
 	createThread *connect.Client[v1.CreateThreadRequest, v1.CreateThreadResponse]
 	updateThread *connect.Client[v1.UpdateThreadRequest, v1.UpdateThreadResponse]
-	assignThread *connect.Client[v1.AssignThreadRequest, v1.AssignThreadResponse]
 	closeThread  *connect.Client[v1.CloseThreadRequest, v1.CloseThreadResponse]
 	reopenThread *connect.Client[v1.ReopenThreadRequest, v1.ReopenThreadResponse]
 }
@@ -511,11 +501,6 @@ func (c *threadServiceClient) UpdateThread(ctx context.Context, req *connect.Req
 	return c.updateThread.CallUnary(ctx, req)
 }
 
-// AssignThread calls syntra.v1.ThreadService.AssignThread.
-func (c *threadServiceClient) AssignThread(ctx context.Context, req *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error) {
-	return c.assignThread.CallUnary(ctx, req)
-}
-
 // CloseThread calls syntra.v1.ThreadService.CloseThread.
 func (c *threadServiceClient) CloseThread(ctx context.Context, req *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error) {
 	return c.closeThread.CallUnary(ctx, req)
@@ -532,7 +517,6 @@ type ThreadServiceHandler interface {
 	GetThread(context.Context, *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error)
 	CreateThread(context.Context, *connect.Request[v1.CreateThreadRequest]) (*connect.Response[v1.CreateThreadResponse], error)
 	UpdateThread(context.Context, *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error)
-	AssignThread(context.Context, *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error)
 	CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error)
 	ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error)
 }
@@ -568,12 +552,6 @@ func NewThreadServiceHandler(svc ThreadServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(threadServiceMethods.ByName("UpdateThread")),
 		connect.WithHandlerOptions(opts...),
 	)
-	threadServiceAssignThreadHandler := connect.NewUnaryHandler(
-		ThreadServiceAssignThreadProcedure,
-		svc.AssignThread,
-		connect.WithSchema(threadServiceMethods.ByName("AssignThread")),
-		connect.WithHandlerOptions(opts...),
-	)
 	threadServiceCloseThreadHandler := connect.NewUnaryHandler(
 		ThreadServiceCloseThreadProcedure,
 		svc.CloseThread,
@@ -596,8 +574,6 @@ func NewThreadServiceHandler(svc ThreadServiceHandler, opts ...connect.HandlerOp
 			threadServiceCreateThreadHandler.ServeHTTP(w, r)
 		case ThreadServiceUpdateThreadProcedure:
 			threadServiceUpdateThreadHandler.ServeHTTP(w, r)
-		case ThreadServiceAssignThreadProcedure:
-			threadServiceAssignThreadHandler.ServeHTTP(w, r)
 		case ThreadServiceCloseThreadProcedure:
 			threadServiceCloseThreadHandler.ServeHTTP(w, r)
 		case ThreadServiceReopenThreadProcedure:
@@ -627,10 +603,6 @@ func (UnimplementedThreadServiceHandler) UpdateThread(context.Context, *connect.
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.UpdateThread is not implemented"))
 }
 
-func (UnimplementedThreadServiceHandler) AssignThread(context.Context, *connect.Request[v1.AssignThreadRequest]) (*connect.Response[v1.AssignThreadResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.AssignThread is not implemented"))
-}
-
 func (UnimplementedThreadServiceHandler) CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.CloseThread is not implemented"))
 }
@@ -645,7 +617,7 @@ type MessageServiceClient interface {
 	SavePreparedMessage(context.Context, *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error)
 	PublishMessage(context.Context, *connect.Request[v1.PublishMessageRequest]) (*connect.Response[v1.PublishMessageResponse], error)
 	DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error)
-	MarkRead(context.Context, *connect.Request[v1.MarkReadRequest]) (*connect.Response[v1.MarkReadResponse], error)
+	MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
 }
 
@@ -684,10 +656,10 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(messageServiceMethods.ByName("DiscardPreparedMessage")),
 			connect.WithClientOptions(opts...),
 		),
-		markRead: connect.NewClient[v1.MarkReadRequest, v1.MarkReadResponse](
+		markThreadRead: connect.NewClient[v1.MarkThreadReadRequest, v1.MarkThreadReadResponse](
 			httpClient,
-			baseURL+MessageServiceMarkReadProcedure,
-			connect.WithSchema(messageServiceMethods.ByName("MarkRead")),
+			baseURL+MessageServiceMarkThreadReadProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("MarkThreadRead")),
 			connect.WithClientOptions(opts...),
 		),
 		markReviewed: connect.NewClient[v1.MarkReviewedRequest, v1.MarkReviewedResponse](
@@ -705,7 +677,7 @@ type messageServiceClient struct {
 	savePreparedMessage    *connect.Client[v1.SavePreparedMessageRequest, v1.SavePreparedMessageResponse]
 	publishMessage         *connect.Client[v1.PublishMessageRequest, v1.PublishMessageResponse]
 	discardPreparedMessage *connect.Client[v1.DiscardPreparedMessageRequest, v1.DiscardPreparedMessageResponse]
-	markRead               *connect.Client[v1.MarkReadRequest, v1.MarkReadResponse]
+	markThreadRead         *connect.Client[v1.MarkThreadReadRequest, v1.MarkThreadReadResponse]
 	markReviewed           *connect.Client[v1.MarkReviewedRequest, v1.MarkReviewedResponse]
 }
 
@@ -729,9 +701,9 @@ func (c *messageServiceClient) DiscardPreparedMessage(ctx context.Context, req *
 	return c.discardPreparedMessage.CallUnary(ctx, req)
 }
 
-// MarkRead calls syntra.v1.MessageService.MarkRead.
-func (c *messageServiceClient) MarkRead(ctx context.Context, req *connect.Request[v1.MarkReadRequest]) (*connect.Response[v1.MarkReadResponse], error) {
-	return c.markRead.CallUnary(ctx, req)
+// MarkThreadRead calls syntra.v1.MessageService.MarkThreadRead.
+func (c *messageServiceClient) MarkThreadRead(ctx context.Context, req *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error) {
+	return c.markThreadRead.CallUnary(ctx, req)
 }
 
 // MarkReviewed calls syntra.v1.MessageService.MarkReviewed.
@@ -745,7 +717,7 @@ type MessageServiceHandler interface {
 	SavePreparedMessage(context.Context, *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error)
 	PublishMessage(context.Context, *connect.Request[v1.PublishMessageRequest]) (*connect.Response[v1.PublishMessageResponse], error)
 	DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error)
-	MarkRead(context.Context, *connect.Request[v1.MarkReadRequest]) (*connect.Response[v1.MarkReadResponse], error)
+	MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
 }
 
@@ -780,10 +752,10 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 		connect.WithSchema(messageServiceMethods.ByName("DiscardPreparedMessage")),
 		connect.WithHandlerOptions(opts...),
 	)
-	messageServiceMarkReadHandler := connect.NewUnaryHandler(
-		MessageServiceMarkReadProcedure,
-		svc.MarkRead,
-		connect.WithSchema(messageServiceMethods.ByName("MarkRead")),
+	messageServiceMarkThreadReadHandler := connect.NewUnaryHandler(
+		MessageServiceMarkThreadReadProcedure,
+		svc.MarkThreadRead,
+		connect.WithSchema(messageServiceMethods.ByName("MarkThreadRead")),
 		connect.WithHandlerOptions(opts...),
 	)
 	messageServiceMarkReviewedHandler := connect.NewUnaryHandler(
@@ -802,8 +774,8 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 			messageServicePublishMessageHandler.ServeHTTP(w, r)
 		case MessageServiceDiscardPreparedMessageProcedure:
 			messageServiceDiscardPreparedMessageHandler.ServeHTTP(w, r)
-		case MessageServiceMarkReadProcedure:
-			messageServiceMarkReadHandler.ServeHTTP(w, r)
+		case MessageServiceMarkThreadReadProcedure:
+			messageServiceMarkThreadReadHandler.ServeHTTP(w, r)
 		case MessageServiceMarkReviewedProcedure:
 			messageServiceMarkReviewedHandler.ServeHTTP(w, r)
 		default:
@@ -831,8 +803,8 @@ func (UnimplementedMessageServiceHandler) DiscardPreparedMessage(context.Context
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.DiscardPreparedMessage is not implemented"))
 }
 
-func (UnimplementedMessageServiceHandler) MarkRead(context.Context, *connect.Request[v1.MarkReadRequest]) (*connect.Response[v1.MarkReadResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.MarkRead is not implemented"))
+func (UnimplementedMessageServiceHandler) MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.MarkThreadRead is not implemented"))
 }
 
 func (UnimplementedMessageServiceHandler) MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error) {

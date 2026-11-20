@@ -32,7 +32,7 @@ current. Running sessions and host config precedence require host inspection.
 | --- | --- |
 | Agent and CLI disagree about login or permissions | Compare MCP `identity` with `syntra status`. Make sure the host and CLI use the same OS user and profile directory. Setup migration preserves existing MCP arguments, including an explicit profile path. |
 | No connection | `syntra login`, then choose from the requested permissions in the browser. |
-| Missing permission | `syntra login --reauthorize --prepare --publish` for private preparation and explicit sending. Use `--prepare` alone for preparation, or include `--mark-read` for explicit read receipts. |
+| Missing permission | `syntra login --reauthorize --prepare --publish` for private preparation and explicit sending. Use `--prepare` alone for preparation only. Agents never mark threads read: a thread is read when a person opens it in the Syntra web app. |
 | Older pinned Codex registration after update | To opt out of the pin, preview with `syntra setup --agent codex --mode latest --dry-run`, then apply and start a fresh session. |
 
 For a deliberately isolated profile, use the same custom `--profile-dir` for CLI
