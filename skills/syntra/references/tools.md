@@ -15,6 +15,7 @@
 | `prepare` | Retain exact private content, no send |
 | `link` | Explicit private destination resolution, no send |
 | `publish` | Separate exact-content publication with opted-in capability |
+| `discard` | Delete the author's own unsent draft (PREPARE capability, exact revisions) |
 | `retry` | Recover the original retained operation with the original request ID |
 
 The server rejects unknown fields, duplicate JSON keys, unsafe scalar encodings and incompatible destination variants before lossy decoding. Use the current tool schema rather than inventing argument aliases. Technical context is an exact Markdown string, not a file path or executable command.
