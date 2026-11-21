@@ -26,7 +26,15 @@ Read `threads`, `thread`, `messages` and `snapshot` as needed. These reads do no
 
 A message can go to one person, to several people (`resolve` with `recipients`, at most 10) or to a whole project team (`resolve` with `team` and `asTeam`, expanded to its active members when the message is sent). Use the `destination` returned by `resolve` exactly. A reply (`syntra reply` or `replyAll`) is addressed to every other participant of the thread; replying to a single person is not supported, so tell the user who will receive it before publishing. Threads have no responsible person.
 
-Prepare the user's intended message using `prepare`: author, recipient intent, **Resumen**, and free-form Markdown. Plain text is valid Markdown. Do not impose headings, next-action fields or version/approval badges. Preserve supplied text, whitespace, Unicode and code exactly. If suggesting a rewritten message, distinguish that suggestion from text the user authorized to send.
+Prepare the user's intended message using `prepare`: author, recipient intent, **Resumen**, and free-form Markdown. Plain text is valid Markdown. Do not impose headings, next-action fields or version/approval badges.
+
+## Formatting the context
+
+Plain text is always fine. When it helps the reader, the context (`contextMarkdown`) may also use Markdown (headings, lists, tables, task lists, fenced code blocks with a language, links, blockquotes, footnotes) and a small safe subset of inline HTML (for example `<details><summary>…</summary>…</details>` to fold long logs, `<kbd>`, `<sub>`, `<sup>`, `<br>`, `<table>`). Use it for readability only: short structured text, not a web page. The web app renders it sanitized: scripts, styles, iframes, forms and event handlers are removed, images are never loaded (only their alt text shows), and only `http(s)`, `mailto` and in-page `#` links work. The **Resumen** is plain text; do not put Markdown or HTML there. Do not rely on formatting for meaning that must survive plain text (CLI/MCP readers see the raw source).
+
+## Unsent drafts
+
+An unsent draft is fully editable by its author's agent: `prepare` with an `update` expectation can change the title, recipients, summary and context (the project stays fixed). `discard` deletes an unsent draft (the initial draft also removes its pending thread); it needs the PREPARE capability and the exact revisions. Neither publishes anything. Preserve supplied text, whitespace, Unicode and code exactly. If suggesting a rewritten message, distinguish that suggestion from text the user authorized to send.
 
 When a recipient does not exist or is ambiguous, keep the original name as an explicit unlinked private destination. Never invite, create a person, choose a different person or claim the named person received it. Use `link` only for an explicit resolved destination; linking remains private and does not send.
 
