@@ -206,6 +206,11 @@ func ValidatePrepare(r *v1.PrepareContentRequest, owner string) error {
 // ValidatePrepareUpdate verifies both digests against the retained private preimage.
 // Actual revision comparison, ownership and initial thread-ID binding stay in T2.3.
 func ValidatePrepareUpdate(r *v1.PrepareContentRequest, prior *v1.AuthoredContent, owner string) error {
+	// An initial draft (no existing thread) was never sent, so it may be re-titled and re-routed.
+	return validatePrepareUpdate(r, prior, owner, prior != nil && prior.ExistingThreadId == nil)
+}
+
+func validatePrepareUpdate(r *v1.PrepareContentRequest, prior *v1.AuthoredContent, owner string, draft bool) error {
 	if e := ValidatePrepare(r, owner); e != nil {
 		return e
 	}
@@ -215,7 +220,32 @@ func ValidatePrepareUpdate(r *v1.PrepareContentRequest, prior *v1.AuthoredConten
 	if e := verifyContent(prior, r.Update.ExpectedContentDigest, owner); e != nil {
 		return e
 	}
+	if draft {
+		return ValidateDraftReplacement(prior, r.Content)
+	}
 	return ValidateReplacement(prior, r.Content)
+}
+
+// ValidateDraftReplacement lets an unsent initial draft change everything an author chose
+// (title, destination and its intent, summary, Markdown) but never its identity:
+// format, author, workspace or the thread it replies to.
+func ValidateDraftReplacement(prior, next *v1.AuthoredContent) error {
+	if _, e := FromProto(prior); e != nil {
+		return e
+	}
+	if _, e := FromProto(next); e != nil {
+		return e
+	}
+	copy := proto.Clone(prior).(*v1.AuthoredContent)
+	copy.Title = next.Title
+	copy.OriginalDestinationIntent = next.OriginalDestinationIntent
+	copy.Destination = next.Destination
+	copy.Summary = next.Summary
+	copy.ContextMarkdown = next.ContextMarkdown
+	if !proto.Equal(copy, next) {
+		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.PreparedRoutingChange))
+	}
+	return nil
 }
 
 // ValidateReplacement restricts Prepare updates to exact summary/Markdown edits.

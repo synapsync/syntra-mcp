@@ -19,7 +19,7 @@ import (
 // UTF-8/UTF-16 escapes. Never inspect only an already-decoded Go message.
 func DecodeStrictJSON(data []byte, target proto.Message) error {
 	switch target.(type) {
-	case *v1.PrepareContentRequest, *v1.LinkContentRequest, *v1.PublishContentRequest, *v1.GetContentSnapshotRequest:
+	case *v1.PrepareContentRequest, *v1.LinkContentRequest, *v1.PublishContentRequest, *v1.GetContentSnapshotRequest, *v1.DiscardContentRequest:
 	default:
 		return ErrWire
 	}

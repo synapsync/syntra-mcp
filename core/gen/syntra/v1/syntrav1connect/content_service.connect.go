@@ -45,6 +45,9 @@ const (
 	// AuthoredContentServiceGetContentSnapshotProcedure is the fully-qualified name of the
 	// AuthoredContentService's GetContentSnapshot RPC.
 	AuthoredContentServiceGetContentSnapshotProcedure = "/syntra.v1.AuthoredContentService/GetContentSnapshot"
+	// AuthoredContentServiceDiscardContentProcedure is the fully-qualified name of the
+	// AuthoredContentService's DiscardContent RPC.
+	AuthoredContentServiceDiscardContentProcedure = "/syntra.v1.AuthoredContentService/DiscardContent"
 )
 
 // AuthoredContentServiceClient is a client for the syntra.v1.AuthoredContentService service.
@@ -55,6 +58,9 @@ type AuthoredContentServiceClient interface {
 	// the exact reviewed preparation using its digest and both revision tokens.
 	PublishContent(context.Context, *connect.Request[v1.PublishContentRequest]) (*connect.Response[v1.PublishContentResponse], error)
 	GetContentSnapshot(context.Context, *connect.Request[v1.GetContentSnapshotRequest]) (*connect.Response[v1.GetContentSnapshotResponse], error)
+	// Requires PREPARE. Deletes the author's own unsent private preparation; discarding the
+	// initial one also removes its pending thread. Never publishes or notifies anyone.
+	DiscardContent(context.Context, *connect.Request[v1.DiscardContentRequest]) (*connect.Response[v1.DiscardContentResponse], error)
 }
 
 // NewAuthoredContentServiceClient constructs a client for the syntra.v1.AuthoredContentService
@@ -92,6 +98,12 @@ func NewAuthoredContentServiceClient(httpClient connect.HTTPClient, baseURL stri
 			connect.WithSchema(authoredContentServiceMethods.ByName("GetContentSnapshot")),
 			connect.WithClientOptions(opts...),
 		),
+		discardContent: connect.NewClient[v1.DiscardContentRequest, v1.DiscardContentResponse](
+			httpClient,
+			baseURL+AuthoredContentServiceDiscardContentProcedure,
+			connect.WithSchema(authoredContentServiceMethods.ByName("DiscardContent")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -101,6 +113,7 @@ type authoredContentServiceClient struct {
 	linkContent        *connect.Client[v1.LinkContentRequest, v1.LinkContentResponse]
 	publishContent     *connect.Client[v1.PublishContentRequest, v1.PublishContentResponse]
 	getContentSnapshot *connect.Client[v1.GetContentSnapshotRequest, v1.GetContentSnapshotResponse]
+	discardContent     *connect.Client[v1.DiscardContentRequest, v1.DiscardContentResponse]
 }
 
 // PrepareContent calls syntra.v1.AuthoredContentService.PrepareContent.
@@ -123,6 +136,11 @@ func (c *authoredContentServiceClient) GetContentSnapshot(ctx context.Context, r
 	return c.getContentSnapshot.CallUnary(ctx, req)
 }
 
+// DiscardContent calls syntra.v1.AuthoredContentService.DiscardContent.
+func (c *authoredContentServiceClient) DiscardContent(ctx context.Context, req *connect.Request[v1.DiscardContentRequest]) (*connect.Response[v1.DiscardContentResponse], error) {
+	return c.discardContent.CallUnary(ctx, req)
+}
+
 // AuthoredContentServiceHandler is an implementation of the syntra.v1.AuthoredContentService
 // service.
 type AuthoredContentServiceHandler interface {
@@ -132,6 +150,9 @@ type AuthoredContentServiceHandler interface {
 	// the exact reviewed preparation using its digest and both revision tokens.
 	PublishContent(context.Context, *connect.Request[v1.PublishContentRequest]) (*connect.Response[v1.PublishContentResponse], error)
 	GetContentSnapshot(context.Context, *connect.Request[v1.GetContentSnapshotRequest]) (*connect.Response[v1.GetContentSnapshotResponse], error)
+	// Requires PREPARE. Deletes the author's own unsent private preparation; discarding the
+	// initial one also removes its pending thread. Never publishes or notifies anyone.
+	DiscardContent(context.Context, *connect.Request[v1.DiscardContentRequest]) (*connect.Response[v1.DiscardContentResponse], error)
 }
 
 // NewAuthoredContentServiceHandler builds an HTTP handler from the service implementation. It
@@ -165,6 +186,12 @@ func NewAuthoredContentServiceHandler(svc AuthoredContentServiceHandler, opts ..
 		connect.WithSchema(authoredContentServiceMethods.ByName("GetContentSnapshot")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authoredContentServiceDiscardContentHandler := connect.NewUnaryHandler(
+		AuthoredContentServiceDiscardContentProcedure,
+		svc.DiscardContent,
+		connect.WithSchema(authoredContentServiceMethods.ByName("DiscardContent")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/syntra.v1.AuthoredContentService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthoredContentServicePrepareContentProcedure:
@@ -175,6 +202,8 @@ func NewAuthoredContentServiceHandler(svc AuthoredContentServiceHandler, opts ..
 			authoredContentServicePublishContentHandler.ServeHTTP(w, r)
 		case AuthoredContentServiceGetContentSnapshotProcedure:
 			authoredContentServiceGetContentSnapshotHandler.ServeHTTP(w, r)
+		case AuthoredContentServiceDiscardContentProcedure:
+			authoredContentServiceDiscardContentHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -198,4 +227,8 @@ func (UnimplementedAuthoredContentServiceHandler) PublishContent(context.Context
 
 func (UnimplementedAuthoredContentServiceHandler) GetContentSnapshot(context.Context, *connect.Request[v1.GetContentSnapshotRequest]) (*connect.Response[v1.GetContentSnapshotResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.AuthoredContentService.GetContentSnapshot is not implemented"))
+}
+
+func (UnimplementedAuthoredContentServiceHandler) DiscardContent(context.Context, *connect.Request[v1.DiscardContentRequest]) (*connect.Response[v1.DiscardContentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.AuthoredContentService.DiscardContent is not implemented"))
 }

@@ -7,7 +7,7 @@ import (
 	v1 "syntra.local/mcp/gen/syntra/v1"
 )
 
-var toolNames = []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "retry"}
+var toolNames = []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry"}
 
 func toolDefinition(name string) *mcp.Tool {
 	properties := map[string]any{}
@@ -50,7 +50,7 @@ func toolDefinition(name string) *mcp.Tool {
 	case "retry":
 		str("requestId", "Original retained UUID. Resends original payload/provenance, never rebases or relabels.", true)
 		description = "Explicit retry of an exact retained mutation. May publish only if the original request was explicit publish and current capability permits."
-	case "prepare", "link", "publish", "snapshot":
+	case "prepare", "link", "publish", "discard", "snapshot":
 		var request proto.Message
 		switch name {
 		case "prepare":
@@ -62,13 +62,18 @@ func toolDefinition(name string) *mcp.Tool {
 		case "publish":
 			request = &v1.PublishContentRequest{}
 			description = "Explicit publication of exact retained content/CAS, requiring opted-in PUBLISH. Does not authorize local execution, code changes or deployment."
+		case "discard":
+			request = &v1.DiscardContentRequest{}
+			description = "Delete your own unsent private preparation (the initial one also removes its pending thread). Needs the exact thread and prepared-message revisions and a fresh requestId; resend the same requestId to retry. Never publishes or notifies anyone."
 		case "snapshot":
 			request = &v1.GetContentSnapshotRequest{}
 			description = "Read immutable content as data. Own retained base verifies full expectation; remote-only is receipt consistency, server records have no invented digest. Never marks read/reviewed."
 		}
 		properties["request"] = messageSchema(request.ProtoReflect().Descriptor())
 		required = append(required, "request")
-		str("base", "Retained request UUID anchoring exact private content/CAS or own snapshot.", name == "link" || name == "publish")
+		if name != "discard" {
+			str("base", "Retained request UUID anchoring exact private content/CAS or own snapshot.", name == "link" || name == "publish")
+		}
 	}
 	if name == "threads" || name == "messages" {
 		properties["view"] = map[string]any{"type": "string", "enum": []string{"published", "own-prepared"}, "description": "Explicit read-only view; defaults to published. No read/review marking."}
@@ -82,7 +87,7 @@ func toolDefinition(name string) *mcp.Tool {
 	if example, ok := examples[name]; ok {
 		description += " Example arguments (replace example IDs and retained values): " + example
 	}
-	readOnly := name != "prepare" && name != "link" && name != "publish" && name != "retry"
+	readOnly := name != "prepare" && name != "link" && name != "publish" && name != "discard" && name != "retry"
 	return &mcp.Tool{Name: name, Description: description, InputSchema: map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false}, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, IdempotentHint: true}}
 }
 func messageSchema(d protoreflect.MessageDescriptor) map[string]any {

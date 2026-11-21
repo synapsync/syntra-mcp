@@ -20,7 +20,7 @@ import (
 
 func isContentCommand(c string) bool {
 	switch c {
-	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "retry", "snapshot", "threads", "thread", "messages":
+	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "discard", "retry", "snapshot", "threads", "thread", "messages":
 		return true
 	}
 	return false
@@ -112,6 +112,8 @@ func runContent(parent context.Context, args []string) error {
 		target = &v1.LinkContentRequest{}
 	case "publish":
 		target = &v1.PublishContentRequest{}
+	case "discard":
+		target = &v1.DiscardContentRequest{}
 	case "snapshot":
 		target = &v1.GetContentSnapshotRequest{}
 	}
@@ -260,6 +262,8 @@ func runContent(parent context.Context, args []string) error {
 			message, e = app.Link(ctx, q, *base)
 		case *v1.PublishContentRequest:
 			message, e = app.Publish(ctx, q, *base)
+		case *v1.DiscardContentRequest:
+			message, e = app.Discard(ctx, q)
 		case *v1.GetContentSnapshotRequest:
 			var s *toolclient.VerifiedSnapshot
 			s, e = app.Snapshot(ctx, q, *base)
