@@ -28,6 +28,7 @@ const (
 	LinkContentChange                      Reason = "LINK_CONTENT_CHANGE"
 	RequestIDConflict                      Reason = "REQUEST_ID_CONFLICT"
 	RecipientLimitExceeded                 Reason = "RECIPIENT_LIMIT_EXCEEDED"
+	NoOtherParticipants                    Reason = "NO_OTHER_PARTICIPANTS"
 )
 
 type guidance struct {
@@ -50,6 +51,7 @@ var reasons = map[Reason]guidance{
 	PreparedAlreadyLinked:                  {connect.CodeInvalidArgument, "The private prepared already has a linked recipient. Publish the current prepared if it has the intended recipient, or prepare a new prepared for a different person."},
 	LinkContentChange:                      {connect.CodeInvalidArgument, "Linking may change only the prepared's destination. Copy the verified base content exactly and replace the destination with the selected linked member."},
 	RecipientLimitExceeded:                 {connect.CodeInvalidArgument, "The destination names more recipients than the configured per-message recipient limit allows. Address fewer people, or send separate messages. Nothing was written."},
+	NoOtherParticipants:                    {connect.CodeFailedPrecondition, "This thread has no other active participant to reply to. A reply to all needs at least one other participant; start a new thread addressed to someone instead."},
 	RequestIDConflict:                      {connect.CodeFailedPrecondition, "This requestId is already bound to a different request. Use syntra retry with the original requestId to recover the original result, or use a fresh requestId for changed input."},
 }
 
