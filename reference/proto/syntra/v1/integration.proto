@@ -1,0 +1,57 @@
+syntax = "proto3";
+package syntra.v1;
+import "google/protobuf/timestamp.proto";
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+// Workspace administrators manage outbound integrations (first kind: a Slack mirror of published threads).
+// Human administration only: agents and tool connections have no access. The bot token is write-only: it is
+// accepted by ConnectIntegration and never returned by any call.
+service IntegrationService {
+  rpc ListIntegrations(ListIntegrationsRequest) returns (ListIntegrationsResponse);
+  // Verifies the token and channel with the provider (the channel receives a short connection notice), stores the
+  // sealed token and leaves the integration disabled. Replacing the configuration disables a running integration.
+  rpc ConnectIntegration(ConnectIntegrationRequest) returns (ConnectIntegrationResponse);
+  // Enabling starts a new forward-only period at the current time; events during a pause or review are omitted.
+  rpc SetIntegrationEnabled(SetIntegrationEnabledRequest) returns (SetIntegrationEnabledResponse);
+  // Newest first by per-integration sequence (bigint carried as a decimal string in JSON).
+  rpc ListIntegrationEvents(ListIntegrationEventsRequest) returns (ListIntegrationEventsResponse);
+}
+enum IntegrationKind { INTEGRATION_KIND_UNSPECIFIED = 0; INTEGRATION_KIND_SLACK = 1; }
+enum IntegrationState { INTEGRATION_STATE_UNSPECIFIED = 0; INTEGRATION_STATE_ACTIVE = 1; INTEGRATION_STATE_NEEDS_REVIEW = 2; INTEGRATION_STATE_DISABLED = 3; }
+message Integration {
+  string id = 1;
+  IntegrationKind kind = 2;
+  string channel_ref = 3;
+  IntegrationState state = 4;
+  google.protobuf.Timestamp activated_at = 5;
+  bool token_set = 6;
+  google.protobuf.Timestamp token_verified_at = 7;
+  int64 revision = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+message IntegrationEvent {
+  int64 sequence = 1;
+  // configured, token_replaced, enabled, disabled, review_required, delivery_sent, delivery_failed, delivery_dropped, gap.
+  string kind = 2;
+  string actor_user_id = 3;
+  string event_id = 4;
+  string error_code = 5;
+  string detail = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+  // Delivery entries only (empty otherwise): the source thread event, its thread and title (published threads only).
+  // source_kind is thread_published, message_published or thread_closed; initial_message marks the thread's first
+  // message, which travels inside the Slack root post.
+  string source_kind = 8;
+  string thread_id = 9;
+  string thread_title = 10;
+  bool initial_message = 11;
+}
+message ListIntegrationsRequest { string workspace_id = 1; }
+message ListIntegrationsResponse { repeated Integration integrations = 1; }
+// expected_revision is 0 to create and the current revision to replace.
+message ConnectIntegrationRequest { string workspace_id = 1; IntegrationKind kind = 2; string channel_ref = 3; string bot_token = 4; int64 expected_revision = 5; }
+message ConnectIntegrationResponse { Integration integration = 1; }
+message SetIntegrationEnabledRequest { string workspace_id = 1; string integration_id = 2; bool enabled = 3; int64 expected_revision = 4; }
+message SetIntegrationEnabledResponse { Integration integration = 1; }
+message ListIntegrationEventsRequest { string workspace_id = 1; string integration_id = 2; int64 before_sequence = 3; int32 page_size = 4; }
+message ListIntegrationEventsResponse { repeated IntegrationEvent events = 1; int64 next_before_sequence = 2; }
