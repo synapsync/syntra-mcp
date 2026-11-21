@@ -838,6 +838,144 @@ func (*GetContentSnapshotResponse_CurrentPreparedMessage) isGetContentSnapshotRe
 
 func (*GetContentSnapshotResponse_PublishedMessage) isGetContentSnapshotResponse_Record() {}
 
+// Both exact revisions bind (stale values fail Aborted without deleting). The request id
+// makes an exact retry return the original outcome.
+type DiscardContentRequest struct {
+	state                           protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId                     string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ThreadId                        string                 `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	PreparedMessageId               string                 `protobuf:"bytes,3,opt,name=prepared_message_id,json=preparedMessageId,proto3" json:"prepared_message_id,omitempty"`
+	ExpectedThreadRevision          string                 `protobuf:"bytes,4,opt,name=expected_thread_revision,json=expectedThreadRevision,proto3" json:"expected_thread_revision,omitempty"`
+	ExpectedPreparedMessageRevision string                 `protobuf:"bytes,5,opt,name=expected_prepared_message_revision,json=expectedPreparedMessageRevision,proto3" json:"expected_prepared_message_revision,omitempty"`
+	RequestId                       string                 `protobuf:"bytes,6,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	unknownFields                   protoimpl.UnknownFields
+	sizeCache                       protoimpl.SizeCache
+}
+
+func (x *DiscardContentRequest) Reset() {
+	*x = DiscardContentRequest{}
+	mi := &file_syntra_v1_content_service_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DiscardContentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DiscardContentRequest) ProtoMessage() {}
+
+func (x *DiscardContentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_content_service_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DiscardContentRequest.ProtoReflect.Descriptor instead.
+func (*DiscardContentRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DiscardContentRequest) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
+func (x *DiscardContentRequest) GetThreadId() string {
+	if x != nil {
+		return x.ThreadId
+	}
+	return ""
+}
+
+func (x *DiscardContentRequest) GetPreparedMessageId() string {
+	if x != nil {
+		return x.PreparedMessageId
+	}
+	return ""
+}
+
+func (x *DiscardContentRequest) GetExpectedThreadRevision() string {
+	if x != nil {
+		return x.ExpectedThreadRevision
+	}
+	return ""
+}
+
+func (x *DiscardContentRequest) GetExpectedPreparedMessageRevision() string {
+	if x != nil {
+		return x.ExpectedPreparedMessageRevision
+	}
+	return ""
+}
+
+func (x *DiscardContentRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+type DiscardContentResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	PreparedMessageId string                 `protobuf:"bytes,1,opt,name=prepared_message_id,json=preparedMessageId,proto3" json:"prepared_message_id,omitempty"`
+	ThreadDiscarded   bool                   `protobuf:"varint,2,opt,name=thread_discarded,json=threadDiscarded,proto3" json:"thread_discarded,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *DiscardContentResponse) Reset() {
+	*x = DiscardContentResponse{}
+	mi := &file_syntra_v1_content_service_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DiscardContentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DiscardContentResponse) ProtoMessage() {}
+
+func (x *DiscardContentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_content_service_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DiscardContentResponse.ProtoReflect.Descriptor instead.
+func (*DiscardContentResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_content_service_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *DiscardContentResponse) GetPreparedMessageId() string {
+	if x != nil {
+		return x.PreparedMessageId
+	}
+	return ""
+}
+
+func (x *DiscardContentResponse) GetThreadDiscarded() bool {
+	if x != nil {
+		return x.ThreadDiscarded
+	}
+	return false
+}
+
 var File_syntra_v1_content_service_proto protoreflect.FileDescriptor
 
 const file_syntra_v1_content_service_proto_rawDesc = "" +
@@ -899,12 +1037,24 @@ const file_syntra_v1_content_service_proto_rawDesc = "" +
 	"\x06thread\x18\x02 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\x12V\n" +
 	"\x18current_prepared_message\x18\x03 \x01(\v2\x1a.syntra.v1.PreparedMessageH\x00R\x16currentPreparedMessage\x12J\n" +
 	"\x11published_message\x18\x04 \x01(\v2\x1b.syntra.v1.PublishedMessageH\x00R\x10publishedMessageB\b\n" +
-	"\x06record2\xf7\x02\n" +
+	"\x06record\"\xad\x02\n" +
+	"\x15DiscardContentRequest\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12.\n" +
+	"\x13prepared_message_id\x18\x03 \x01(\tR\x11preparedMessageId\x128\n" +
+	"\x18expected_thread_revision\x18\x04 \x01(\tR\x16expectedThreadRevision\x12K\n" +
+	"\"expected_prepared_message_revision\x18\x05 \x01(\tR\x1fexpectedPreparedMessageRevision\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x06 \x01(\tR\trequestId\"s\n" +
+	"\x16DiscardContentResponse\x12.\n" +
+	"\x13prepared_message_id\x18\x01 \x01(\tR\x11preparedMessageId\x12)\n" +
+	"\x10thread_discarded\x18\x02 \x01(\bR\x0fthreadDiscarded2\xce\x03\n" +
 	"\x16AuthoredContentService\x12U\n" +
 	"\x0ePrepareContent\x12 .syntra.v1.PrepareContentRequest\x1a!.syntra.v1.PrepareContentResponse\x12L\n" +
 	"\vLinkContent\x12\x1d.syntra.v1.LinkContentRequest\x1a\x1e.syntra.v1.LinkContentResponse\x12U\n" +
 	"\x0ePublishContent\x12 .syntra.v1.PublishContentRequest\x1a!.syntra.v1.PublishContentResponse\x12a\n" +
-	"\x12GetContentSnapshot\x12$.syntra.v1.GetContentSnapshotRequest\x1a%.syntra.v1.GetContentSnapshotResponseB)Z'syntra.local/mcp/gen/syntra/v1;syntrav1b\x06proto3"
+	"\x12GetContentSnapshot\x12$.syntra.v1.GetContentSnapshotRequest\x1a%.syntra.v1.GetContentSnapshotResponse\x12U\n" +
+	"\x0eDiscardContent\x12 .syntra.v1.DiscardContentRequest\x1a!.syntra.v1.DiscardContentResponseB)Z'syntra.local/mcp/gen/syntra/v1;syntrav1b\x06proto3"
 
 var (
 	file_syntra_v1_content_service_proto_rawDescOnce sync.Once
@@ -918,7 +1068,7 @@ func file_syntra_v1_content_service_proto_rawDescGZIP() []byte {
 	return file_syntra_v1_content_service_proto_rawDescData
 }
 
-var file_syntra_v1_content_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_syntra_v1_content_service_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_syntra_v1_content_service_proto_goTypes = []any{
 	(*PreparedContentExpectation)(nil), // 0: syntra.v1.PreparedContentExpectation
 	(*PrepareContentRequest)(nil),      // 1: syntra.v1.PrepareContentRequest
@@ -931,43 +1081,47 @@ var file_syntra_v1_content_service_proto_goTypes = []any{
 	(*PrivateContentRevision)(nil),     // 8: syntra.v1.PrivateContentRevision
 	(*GetContentSnapshotRequest)(nil),  // 9: syntra.v1.GetContentSnapshotRequest
 	(*GetContentSnapshotResponse)(nil), // 10: syntra.v1.GetContentSnapshotResponse
-	(*AuthoredContent)(nil),            // 11: syntra.v1.AuthoredContent
-	(*ClientReportedProvenance)(nil),   // 12: syntra.v1.ClientReportedProvenance
-	(*ContentProvenanceReceipt)(nil),   // 13: syntra.v1.ContentProvenanceReceipt
-	(*Thread)(nil),                     // 14: syntra.v1.Thread
-	(*PreparedMessage)(nil),            // 15: syntra.v1.PreparedMessage
-	(*PublishedMessage)(nil),           // 16: syntra.v1.PublishedMessage
+	(*DiscardContentRequest)(nil),      // 11: syntra.v1.DiscardContentRequest
+	(*DiscardContentResponse)(nil),     // 12: syntra.v1.DiscardContentResponse
+	(*AuthoredContent)(nil),            // 13: syntra.v1.AuthoredContent
+	(*ClientReportedProvenance)(nil),   // 14: syntra.v1.ClientReportedProvenance
+	(*ContentProvenanceReceipt)(nil),   // 15: syntra.v1.ContentProvenanceReceipt
+	(*Thread)(nil),                     // 16: syntra.v1.Thread
+	(*PreparedMessage)(nil),            // 17: syntra.v1.PreparedMessage
+	(*PublishedMessage)(nil),           // 18: syntra.v1.PublishedMessage
 }
 var file_syntra_v1_content_service_proto_depIdxs = []int32{
-	11, // 0: syntra.v1.PrepareContentRequest.content:type_name -> syntra.v1.AuthoredContent
+	13, // 0: syntra.v1.PrepareContentRequest.content:type_name -> syntra.v1.AuthoredContent
 	0,  // 1: syntra.v1.PrepareContentRequest.update:type_name -> syntra.v1.PreparedContentExpectation
-	12, // 2: syntra.v1.PrepareContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
+	14, // 2: syntra.v1.PrepareContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
 	7,  // 3: syntra.v1.PrepareContentResponse.snapshot:type_name -> syntra.v1.AuthoredContentSnapshot
 	0,  // 4: syntra.v1.LinkContentRequest.current:type_name -> syntra.v1.PreparedContentExpectation
-	11, // 5: syntra.v1.LinkContentRequest.linked_content:type_name -> syntra.v1.AuthoredContent
-	12, // 6: syntra.v1.LinkContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
+	13, // 5: syntra.v1.LinkContentRequest.linked_content:type_name -> syntra.v1.AuthoredContent
+	14, // 6: syntra.v1.LinkContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
 	7,  // 7: syntra.v1.LinkContentResponse.snapshot:type_name -> syntra.v1.AuthoredContentSnapshot
 	0,  // 8: syntra.v1.PublishContentRequest.current:type_name -> syntra.v1.PreparedContentExpectation
-	12, // 9: syntra.v1.PublishContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
+	14, // 9: syntra.v1.PublishContentRequest.client_reported:type_name -> syntra.v1.ClientReportedProvenance
 	7,  // 10: syntra.v1.PublishContentResponse.snapshot:type_name -> syntra.v1.AuthoredContentSnapshot
-	11, // 11: syntra.v1.AuthoredContentSnapshot.content:type_name -> syntra.v1.AuthoredContent
-	13, // 12: syntra.v1.AuthoredContentSnapshot.receipt:type_name -> syntra.v1.ContentProvenanceReceipt
+	13, // 11: syntra.v1.AuthoredContentSnapshot.content:type_name -> syntra.v1.AuthoredContent
+	15, // 12: syntra.v1.AuthoredContentSnapshot.receipt:type_name -> syntra.v1.ContentProvenanceReceipt
 	8,  // 13: syntra.v1.AuthoredContentSnapshot.prepared_message:type_name -> syntra.v1.PrivateContentRevision
 	8,  // 14: syntra.v1.GetContentSnapshotRequest.prepared_message:type_name -> syntra.v1.PrivateContentRevision
 	7,  // 15: syntra.v1.GetContentSnapshotResponse.authored:type_name -> syntra.v1.AuthoredContentSnapshot
-	14, // 16: syntra.v1.GetContentSnapshotResponse.thread:type_name -> syntra.v1.Thread
-	15, // 17: syntra.v1.GetContentSnapshotResponse.current_prepared_message:type_name -> syntra.v1.PreparedMessage
-	16, // 18: syntra.v1.GetContentSnapshotResponse.published_message:type_name -> syntra.v1.PublishedMessage
+	16, // 16: syntra.v1.GetContentSnapshotResponse.thread:type_name -> syntra.v1.Thread
+	17, // 17: syntra.v1.GetContentSnapshotResponse.current_prepared_message:type_name -> syntra.v1.PreparedMessage
+	18, // 18: syntra.v1.GetContentSnapshotResponse.published_message:type_name -> syntra.v1.PublishedMessage
 	1,  // 19: syntra.v1.AuthoredContentService.PrepareContent:input_type -> syntra.v1.PrepareContentRequest
 	3,  // 20: syntra.v1.AuthoredContentService.LinkContent:input_type -> syntra.v1.LinkContentRequest
 	5,  // 21: syntra.v1.AuthoredContentService.PublishContent:input_type -> syntra.v1.PublishContentRequest
 	9,  // 22: syntra.v1.AuthoredContentService.GetContentSnapshot:input_type -> syntra.v1.GetContentSnapshotRequest
-	2,  // 23: syntra.v1.AuthoredContentService.PrepareContent:output_type -> syntra.v1.PrepareContentResponse
-	4,  // 24: syntra.v1.AuthoredContentService.LinkContent:output_type -> syntra.v1.LinkContentResponse
-	6,  // 25: syntra.v1.AuthoredContentService.PublishContent:output_type -> syntra.v1.PublishContentResponse
-	10, // 26: syntra.v1.AuthoredContentService.GetContentSnapshot:output_type -> syntra.v1.GetContentSnapshotResponse
-	23, // [23:27] is the sub-list for method output_type
-	19, // [19:23] is the sub-list for method input_type
+	11, // 23: syntra.v1.AuthoredContentService.DiscardContent:input_type -> syntra.v1.DiscardContentRequest
+	2,  // 24: syntra.v1.AuthoredContentService.PrepareContent:output_type -> syntra.v1.PrepareContentResponse
+	4,  // 25: syntra.v1.AuthoredContentService.LinkContent:output_type -> syntra.v1.LinkContentResponse
+	6,  // 26: syntra.v1.AuthoredContentService.PublishContent:output_type -> syntra.v1.PublishContentResponse
+	10, // 27: syntra.v1.AuthoredContentService.GetContentSnapshot:output_type -> syntra.v1.GetContentSnapshotResponse
+	12, // 28: syntra.v1.AuthoredContentService.DiscardContent:output_type -> syntra.v1.DiscardContentResponse
+	24, // [24:29] is the sub-list for method output_type
+	19, // [19:24] is the sub-list for method input_type
 	19, // [19:19] is the sub-list for extension type_name
 	19, // [19:19] is the sub-list for extension extendee
 	0,  // [0:19] is the sub-list for field type_name
@@ -999,7 +1153,7 @@ func file_syntra_v1_content_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_content_service_proto_rawDesc), len(file_syntra_v1_content_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

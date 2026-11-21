@@ -765,7 +765,7 @@ func TestMCPActionableErrorCLIParity(t *testing.T) {
 }
 
 func TestMCPActualProcessCLIParity(t *testing.T) {
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "retry"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry"}
 	f := fixture(t)
 	p := spawn(t, f)
 	p.init(t)
@@ -969,13 +969,13 @@ func TestBrowserCLIRecoveryThenMCPProcess(t *testing.T) {
 	process.next++
 	process.send(t, []byte(fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":"tools/list","params":{}}`, process.next)))
 	listed := process.receive(t)
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "retry"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry"}
 	var catalog struct {
 		Tools []struct {
 			Name string `json:"name"`
 		} `json:"tools"`
 	}
-	if json.Unmarshal(listed["result"], &catalog) != nil || len(catalog.Tools) != 14 {
+	if json.Unmarshal(listed["result"], &catalog) != nil || len(catalog.Tools) != 15 {
 		t.Fatal("browser profile MCP tool allowlist changed", string(listed["result"]))
 	}
 	for _, tool := range catalog.Tools {
