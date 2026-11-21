@@ -717,10 +717,11 @@ func TestNilExplicitIDEditCASAndPublicationCapability(t *testing.T) {
 	}
 	bad := proto.Clone(edit).(*v1.PrepareContentRequest)
 	bad.RequestId = randomUUID()
-	bad.Content.Title = "changed title"
+	other := randomUUID()
+	bad.Content.ExistingThreadId = &other
 	before := f.calls
 	if _, e = a.Prepare(ctx, bad, q.RequestId); e == nil || f.calls != before {
-		t.Fatal("edit changed routing/title")
+		t.Fatal("edit changed the thread identity")
 	}
 	bad = proto.Clone(edit).(*v1.PrepareContentRequest)
 	bad.RequestId = randomUUID()

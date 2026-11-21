@@ -12,6 +12,9 @@ service AuthoredContentService {
   // the exact reviewed preparation using its digest and both revision tokens.
   rpc PublishContent(PublishContentRequest) returns (PublishContentResponse);
   rpc GetContentSnapshot(GetContentSnapshotRequest) returns (GetContentSnapshotResponse);
+  // Requires PREPARE. Deletes the author's own unsent private preparation; discarding the
+  // initial one also removes its pending thread. Never publishes or notifies anyone.
+  rpc DiscardContent(DiscardContentRequest) returns (DiscardContentResponse);
 }
 // Required together when replacing/linking/publishing a private prepared message.
 // Digest refers to the prior exact content, not the new replacement.
@@ -92,4 +95,19 @@ message GetContentSnapshotResponse {
     PreparedMessage current_prepared_message = 3;
     PublishedMessage published_message = 4;
   }
+}
+
+// Both exact revisions bind (stale values fail Aborted without deleting). The request id
+// makes an exact retry return the original outcome.
+message DiscardContentRequest {
+  string workspace_id = 1;
+  string thread_id = 2;
+  string prepared_message_id = 3;
+  string expected_thread_revision = 4;
+  string expected_prepared_message_revision = 5;
+  string request_id = 6;
+}
+message DiscardContentResponse {
+  string prepared_message_id = 1;
+  bool thread_discarded = 2;
 }

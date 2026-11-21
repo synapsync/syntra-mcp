@@ -134,6 +134,19 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 // loading a local profile. Authentication and retained-base checks remain in App.
 func ValidateLocalContentRequest(target proto.Message, baseID string) error {
 	switch q := target.(type) {
+	case *v1.DiscardContentRequest:
+		if q == nil || baseID != "" {
+			return clientField("request", "is required and takes no --base")
+		}
+		for name, value := range map[string]string{"workspaceId": q.WorkspaceId, "threadId": q.ThreadId, "preparedMessageId": q.PreparedMessageId, "requestId": q.RequestId} {
+			if err := clientID(name, value); err != nil {
+				return err
+			}
+		}
+		if q.ExpectedThreadRevision == "" || q.ExpectedPreparedMessageRevision == "" {
+			return clientField("expectedThreadRevision", "and expectedPreparedMessageRevision are required")
+		}
+		return nil
 	case *v1.PrepareContentRequest:
 		if q == nil {
 			return clientField("request", "is required")

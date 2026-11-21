@@ -31,10 +31,11 @@ var helpEntries = map[string]helpEntry{
 	"prepare":    {"Prepare private content without publishing.", "--file PATH|- [--base REQUEST_UUID] | --template new|reply --workspace UUID [--project UUID] [--thread UUID]", "syntra prepare --template reply --workspace WORKSPACE_UUID --thread THREAD_UUID", "Template JSON for --template (reply requires a published, nonclosed thread); private prepared message snapshot JSON for --file."},
 	"link":       {"Link a private prepared message to a member without publishing.", "--file PATH|- --base REQUEST_UUID", "syntra link --file link.json --base REQUEST_UUID", "Private prepared snapshot JSON."},
 	"publish":    {"Publish an exact retained private prepared message.", "--file PATH|- --base REQUEST_UUID", "syntra publish --file publish.json --base REQUEST_UUID", "Published snapshot JSON."},
+	"discard":    {"Delete your own unsent prepared message (the initial one also removes its pending thread). Never publishes.", "--file PATH|-", "syntra discard --file discard.json", "Discard result JSON (preparedMessageId, threadDiscarded). Resend the same requestId to retry."},
 	"snapshot":   {"Read and verify a content snapshot.", "--file PATH|- [--base REQUEST_UUID]", "syntra snapshot --file snapshot.json", "Snapshot JSON and verification level."},
 	"retry":      {"Retry an exact retained request.", "--request UUID", "syntra retry --request REQUEST_UUID", "Original result JSON."},
 }
-var helpOrder = []string{"version", "login", "status", "identity", "disconnect", "forget", "mcp", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "reply", "prepare", "link", "publish", "snapshot", "retry"}
+var helpOrder = []string{"version", "login", "status", "identity", "disconnect", "forget", "mcp", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "reply", "prepare", "link", "publish", "discard", "snapshot", "retry"}
 
 func usage(name string) string {
 	e := helpEntries[name]
