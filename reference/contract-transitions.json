@@ -303,6 +303,26 @@
           "toSha256": "c3eb277150ae454c5b293646cd3944822c5c794cda5522fdb59c9c216a4764eb"
         }
       ]
+    },
+    {
+      "sourceCommit": "f39462f137003351dd14eeabbe41ac57381216d4",
+      "files": [
+        {
+          "path": "core/gen/syntra/v1/integration.pb.go",
+          "fromSha256": null,
+          "toSha256": "7f1351977652619878a1ab3e9f6948d30302848080906a94f86c3b28bed08350"
+        },
+        {
+          "path": "core/gen/syntra/v1/syntrav1connect/integration.connect.go",
+          "fromSha256": null,
+          "toSha256": "f934103533fd2afc09fe154b88bb0b12f7d6e7bb4d2843defe23237f1f02ba76"
+        },
+        {
+          "path": "reference/proto/syntra/v1/integration.proto",
+          "fromSha256": null,
+          "toSha256": "02e498385db66fa92bebda24896965d597257a04dd4a1f989e02490496aeeff3"
+        }
+      ]
     }
   ]
 }
