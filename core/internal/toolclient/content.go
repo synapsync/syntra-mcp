@@ -474,3 +474,23 @@ func preparedValidationError(err error) error {
 	}
 	return ci.ErrIntegrity
 }
+
+// Discard deletes the owner's own unsent private preparation (the initial one also removes its
+// pending thread). Both exact revisions bind and the requestId makes an exact retry return the
+// original outcome, so nothing needs retaining locally. It never publishes.
+func (a *App) Discard(ctx context.Context, in *v1.DiscardContentRequest) (*v1.DiscardContentResponse, error) {
+	if in == nil {
+		return nil, clientField("request", "is required")
+	}
+	if e := ValidateLocalContentRequest(in, ""); e != nil {
+		return nil, e
+	}
+	if e := a.authorize(ctx, v1.ToolCapability_TOOL_CAPABILITY_PREPARE); e != nil {
+		return nil, e
+	}
+	res, e := a.content().DiscardContent(ctx, bearer(connect.NewRequest(proto.Clone(in).(*v1.DiscardContentRequest)), a.profile.Secret))
+	if e != nil {
+		return nil, a.authoredRPCError(e)
+	}
+	return res.Msg, nil
+}

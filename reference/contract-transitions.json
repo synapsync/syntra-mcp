@@ -283,6 +283,26 @@
           "toSha256": "b04bdc71960dd318f99ea126d4a4b2a6e9091804e761b8c0b786046c1cc0d098"
         }
       ]
+    },
+    {
+      "sourceCommit": "c7543814f832b9d32c315103e7120b6dc82ade11",
+      "files": [
+        {
+          "path": "core/gen/syntra/v1/content_service.pb.go",
+          "fromSha256": "00fadd69cbeb882f6cfec2b11a1e3b35feb36dad5053c87a1bb03615d235fafa",
+          "toSha256": "d8b51d4a2b7d13287044664da5be1c6b3e3ab268576c2fed11c578ae1ea4d722"
+        },
+        {
+          "path": "core/gen/syntra/v1/syntrav1connect/content_service.connect.go",
+          "fromSha256": "d3520b60bfa35c0a4c278cc3764001c9990ce4480c8150fbde1a6d565af32ecb",
+          "toSha256": "83c23c89d5f908bdb6c1568f76f6ae6d1b1440ef1b612038814ed86fa3f4f6c3"
+        },
+        {
+          "path": "reference/proto/syntra/v1/content_service.proto",
+          "fromSha256": "9dc69642f2498c41f52aefabbc35c4829d587511239fff5112e53170e0bea7a9",
+          "toSha256": "c3eb277150ae454c5b293646cd3944822c5c794cda5522fdb59c9c216a4764eb"
+        }
+      ]
     }
   ]
 }

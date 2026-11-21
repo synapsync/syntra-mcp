@@ -168,6 +168,8 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		out, e = app.Link(ctx, args.request.(*v1.LinkContentRequest), args.base)
 	case "publish":
 		out, e = app.Publish(ctx, args.request.(*v1.PublishContentRequest), args.base)
+	case "discard":
+		out, e = app.Discard(ctx, args.request.(*v1.DiscardContentRequest))
 	case "retry":
 		out, e = app.Retry(ctx, args.requestID)
 	case "snapshot":
@@ -252,6 +254,8 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 	case "prepare", "snapshot":
 		required = []string{"request"}
 		optional = []string{"base"}
+	case "discard":
+		required = []string{"request"}
 	case "link", "publish":
 		required = []string{"request", "base"}
 	case "retry":
@@ -272,6 +276,8 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 				target = &v1.LinkContentRequest{}
 			case "publish":
 				target = &v1.PublishContentRequest{}
+			case "discard":
+				target = &v1.DiscardContentRequest{}
 			case "snapshot":
 				target = &v1.GetContentSnapshotRequest{}
 			}
@@ -319,6 +325,8 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 			a.request = &v1.LinkContentRequest{}
 		case "publish":
 			a.request = &v1.PublishContentRequest{}
+		case "discard":
+			a.request = &v1.DiscardContentRequest{}
 		case "snapshot":
 			a.request = &v1.GetContentSnapshotRequest{}
 		}
