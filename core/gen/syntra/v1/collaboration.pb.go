@@ -735,9 +735,12 @@ type Thread struct {
 	ParticipantCount int32 `protobuf:"varint,22,opt,name=participant_count,json=participantCount,proto3" json:"participant_count,omitempty"`
 	// GetThread and published ListThreads: the creator, then every author and recipient of a published message, each once.
 	// A person who later left stays listed and is flagged departed. Any participant may close and reopen the thread.
-	Participants  []*ThreadParticipant `protobuf:"bytes,23,rep,name=participants,proto3" json:"participants,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Participants []*ThreadParticipant `protobuf:"bytes,23,rep,name=participants,proto3" json:"participants,omitempty"`
+	// GetThread and published ListThreads: how many received messages of this open thread the caller has not read yet
+	// (the caller's own receipts only). Zero for everyone else and everywhere else.
+	UnreadMessageCount uint64 `protobuf:"varint,24,opt,name=unread_message_count,json=unreadMessageCount,proto3" json:"unread_message_count,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Thread) Reset() {
@@ -894,6 +897,13 @@ func (x *Thread) GetParticipants() []*ThreadParticipant {
 		return x.Participants
 	}
 	return nil
+}
+
+func (x *Thread) GetUnreadMessageCount() uint64 {
+	if x != nil {
+		return x.UnreadMessageCount
+	}
+	return 0
 }
 
 // Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.
@@ -4599,7 +4609,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x06active\x18\x03 \x01(\bR\x06active\"H\n" +
 	"\x11ThreadParticipant\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
-	"\bdeparted\x18\x02 \x01(\bR\bdeparted\"\xe9\x06\n" +
+	"\bdeparted\x18\x02 \x01(\bR\bdeparted\"\x9b\a\n" +
 	"\x06Thread\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1d\n" +
@@ -4622,7 +4632,8 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x0fsummary_preview\x18\x14 \x01(\tR\x0esummaryPreview\x12?\n" +
 	"\x1cparticipant_preview_user_ids\x18\x15 \x03(\tR\x19participantPreviewUserIds\x12+\n" +
 	"\x11participant_count\x18\x16 \x01(\x05R\x10participantCount\x12@\n" +
-	"\fparticipants\x18\x17 \x03(\v2\x1c.syntra.v1.ThreadParticipantR\fparticipantsB\x14\n" +
+	"\fparticipants\x18\x17 \x03(\v2\x1c.syntra.v1.ThreadParticipantR\fparticipants\x120\n" +
+	"\x14unread_message_count\x18\x18 \x01(\x04R\x12unreadMessageCountB\x14\n" +
 	"\x12_closed_by_user_idJ\x04\b\x06\x10\aR\x10assignee_user_id\"\xf5\x04\n" +
 	"\x0fPreparedMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
