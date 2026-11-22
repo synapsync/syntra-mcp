@@ -303,6 +303,36 @@
           "toSha256": "c3eb277150ae454c5b293646cd3944822c5c794cda5522fdb59c9c216a4764eb"
         }
       ]
+    },
+    {
+      "sourceCommit": "a45b5ef980115ce98a12c7bca30b4ca24af8b570",
+      "files": [
+        {
+          "path": "core/gen/syntra/v1/collaboration.pb.go",
+          "fromSha256": "43c82be0034a08dd35eaa7f4242b54be2a17edd77c89424fad7d95d7833173b0",
+          "toSha256": "da3553703ea61e560080a2268d4ebc2db0e8d13a4010382eaf3b9290c35956e7"
+        },
+        {
+          "path": "core/gen/syntra/v1/integration.pb.go",
+          "fromSha256": null,
+          "toSha256": "dc2dfe2c89a0928ef7da67353befebd442f5c5b1563727475b260e2cbade6b2c"
+        },
+        {
+          "path": "core/gen/syntra/v1/syntrav1connect/integration.connect.go",
+          "fromSha256": null,
+          "toSha256": "f934103533fd2afc09fe154b88bb0b12f7d6e7bb4d2843defe23237f1f02ba76"
+        },
+        {
+          "path": "reference/proto/syntra/v1/collaboration.proto",
+          "fromSha256": "b04bdc71960dd318f99ea126d4a4b2a6e9091804e761b8c0b786046c1cc0d098",
+          "toSha256": "d0879aafdbe4bb5733ec45ffa743a02f083ea72aa42f17f0a800f4e16af86dde"
+        },
+        {
+          "path": "reference/proto/syntra/v1/integration.proto",
+          "fromSha256": null,
+          "toSha256": "825bc91ec52ad08c1cacf9d74e2d2b655049e71a4952abacd1c0ea593a52ebfd"
+        }
+      ]
     }
   ]
 }
