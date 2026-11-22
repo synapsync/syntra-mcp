@@ -27,6 +27,7 @@ type IntegrationKind int32
 const (
 	IntegrationKind_INTEGRATION_KIND_UNSPECIFIED IntegrationKind = 0
 	IntegrationKind_INTEGRATION_KIND_SLACK       IntegrationKind = 1
+	IntegrationKind_INTEGRATION_KIND_GOOGLE_CHAT IntegrationKind = 2
 )
 
 // Enum value maps for IntegrationKind.
@@ -34,10 +35,12 @@ var (
 	IntegrationKind_name = map[int32]string{
 		0: "INTEGRATION_KIND_UNSPECIFIED",
 		1: "INTEGRATION_KIND_SLACK",
+		2: "INTEGRATION_KIND_GOOGLE_CHAT",
 	}
 	IntegrationKind_value = map[string]int32{
 		"INTEGRATION_KIND_UNSPECIFIED": 0,
 		"INTEGRATION_KIND_SLACK":       1,
+		"INTEGRATION_KIND_GOOGLE_CHAT": 2,
 	}
 )
 
@@ -240,14 +243,21 @@ type IntegrationEvent struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	Sequence int64                  `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	// configured, token_replaced, enabled, disabled, review_required, delivery_sent, delivery_failed, delivery_dropped, gap.
-	Kind          string                 `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
-	ActorUserId   string                 `protobuf:"bytes,3,opt,name=actor_user_id,json=actorUserId,proto3" json:"actor_user_id,omitempty"`
-	EventId       string                 `protobuf:"bytes,4,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	ErrorCode     string                 `protobuf:"bytes,5,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
-	Detail        string                 `protobuf:"bytes,6,opt,name=detail,proto3" json:"detail,omitempty"`
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Kind        string                 `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	ActorUserId string                 `protobuf:"bytes,3,opt,name=actor_user_id,json=actorUserId,proto3" json:"actor_user_id,omitempty"`
+	EventId     string                 `protobuf:"bytes,4,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	ErrorCode   string                 `protobuf:"bytes,5,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
+	Detail      string                 `protobuf:"bytes,6,opt,name=detail,proto3" json:"detail,omitempty"`
+	OccurredAt  *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Delivery entries only (empty otherwise): the source thread event, its thread and title (published threads only).
+	// source_kind is thread_published, message_published or thread_closed; initial_message marks the thread's first
+	// message, which travels inside the Slack root post.
+	SourceKind     string `protobuf:"bytes,8,opt,name=source_kind,json=sourceKind,proto3" json:"source_kind,omitempty"`
+	ThreadId       string `protobuf:"bytes,9,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	ThreadTitle    string `protobuf:"bytes,10,opt,name=thread_title,json=threadTitle,proto3" json:"thread_title,omitempty"`
+	InitialMessage bool   `protobuf:"varint,11,opt,name=initial_message,json=initialMessage,proto3" json:"initial_message,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *IntegrationEvent) Reset() {
@@ -327,6 +337,34 @@ func (x *IntegrationEvent) GetOccurredAt() *timestamppb.Timestamp {
 		return x.OccurredAt
 	}
 	return nil
+}
+
+func (x *IntegrationEvent) GetSourceKind() string {
+	if x != nil {
+		return x.SourceKind
+	}
+	return ""
+}
+
+func (x *IntegrationEvent) GetThreadId() string {
+	if x != nil {
+		return x.ThreadId
+	}
+	return ""
+}
+
+func (x *IntegrationEvent) GetThreadTitle() string {
+	if x != nil {
+		return x.ThreadTitle
+	}
+	return ""
+}
+
+func (x *IntegrationEvent) GetInitialMessage() bool {
+	if x != nil {
+		return x.InitialMessage
+	}
+	return false
 }
 
 type ListIntegrationsRequest struct {
@@ -417,6 +455,8 @@ func (x *ListIntegrationsResponse) GetIntegrations() []*Integration {
 	return nil
 }
 
+// channel_ref is the provider target: a Slack channel id or a Google Chat space id. bot_token is the write-only
+// provider credential: a Slack bot token or the JSON content of a Google service-account key.
 // expected_revision is 0 to create and the current revision to replace.
 type ConnectIntegrationRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
@@ -789,7 +829,7 @@ const file_syntra_v1_integration_proto_rawDesc = "" +
 	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xf5\x01\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xff\x02\n" +
 	"\x10IntegrationEvent\x12\x1a\n" +
 	"\bsequence\x18\x01 \x01(\x03R\bsequence\x12\x12\n" +
 	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\"\n" +
@@ -799,7 +839,13 @@ const file_syntra_v1_integration_proto_rawDesc = "" +
 	"error_code\x18\x05 \x01(\tR\terrorCode\x12\x16\n" +
 	"\x06detail\x18\x06 \x01(\tR\x06detail\x12;\n" +
 	"\voccurred_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"<\n" +
+	"occurredAt\x12\x1f\n" +
+	"\vsource_kind\x18\b \x01(\tR\n" +
+	"sourceKind\x12\x1b\n" +
+	"\tthread_id\x18\t \x01(\tR\bthreadId\x12!\n" +
+	"\fthread_title\x18\n" +
+	" \x01(\tR\vthreadTitle\x12'\n" +
+	"\x0finitial_message\x18\v \x01(\bR\x0einitialMessage\"<\n" +
 	"\x17ListIntegrationsRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"V\n" +
 	"\x18ListIntegrationsResponse\x12:\n" +
@@ -827,10 +873,11 @@ const file_syntra_v1_integration_proto_rawDesc = "" +
 	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"\x86\x01\n" +
 	"\x1dListIntegrationEventsResponse\x123\n" +
 	"\x06events\x18\x01 \x03(\v2\x1b.syntra.v1.IntegrationEventR\x06events\x120\n" +
-	"\x14next_before_sequence\x18\x02 \x01(\x03R\x12nextBeforeSequence*O\n" +
+	"\x14next_before_sequence\x18\x02 \x01(\x03R\x12nextBeforeSequence*q\n" +
 	"\x0fIntegrationKind\x12 \n" +
 	"\x1cINTEGRATION_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
-	"\x16INTEGRATION_KIND_SLACK\x10\x01*\x97\x01\n" +
+	"\x16INTEGRATION_KIND_SLACK\x10\x01\x12 \n" +
+	"\x1cINTEGRATION_KIND_GOOGLE_CHAT\x10\x02*\x97\x01\n" +
 	"\x10IntegrationState\x12!\n" +
 	"\x1dINTEGRATION_STATE_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18INTEGRATION_STATE_ACTIVE\x10\x01\x12\"\n" +
