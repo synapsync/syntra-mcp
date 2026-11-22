@@ -739,8 +739,11 @@ type Thread struct {
 	// GetThread and published ListThreads: how many received messages of this open thread the caller has not read yet
 	// (the caller's own receipts only). Zero for everyone else and everywhere else.
 	UnreadMessageCount uint64 `protobuf:"varint,24,opt,name=unread_message_count,json=unreadMessageCount,proto3" json:"unread_message_count,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// GetThread and published ListThreads: how many messages are published in this thread, the initial one included. Prepared messages
+	// of anyone are never counted. Zero everywhere else.
+	MessageCount  uint64 `protobuf:"varint,25,opt,name=message_count,json=messageCount,proto3" json:"message_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Thread) Reset() {
@@ -902,6 +905,13 @@ func (x *Thread) GetParticipants() []*ThreadParticipant {
 func (x *Thread) GetUnreadMessageCount() uint64 {
 	if x != nil {
 		return x.UnreadMessageCount
+	}
+	return 0
+}
+
+func (x *Thread) GetMessageCount() uint64 {
+	if x != nil {
+		return x.MessageCount
 	}
 	return 0
 }
@@ -4609,7 +4619,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x06active\x18\x03 \x01(\bR\x06active\"H\n" +
 	"\x11ThreadParticipant\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
-	"\bdeparted\x18\x02 \x01(\bR\bdeparted\"\x9b\a\n" +
+	"\bdeparted\x18\x02 \x01(\bR\bdeparted\"\xc0\a\n" +
 	"\x06Thread\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1d\n" +
@@ -4633,7 +4643,8 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x1cparticipant_preview_user_ids\x18\x15 \x03(\tR\x19participantPreviewUserIds\x12+\n" +
 	"\x11participant_count\x18\x16 \x01(\x05R\x10participantCount\x12@\n" +
 	"\fparticipants\x18\x17 \x03(\v2\x1c.syntra.v1.ThreadParticipantR\fparticipants\x120\n" +
-	"\x14unread_message_count\x18\x18 \x01(\x04R\x12unreadMessageCountB\x14\n" +
+	"\x14unread_message_count\x18\x18 \x01(\x04R\x12unreadMessageCount\x12#\n" +
+	"\rmessage_count\x18\x19 \x01(\x04R\fmessageCountB\x14\n" +
 	"\x12_closed_by_user_idJ\x04\b\x06\x10\aR\x10assignee_user_id\"\xf5\x04\n" +
 	"\x0fPreparedMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
