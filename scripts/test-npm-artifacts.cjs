@@ -32,7 +32,7 @@ const TARGETS = Object.freeze({
 });
 const EXPECTED_TOOLS = Object.freeze([
   'identity', 'workspaces', 'projects', 'teams', 'members', 'resolve',
-  'threads', 'thread', 'messages', 'snapshot', 'prepare', 'link', 'publish', 'retry',
+  'threads', 'thread', 'messages', 'snapshot', 'prepare', 'link', 'publish', 'discard', 'retry',
 ]);
 const EXPECTED_EMPTY_PROFILE_ERROR = /No Syntra connection\. Run: syntra login/;
 
@@ -283,7 +283,7 @@ function checkMCP(result) {
   assert.ok(frames[0].result?.serverInfo?.name === 'syntra', 'MCP initialize did not identify the packaged server');
   const tools = frames[1].result?.tools;
   assert.ok(Array.isArray(tools), 'MCP tools/list did not return a tool catalog');
-  assert.deepEqual(tools.map(tool => tool.name).sort(), [...EXPECTED_TOOLS].sort(), 'MCP allowlist differs from the fourteen-tool contract');
+  assert.deepEqual(tools.map(tool => tool.name).sort(), [...EXPECTED_TOOLS].sort(), 'MCP allowlist differs from the fifteen-tool contract');
   assert.equal(frames[2].result?.isError, true, 'identity call without a profile must return a safe tool error');
   const text = (frames[2].result?.content || []).map(item => item.text || '').join('\n');
   assert.match(text, /No Syntra connection\. Run: syntra login/);
