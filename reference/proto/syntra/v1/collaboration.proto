@@ -193,6 +193,9 @@ message Thread {
   // GetThread and published ListThreads: how many received messages of this open thread the caller has not read yet
   // (the caller's own receipts only). Zero for everyone else and everywhere else.
   uint64 unread_message_count = 24;
+  // GetThread and published ListThreads: how many messages are published in this thread, the initial one included. Prepared messages
+  // of anyone are never counted. Zero everywhere else.
+  uint64 message_count = 25;
 }
 
 // Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.

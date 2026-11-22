@@ -13,9 +13,9 @@ import uuid
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE_ID = "syntra-mcp-wire-v1"
 MANIFEST_REL = "reference/source-manifest.json"
-MANIFEST_SHA256 = "397330d2dcba9c10d14b4cd734dea776b843f3b4f220b18226f7f5f38c041d2e"
+MANIFEST_SHA256 = "c28173a893eb44a322e8c8560778443aae4ddcfc0b2578abb7bd11119c147564"
 TRANSITIONS_REL = "reference/contract-transitions.json"
-TRANSITIONS_SHA256 = "6cb94f247064d0c6bc4525eda7008459007a38cc1561ce7a4bc4bdca36e59cc2"
+TRANSITIONS_SHA256 = "f693910098241f8953d04203b393bcd0a1750ffb585c33fa7860e1946cb2e78b"
 FINGERPRINT_REL = "reference/device-fingerprint-v1.json"
 FINGERPRINT_SHA256 = "d47c6d43307122886e60300607ffb5f4109199837c00a300143df6378f0b104e"
 CONTENT_VECTOR_REL = "core/fixtures/content-integrity-v1.json"

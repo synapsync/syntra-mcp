@@ -2,9 +2,9 @@ syntax = "proto3";
 package syntra.v1;
 import "google/protobuf/timestamp.proto";
 option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
-// Workspace administrators manage outbound integrations (first kind: a Slack mirror of published threads).
+// Workspace administrators manage outbound integrations (kinds: a Slack mirror and a Google Chat mirror of published threads).
 // Human administration only: agents and tool connections have no access. The bot token is write-only: it is
-// accepted by ConnectIntegration and never returned by any call.
+// accepted by ConnectIntegration and never returned by any call. A workspace has at most one integration per kind.
 service IntegrationService {
   rpc ListIntegrations(ListIntegrationsRequest) returns (ListIntegrationsResponse);
   // Verifies the token and channel with the provider (the channel receives a short connection notice), stores the
@@ -15,7 +15,7 @@ service IntegrationService {
   // Newest first by per-integration sequence (bigint carried as a decimal string in JSON).
   rpc ListIntegrationEvents(ListIntegrationEventsRequest) returns (ListIntegrationEventsResponse);
 }
-enum IntegrationKind { INTEGRATION_KIND_UNSPECIFIED = 0; INTEGRATION_KIND_SLACK = 1; }
+enum IntegrationKind { INTEGRATION_KIND_UNSPECIFIED = 0; INTEGRATION_KIND_SLACK = 1; INTEGRATION_KIND_GOOGLE_CHAT = 2; }
 enum IntegrationState { INTEGRATION_STATE_UNSPECIFIED = 0; INTEGRATION_STATE_ACTIVE = 1; INTEGRATION_STATE_NEEDS_REVIEW = 2; INTEGRATION_STATE_DISABLED = 3; }
 message Integration {
   string id = 1;
@@ -38,9 +38,18 @@ message IntegrationEvent {
   string error_code = 5;
   string detail = 6;
   google.protobuf.Timestamp occurred_at = 7;
+  // Delivery entries only (empty otherwise): the source thread event, its thread and title (published threads only).
+  // source_kind is thread_published, message_published or thread_closed; initial_message marks the thread's first
+  // message, which travels inside the Slack root post.
+  string source_kind = 8;
+  string thread_id = 9;
+  string thread_title = 10;
+  bool initial_message = 11;
 }
 message ListIntegrationsRequest { string workspace_id = 1; }
 message ListIntegrationsResponse { repeated Integration integrations = 1; }
+// channel_ref is the provider target: a Slack channel id or a Google Chat space id. bot_token is the write-only
+// provider credential: a Slack bot token or the JSON content of a Google service-account key.
 // expected_revision is 0 to create and the current revision to replace.
 message ConnectIntegrationRequest { string workspace_id = 1; IntegrationKind kind = 2; string channel_ref = 3; string bot_token = 4; int64 expected_revision = 5; }
 message ConnectIntegrationResponse { Integration integration = 1; }
