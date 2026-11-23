@@ -348,6 +348,26 @@
           "toSha256": "825bc91ec52ad08c1cacf9d74e2d2b655049e71a4952abacd1c0ea593a52ebfd"
         }
       ]
+    },
+    {
+      "sourceCommit": "9b79871ecd9c3cc155af6cdb8b0f8e4bbb173c7e",
+      "files": [
+        {
+          "path": "core/gen/syntra/v1/notification.pb.go",
+          "fromSha256": null,
+          "toSha256": "d24c92cbbaf0fe48bc6ae9811af8f0d2bcb820e993d24bb181a06c395e61963d"
+        },
+        {
+          "path": "core/gen/syntra/v1/syntrav1connect/notification.connect.go",
+          "fromSha256": null,
+          "toSha256": "14fae446ecef23551b8a321213e80e7a6e44b1c831036259ff17c8d92542512a"
+        },
+        {
+          "path": "reference/proto/syntra/v1/notification.proto",
+          "fromSha256": null,
+          "toSha256": "2f7855c790a7f1e1c426e9e243b8a4651c1367e2de281c841ba28f748e4174b8"
+        }
+      ]
     }
   ]
 }

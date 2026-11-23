@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package syntra.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// NotificationService provides in-app notifications for authenticated humans.
+// Tool credentials, agents, and revoked members are rejected.
+// Items carry references only, never message content.
+service NotificationService {
+  rpc GetNotificationSummary(GetNotificationSummaryRequest) returns (GetNotificationSummaryResponse);
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
+  rpc MarkNotificationsRead(MarkNotificationsReadRequest) returns (MarkNotificationsReadResponse);
+  rpc MarkAllNotificationsRead(MarkAllNotificationsReadRequest) returns (MarkAllNotificationsReadResponse);
+}
+
+enum NotificationKind {
+  NOTIFICATION_KIND_UNSPECIFIED = 0;
+  NOTIFICATION_KIND_MESSAGE_RECEIVED = 1;
+  NOTIFICATION_KIND_THREAD_CLOSED = 2;
+  NOTIFICATION_KIND_THREAD_REOPENED = 3;
+  NOTIFICATION_KIND_ADDED_TO_PROJECT = 4;
+  NOTIFICATION_KIND_ADDED_TO_TEAM = 5;
+  NOTIFICATION_KIND_ROLE_CHANGED = 6;
+  NOTIFICATION_KIND_ACCESS_REVOKED = 7;
+  NOTIFICATION_KIND_INTEGRATION_NEEDS_REVIEW = 8;
+  NOTIFICATION_KIND_INVITATION_ACCEPTED = 9;
+}
+
+message NotificationItem {
+  uint64 sequence = 1;
+  NotificationKind kind = 2;
+  string actor_user_id = 3;
+  string thread_id = 4;
+  string message_id = 5;
+  string project_id = 6;
+  string team_id = 7;
+  google.protobuf.Timestamp created_at = 8;
+  bool read = 9;
+}
+
+message GetNotificationSummaryRequest {
+  string workspace_id = 1;
+}
+
+message GetNotificationSummaryResponse {
+  uint64 unread_count = 1;
+  uint64 last_sequence = 2;
+  uint32 poll_interval_seconds = 3;
+}
+
+message ListNotificationsRequest {
+  string workspace_id = 1;
+  uint64 after_sequence = 2;
+  int32 page_size = 3;
+  bool unread_only = 4;
+}
+
+message ListNotificationsResponse {
+  repeated NotificationItem items = 1;
+  uint64 next_after_sequence = 2;
+  bool has_more = 3;
+}
+
+message MarkNotificationsReadRequest {
+  string workspace_id = 1;
+  repeated uint64 sequences = 2;
+}
+
+message MarkNotificationsReadResponse {
+  uint64 unread_count = 1;
+  uint64 last_sequence = 2;
+}
+
+message MarkAllNotificationsReadRequest {
+  string workspace_id = 1;
+  uint64 up_to_sequence = 2;
+}
+
+message MarkAllNotificationsReadResponse {
+  uint64 unread_count = 1;
+  uint64 last_sequence = 2;
+}
