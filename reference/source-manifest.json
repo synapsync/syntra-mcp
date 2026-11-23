@@ -75,7 +75,7 @@
       "exportSha256": "78c1aa7989ab9ac8d74ea3b822537a74719fc204cbc42d88c2c929f7a9418fe6"
     }
   ],
-  "sourceCommit": "8071e71b7e8733643482e2c22f474d7b305c8d90",
+  "sourceCommit": "f26e6ea7dc12f683b503a5872388ca0816d3d8ea",
   "currentFiles": [
     {
       "destination": "core/fixtures/content-integrity-v1.json",
@@ -106,6 +106,10 @@
       "exportSha256": "dc2dfe2c89a0928ef7da67353befebd442f5c5b1563727475b260e2cbade6b2c"
     },
     {
+      "destination": "core/gen/syntra/v1/notification.pb.go",
+      "exportSha256": "081d589e26391c3477eddc8bc5d8fa3a21dd986fcb4d26e75a5b461f9f45fb92"
+    },
+    {
       "destination": "core/gen/syntra/v1/status.pb.go",
       "exportSha256": "c6350f39a6a8bbc620d3cbcdad7157a5738b71d6b58808f146ec33c4a1f88751"
     },
@@ -128,6 +132,10 @@
     {
       "destination": "core/gen/syntra/v1/syntrav1connect/integration.connect.go",
       "exportSha256": "f934103533fd2afc09fe154b88bb0b12f7d6e7bb4d2843defe23237f1f02ba76"
+    },
+    {
+      "destination": "core/gen/syntra/v1/syntrav1connect/notification.connect.go",
+      "exportSha256": "14fae446ecef23551b8a321213e80e7a6e44b1c831036259ff17c8d92542512a"
     },
     {
       "destination": "core/gen/syntra/v1/syntrav1connect/status.connect.go",
@@ -172,6 +180,10 @@
     {
       "destination": "reference/proto/syntra/v1/integration.proto",
       "exportSha256": "825bc91ec52ad08c1cacf9d74e2d2b655049e71a4952abacd1c0ea593a52ebfd"
+    },
+    {
+      "destination": "reference/proto/syntra/v1/notification.proto",
+      "exportSha256": "569a014f956c36cd8d90d10d49e7940ea97dbeddcb9cde59333d7b5e3281c73f"
     },
     {
       "destination": "reference/proto/syntra/v1/status.proto",
