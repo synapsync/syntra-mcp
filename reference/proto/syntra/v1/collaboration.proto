@@ -36,6 +36,7 @@ service ThreadService {
   rpc UpdateThread(UpdateThreadRequest) returns (UpdateThreadResponse);
   rpc CloseThread(CloseThreadRequest) returns (CloseThreadResponse);
   rpc ReopenThread(ReopenThreadRequest) returns (ReopenThreadResponse);
+  rpc AddThreadParticipant(AddThreadParticipantRequest) returns (AddThreadParticipantResponse);
 }
 
 // MessageService uses current workspace authorization on every request and retry.
@@ -107,6 +108,8 @@ enum ThreadEventKind {
   THREAD_EVENT_KIND_MESSAGE_REVIEWED = 6;
   THREAD_EVENT_KIND_THREAD_CLOSED = 8;
   THREAD_EVENT_KIND_THREAD_REOPENED = 9;
+  // A person was included in a published thread without a message; actor is who added, target_user_id who was added.
+  THREAD_EVENT_KIND_PARTICIPANT_ADDED = 10;
 }
 
 // Workspace catalog metadata; writes require current ADMIN. Names are 1..120 scalars/480 bytes, descriptions 0..2000 scalars/8000 bytes.
@@ -290,6 +293,8 @@ message ThreadEvent {
   string reason = 13;
   // Monotonic per-thread causal order; independent of wall-clock time and UUIDs.
   int64 sequence = 14;
+  // Set only for THREAD_EVENT_KIND_PARTICIPANT_ADDED: the person added.
+  optional string target_user_id = 15;
 }
 
 // Exactly one published message OR own prepared message, selected by the required inbox view.
@@ -439,7 +444,7 @@ message ListThreadsRequest {
   string workspace_id = 1;
   optional string project_id = 2;
   ThreadState state = 4;
-  // Only threads in which this person participates (creator, or author/recipient of a published message).
+  // Only threads in which this person participates (creator, author/recipient of a published message, or added without a message).
   optional string participant_user_id = 5;
   // Exact literal case-sensitive substring of title, 0..120 scalars/480 bytes. No wildcards, ranking or Markdown search.
   string query = 6;
@@ -537,6 +542,27 @@ message ReopenThreadRequest {
 
 message ReopenThreadResponse {
   Thread thread = 1;
+}
+
+// Includes an active enabled workspace member as participant of a published (open or closed) thread without sending a message.
+// Callable by any participant of the thread and by workspace administrators; every other member is denied and a pending thread is never reachable.
+// Adding the creator or an existing participant is a successful no-op: no event and no notification. The added person becomes a full participant
+// (reply, close, reopen, reply-to-all) and earlier messages are not unread for them. Agent connections need the PUBLISH capability and act for their owner.
+message AddThreadParticipantRequest {
+  // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+  string workspace_id = 1;
+  string thread_id = 2;
+  // The workspace member to add; must be an active enabled member.
+  string user_id = 3;
+  // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+  string request_id = 4;
+}
+
+message AddThreadParticipantResponse {
+  // The thread with its current participants list.
+  Thread thread = 1;
+  // True when this call (or its exact retry) added the person; false when they already took part.
+  bool added = 2;
 }
 
 // Explicit view required. PUBLISHED returns only messages; OWN_PREPARED only caller prepared messages. No mixed visibility pages.

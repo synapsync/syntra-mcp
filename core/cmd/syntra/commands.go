@@ -20,7 +20,7 @@ import (
 
 func isContentCommand(c string) bool {
 	switch c {
-	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "discard", "retry", "snapshot", "threads", "thread", "messages":
+	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "discard", "retry", "snapshot", "threads", "thread", "messages", "add-participant":
 		return true
 	}
 	return false
@@ -45,6 +45,8 @@ func runContent(parent context.Context, args []string) error {
 	asTeam := f.Bool("as-team", false, "resolve: address the whole selected --team")
 	thread := f.String("thread", "", "thread ID")
 	view := f.String("view", "published", "messages: published or own-prepared")
+	member := f.String("member", "", "add-participant: active workspace member UUID")
+	requestID := f.String("request-id", "", "add-participant: fresh canonical UUID; resend it to retry")
 	if err := f.Parse(args[1:]); err != nil {
 		return optionError(args[0], err)
 	}
@@ -75,6 +77,10 @@ func runContent(parent context.Context, args []string) error {
 		}
 	case "retry":
 		allowed["request"] = true
+	case "add-participant":
+		for _, s := range []string{"workspace", "thread", "member", "request-id"} {
+			allowed[s] = true
+		}
 	case "reply":
 		for _, s := range []string{"workspace", "thread", "summary", "context-file"} {
 			allowed[s] = true
@@ -251,6 +257,8 @@ func runContent(parent context.Context, args []string) error {
 		message = t
 	case "resolve":
 		result, e = app.Resolve(ctx, toolclient.Selection{Workspace: *workspace, Project: *project, Team: *team, Recipient: *recipient, Recipients: splitRecipients(*recipients), AsTeam: *asTeam})
+	case "add-participant":
+		message, e = app.AddParticipant(ctx, *workspace, *thread, *member, *requestID)
 	case "retry":
 		message, e = app.Retry(ctx, *request)
 	default:

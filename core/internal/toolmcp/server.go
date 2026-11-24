@@ -170,6 +170,8 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		out, e = app.Publish(ctx, args.request.(*v1.PublishContentRequest), args.base)
 	case "discard":
 		out, e = app.Discard(ctx, args.request.(*v1.DiscardContentRequest))
+	case "add-participant":
+		out, e = app.AddParticipant(ctx, args.workspace, args.thread, args.member, args.requestID)
 	case "retry":
 		out, e = app.Retry(ctx, args.requestID)
 	case "snapshot":
@@ -222,10 +224,10 @@ func identityStatus(connection *v1.ToolConnection, status toolclient.ConnectionS
 }
 
 type arguments struct {
-	workspace, project, team, recipient, thread, view, base, requestID string
-	recipients                                                         []string
-	asTeam                                                             bool
-	request                                                            proto.Message
+	workspace, project, team, recipient, thread, member, view, base, requestID string
+	recipients                                                                 []string
+	asTeam                                                                     bool
+	request                                                                    proto.Message
 }
 
 func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
@@ -258,6 +260,8 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 		required = []string{"request"}
 	case "link", "publish":
 		required = []string{"request", "base"}
+	case "add-participant":
+		required = []string{"workspaceId", "threadId", "userId", "requestId"}
 	case "retry":
 		required = []string{"requestId"}
 	default:
@@ -292,7 +296,7 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 	if e != nil {
 		return a, e
 	}
-	values := map[string]*string{"workspaceId": &a.workspace, "projectId": &a.project, "threadId": &a.thread, "workspace": &a.workspace, "project": &a.project, "team": &a.team, "recipient": &a.recipient, "view": &a.view, "base": &a.base, "requestId": &a.requestID}
+	values := map[string]*string{"workspaceId": &a.workspace, "projectId": &a.project, "threadId": &a.thread, "userId": &a.member, "workspace": &a.workspace, "project": &a.project, "team": &a.team, "recipient": &a.recipient, "view": &a.view, "base": &a.base, "requestId": &a.requestID}
 	for k, p := range values {
 		if _, ok := m[k]; ok {
 			*p, e = text(m, k, true)

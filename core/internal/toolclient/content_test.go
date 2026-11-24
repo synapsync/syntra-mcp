@@ -51,26 +51,27 @@ type contentFixture struct {
 	syntrav1connect.UnimplementedWorkspaceServiceHandler
 	syntrav1connect.UnimplementedMessageServiceHandler
 	syntrav1connect.UnimplementedThreadServiceHandler
-	mu            sync.Mutex
-	p             *Profile
-	attempts      map[string]proto.Message
-	snapshots     map[string]*v1.AuthoredContentSnapshot
-	calls         int
-	pages         int
-	duplicate     bool
-	noTeams       bool
-	expire        bool
-	incomplete    bool
-	deny          bool
-	closed        bool
-	threadReads   int
-	threadState   v1.ThreadState
-	threadPrivate bool
-	tamper        string
-	hold          bool
-	committed     chan struct{}
-	snapshot      *v1.AuthoredContentSnapshot
-	record        *v1.GetContentSnapshotResponse
+	mu                  sync.Mutex
+	p                   *Profile
+	attempts            map[string]proto.Message
+	snapshots           map[string]*v1.AuthoredContentSnapshot
+	calls               int
+	pages               int
+	duplicate           bool
+	noTeams             bool
+	expire              bool
+	incomplete          bool
+	deny                bool
+	closed              bool
+	threadReads         int
+	threadState         v1.ThreadState
+	threadPrivate       bool
+	participantRequests []*v1.AddThreadParticipantRequest
+	tamper              string
+	hold                bool
+	committed           chan struct{}
+	snapshot            *v1.AuthoredContentSnapshot
+	record              *v1.GetContentSnapshotResponse
 }
 
 func (f *contentFixture) GetIdentity(context.Context, *connect.Request[v1.GetIdentityRequest]) (*connect.Response[v1.GetIdentityResponse], error) {

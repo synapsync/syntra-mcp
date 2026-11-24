@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package syntra.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "syntra.local/mcp/gen/syntra/v1;syntrav1";
+
+// NotificationService provides in-app notifications for authenticated humans.
+// Tool credentials, agents, and revoked members are rejected.
+// Items carry references only, never message content.
+service NotificationService {
+  rpc GetNotificationSummary(GetNotificationSummaryRequest) returns (GetNotificationSummaryResponse);
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
+  rpc MarkNotificationsRead(MarkNotificationsReadRequest) returns (MarkNotificationsReadResponse);
+  rpc MarkAllNotificationsRead(MarkAllNotificationsReadRequest) returns (MarkAllNotificationsReadResponse);
+}
+
+enum NotificationKind {
+  // Number 7 was a revocation kind removed before release: a revoked member can
+  // never read a notification, so it was unreachable.
+  reserved 7;
+  reserved "NOTIFICATION_KIND_ACCESS_REVOKED";
+  NOTIFICATION_KIND_UNSPECIFIED = 0;
+  NOTIFICATION_KIND_MESSAGE_RECEIVED = 1;
+  NOTIFICATION_KIND_THREAD_CLOSED = 2;
+  NOTIFICATION_KIND_THREAD_REOPENED = 3;
+  NOTIFICATION_KIND_ADDED_TO_PROJECT = 4;
+  NOTIFICATION_KIND_ADDED_TO_TEAM = 5;
+  NOTIFICATION_KIND_ROLE_CHANGED = 6;
+  NOTIFICATION_KIND_INTEGRATION_NEEDS_REVIEW = 8;
+  NOTIFICATION_KIND_INVITATION_ACCEPTED = 9;
+  NOTIFICATION_KIND_ADDED_TO_THREAD = 10;
+}
+
+message NotificationItem {
+  uint64 sequence = 1;
+  NotificationKind kind = 2;
+  string actor_user_id = 3;
+  string thread_id = 4;
+  string message_id = 5;
+  string project_id = 6;
+  string team_id = 7;
+  google.protobuf.Timestamp created_at = 8;
+  bool read = 9;
+}
+
+message GetNotificationSummaryRequest {
+  string workspace_id = 1;
+}
+
+message GetNotificationSummaryResponse {
+  uint64 unread_count = 1;
+  uint64 last_sequence = 2;
+  uint32 poll_interval_seconds = 3;
+}
+
+// Two listing modes. Ascending (newest_first false, the default) returns items
+// with sequence > after_sequence, oldest first, for "what is new since" use.
+// Newest first (newest_first true) returns items with sequence < before_sequence,
+// newest first; before_sequence 0 starts from the newest. At most one of
+// after_sequence and before_sequence may be non-zero, and before_sequence is
+// only valid with newest_first; any other combination is INVALID_ARGUMENT.
+// Sequences are uint64 and never leave integer representation.
+message ListNotificationsRequest {
+  string workspace_id = 1;
+  uint64 after_sequence = 2;
+  int32 page_size = 3;
+  bool unread_only = 4;
+  bool newest_first = 5;
+  uint64 before_sequence = 6;
+}
+
+// Ascending pages set next_after_sequence (the last sequence returned, or the
+// request value when empty). Newest-first pages set next_before_sequence (the
+// lowest sequence returned, or the request value when empty) and leave
+// next_after_sequence at the request value. has_more tells whether another
+// page exists in the paging direction.
+message ListNotificationsResponse {
+  repeated NotificationItem items = 1;
+  uint64 next_after_sequence = 2;
+  bool has_more = 3;
+  uint64 next_before_sequence = 4;
+}
+
+message MarkNotificationsReadRequest {
+  string workspace_id = 1;
+  repeated uint64 sequences = 2;
+}
+
+message MarkNotificationsReadResponse {
+  uint64 unread_count = 1;
+  uint64 last_sequence = 2;
+}
+
+message MarkAllNotificationsReadRequest {
+  string workspace_id = 1;
+  uint64 up_to_sequence = 2;
+}
+
+message MarkAllNotificationsReadResponse {
+  uint64 unread_count = 1;
+  uint64 last_sequence = 2;
+}
