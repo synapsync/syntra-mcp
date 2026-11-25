@@ -75,7 +75,7 @@
       "exportSha256": "78c1aa7989ab9ac8d74ea3b822537a74719fc204cbc42d88c2c929f7a9418fe6"
     }
   ],
-  "sourceCommit": "9b79871ecd9c3cc155af6cdb8b0f8e4bbb173c7e",
+  "sourceCommit": "7af8bfcb3f771d5bcf9919a38133cd388a6e16c9",
   "currentFiles": [
     {
       "destination": "core/fixtures/content-integrity-v1.json",
@@ -91,7 +91,7 @@
     },
     {
       "destination": "core/gen/syntra/v1/collaboration.pb.go",
-      "exportSha256": "da3553703ea61e560080a2268d4ebc2db0e8d13a4010382eaf3b9290c35956e7"
+      "exportSha256": "bb92090055d0a3f9fd3728f9d697772e8590c45525a79fc6ad749e2ddcc8f5a3"
     },
     {
       "destination": "core/gen/syntra/v1/content_service.pb.go",
@@ -107,7 +107,7 @@
     },
     {
       "destination": "core/gen/syntra/v1/notification.pb.go",
-      "exportSha256": "d24c92cbbaf0fe48bc6ae9811af8f0d2bcb820e993d24bb181a06c395e61963d"
+      "exportSha256": "f6af33eb0623ce9d56dede8d594901cd1ec2d986c72ae90f0d508ef4ed22de7c"
     },
     {
       "destination": "core/gen/syntra/v1/status.pb.go",
@@ -119,7 +119,7 @@
     },
     {
       "destination": "core/gen/syntra/v1/syntrav1connect/collaboration.connect.go",
-      "exportSha256": "f4718e1b92be8d799d92c929e871afd4ed5eac628715a14afce6e9cb06eb7da0"
+      "exportSha256": "499b6923e8be6700f5ccd0e0d1222af029f528716fdd1569c407ab4ef618aca6"
     },
     {
       "destination": "core/gen/syntra/v1/syntrav1connect/content_service.connect.go",
@@ -167,7 +167,7 @@
     },
     {
       "destination": "reference/proto/syntra/v1/collaboration.proto",
-      "exportSha256": "d0879aafdbe4bb5733ec45ffa743a02f083ea72aa42f17f0a800f4e16af86dde"
+      "exportSha256": "ad4bca6887783496aae9753ad02315f5a0716d2d2926558c4f9628bae6bbc6e1"
     },
     {
       "destination": "reference/proto/syntra/v1/content_service.proto",
@@ -183,7 +183,7 @@
     },
     {
       "destination": "reference/proto/syntra/v1/notification.proto",
-      "exportSha256": "2f7855c790a7f1e1c426e9e243b8a4651c1367e2de281c841ba28f748e4174b8"
+      "exportSha256": "1538b4ef34c4c78510fa12041cf45d6f67b3b4f56e1a93139e351cb357d7f0d5"
     },
     {
       "destination": "reference/proto/syntra/v1/status.proto",

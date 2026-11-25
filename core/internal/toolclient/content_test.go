@@ -51,26 +51,27 @@ type contentFixture struct {
 	syntrav1connect.UnimplementedWorkspaceServiceHandler
 	syntrav1connect.UnimplementedMessageServiceHandler
 	syntrav1connect.UnimplementedThreadServiceHandler
-	mu            sync.Mutex
-	p             *Profile
-	attempts      map[string]proto.Message
-	snapshots     map[string]*v1.AuthoredContentSnapshot
-	calls         int
-	pages         int
-	duplicate     bool
-	noTeams       bool
-	expire        bool
-	incomplete    bool
-	deny          bool
-	closed        bool
-	threadReads   int
-	threadState   v1.ThreadState
-	threadPrivate bool
-	tamper        string
-	hold          bool
-	committed     chan struct{}
-	snapshot      *v1.AuthoredContentSnapshot
-	record        *v1.GetContentSnapshotResponse
+	mu                  sync.Mutex
+	p                   *Profile
+	attempts            map[string]proto.Message
+	snapshots           map[string]*v1.AuthoredContentSnapshot
+	calls               int
+	pages               int
+	duplicate           bool
+	noTeams             bool
+	expire              bool
+	incomplete          bool
+	deny                bool
+	closed              bool
+	threadReads         int
+	threadState         v1.ThreadState
+	threadPrivate       bool
+	participantRequests []*v1.AddThreadParticipantRequest
+	tamper              string
+	hold                bool
+	committed           chan struct{}
+	snapshot            *v1.AuthoredContentSnapshot
+	record              *v1.GetContentSnapshotResponse
 }
 
 func (f *contentFixture) GetIdentity(context.Context, *connect.Request[v1.GetIdentityRequest]) (*connect.Response[v1.GetIdentityResponse], error) {
@@ -120,9 +121,9 @@ func (f *contentFixture) ListProjectTeams(_ context.Context, r *connect.Request[
 }
 func (f *contentFixture) ListMembers(_ context.Context, r *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error) {
 	if r.Msg.PageToken == "" {
-		return connect.NewResponse(&v1.ListMembersResponse{Members: []*v1.WorkspaceMember{{UserId: accountA, DisplayName: "Roimer"}}, NextPageToken: "later"}), nil
+		return connect.NewResponse(&v1.ListMembersResponse{Members: []*v1.WorkspaceMember{{UserId: accountA, DisplayName: "Roimer", Username: "rperaza"}}, NextPageToken: "later"}), nil
 	}
-	return connect.NewResponse(&v1.ListMembersResponse{Members: []*v1.WorkspaceMember{{UserId: accountB, DisplayName: "Pedro"}}}), nil
+	return connect.NewResponse(&v1.ListMembersResponse{Members: []*v1.WorkspaceMember{{UserId: accountB, DisplayName: "Pedro", Username: "pgomez"}}}), nil
 }
 func (f *contentFixture) apply(ctx context.Context, id string, req proto.Message, c *v1.AuthoredContent, p *v1.ClientReportedProvenance, publish bool) (*v1.AuthoredContentSnapshot, error) {
 	f.mu.Lock()
@@ -311,6 +312,47 @@ func TestProjectTeamDiscoveryReturnsEffectiveMembersOnly(t *testing.T) {
 	}
 	if bytes.Contains(raw, []byte("excludedUserIds")) {
 		t.Fatal("administrative exclusions leaked into discovery output")
+	}
+}
+
+func TestRecipientByUsername(t *testing.T) {
+	a, f, _, _ := setupContent(t)
+	ctx := context.Background()
+	// Workspace directory (project without teams), roster of one team and the union of rosters.
+	for _, noTeams := range []bool{true, false} {
+		f.mu.Lock()
+		f.noTeams = noTeams
+		f.mu.Unlock()
+		for _, q := range []string{"pgomez", "@pgomez", " @PGomez "} {
+			r, e := a.Resolve(ctx, Selection{Workspace: "Labs", Project: "App", Recipient: q})
+			if e != nil || r.RecipientID == nil || *r.RecipientID != accountB {
+				t.Fatalf("username %q (noTeams=%v): %v %v", q, noTeams, r, e)
+			}
+		}
+	}
+	f.mu.Lock()
+	f.noTeams = false
+	f.mu.Unlock()
+	r, e := a.Resolve(ctx, Selection{Workspace: "Labs", Project: "App", Team: "QA", Recipient: "@pgomez"})
+	if e != nil || *r.RecipientID != accountB || *r.TeamID != qaTeamID {
+		t.Fatalf("username inside a team roster: %v %v", r, e)
+	}
+	// Several people may be named by username.
+	r, e = a.Resolve(ctx, Selection{Workspace: "Labs", Recipients: []string{"@pgomez", "rperaza"}})
+	if e != nil || len(r.RecipientIDs) != 2 {
+		t.Fatalf("several usernames: %v %v", r, e)
+	}
+	// A username outside the roster of the chosen team is not a candidate, and an unknown one never links.
+	var c *Clarification
+	if _, e = a.Resolve(ctx, Selection{Workspace: "Labs", Project: "App", Team: "Backend", Recipient: "@pgomez"}); !errors.As(e, &c) || len(c.Candidates) != 0 {
+		t.Fatal("username outside the team roster resolved", e)
+	}
+	if _, e = a.Resolve(ctx, Selection{Workspace: "Labs", Recipient: "@nobody"}); !errors.As(e, &c) || len(c.Candidates) != 0 {
+		t.Fatal("unknown username linked", e)
+	}
+	// An empty handle never matches a member that has no username.
+	if matchesUsername("", "@") || matchesUsername("pgomez", "@") || !matchesUsername("pgomez", "@PGOMEZ") {
+		t.Fatal("matchesUsername contract")
 	}
 }
 

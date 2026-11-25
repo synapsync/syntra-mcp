@@ -32,24 +32,24 @@ const (
 	NotificationKind_NOTIFICATION_KIND_ADDED_TO_PROJECT         NotificationKind = 4
 	NotificationKind_NOTIFICATION_KIND_ADDED_TO_TEAM            NotificationKind = 5
 	NotificationKind_NOTIFICATION_KIND_ROLE_CHANGED             NotificationKind = 6
-	NotificationKind_NOTIFICATION_KIND_ACCESS_REVOKED           NotificationKind = 7
 	NotificationKind_NOTIFICATION_KIND_INTEGRATION_NEEDS_REVIEW NotificationKind = 8
 	NotificationKind_NOTIFICATION_KIND_INVITATION_ACCEPTED      NotificationKind = 9
+	NotificationKind_NOTIFICATION_KIND_ADDED_TO_THREAD          NotificationKind = 10
 )
 
 // Enum value maps for NotificationKind.
 var (
 	NotificationKind_name = map[int32]string{
-		0: "NOTIFICATION_KIND_UNSPECIFIED",
-		1: "NOTIFICATION_KIND_MESSAGE_RECEIVED",
-		2: "NOTIFICATION_KIND_THREAD_CLOSED",
-		3: "NOTIFICATION_KIND_THREAD_REOPENED",
-		4: "NOTIFICATION_KIND_ADDED_TO_PROJECT",
-		5: "NOTIFICATION_KIND_ADDED_TO_TEAM",
-		6: "NOTIFICATION_KIND_ROLE_CHANGED",
-		7: "NOTIFICATION_KIND_ACCESS_REVOKED",
-		8: "NOTIFICATION_KIND_INTEGRATION_NEEDS_REVIEW",
-		9: "NOTIFICATION_KIND_INVITATION_ACCEPTED",
+		0:  "NOTIFICATION_KIND_UNSPECIFIED",
+		1:  "NOTIFICATION_KIND_MESSAGE_RECEIVED",
+		2:  "NOTIFICATION_KIND_THREAD_CLOSED",
+		3:  "NOTIFICATION_KIND_THREAD_REOPENED",
+		4:  "NOTIFICATION_KIND_ADDED_TO_PROJECT",
+		5:  "NOTIFICATION_KIND_ADDED_TO_TEAM",
+		6:  "NOTIFICATION_KIND_ROLE_CHANGED",
+		8:  "NOTIFICATION_KIND_INTEGRATION_NEEDS_REVIEW",
+		9:  "NOTIFICATION_KIND_INVITATION_ACCEPTED",
+		10: "NOTIFICATION_KIND_ADDED_TO_THREAD",
 	}
 	NotificationKind_value = map[string]int32{
 		"NOTIFICATION_KIND_UNSPECIFIED":              0,
@@ -59,9 +59,9 @@ var (
 		"NOTIFICATION_KIND_ADDED_TO_PROJECT":         4,
 		"NOTIFICATION_KIND_ADDED_TO_TEAM":            5,
 		"NOTIFICATION_KIND_ROLE_CHANGED":             6,
-		"NOTIFICATION_KIND_ACCESS_REVOKED":           7,
 		"NOTIFICATION_KIND_INTEGRATION_NEEDS_REVIEW": 8,
 		"NOTIFICATION_KIND_INVITATION_ACCEPTED":      9,
+		"NOTIFICATION_KIND_ADDED_TO_THREAD":          10,
 	}
 )
 
@@ -304,14 +304,23 @@ func (x *GetNotificationSummaryResponse) GetPollIntervalSeconds() uint32 {
 	return 0
 }
 
+// Two listing modes. Ascending (newest_first false, the default) returns items
+// with sequence > after_sequence, oldest first, for "what is new since" use.
+// Newest first (newest_first true) returns items with sequence < before_sequence,
+// newest first; before_sequence 0 starts from the newest. At most one of
+// after_sequence and before_sequence may be non-zero, and before_sequence is
+// only valid with newest_first; any other combination is INVALID_ARGUMENT.
+// Sequences are uint64 and never leave integer representation.
 type ListNotificationsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkspaceId   string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
-	AfterSequence uint64                 `protobuf:"varint,2,opt,name=after_sequence,json=afterSequence,proto3" json:"after_sequence,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	UnreadOnly    bool                   `protobuf:"varint,4,opt,name=unread_only,json=unreadOnly,proto3" json:"unread_only,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId    string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	AfterSequence  uint64                 `protobuf:"varint,2,opt,name=after_sequence,json=afterSequence,proto3" json:"after_sequence,omitempty"`
+	PageSize       int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	UnreadOnly     bool                   `protobuf:"varint,4,opt,name=unread_only,json=unreadOnly,proto3" json:"unread_only,omitempty"`
+	NewestFirst    bool                   `protobuf:"varint,5,opt,name=newest_first,json=newestFirst,proto3" json:"newest_first,omitempty"`
+	BeforeSequence uint64                 `protobuf:"varint,6,opt,name=before_sequence,json=beforeSequence,proto3" json:"before_sequence,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ListNotificationsRequest) Reset() {
@@ -372,13 +381,33 @@ func (x *ListNotificationsRequest) GetUnreadOnly() bool {
 	return false
 }
 
+func (x *ListNotificationsRequest) GetNewestFirst() bool {
+	if x != nil {
+		return x.NewestFirst
+	}
+	return false
+}
+
+func (x *ListNotificationsRequest) GetBeforeSequence() uint64 {
+	if x != nil {
+		return x.BeforeSequence
+	}
+	return 0
+}
+
+// Ascending pages set next_after_sequence (the last sequence returned, or the
+// request value when empty). Newest-first pages set next_before_sequence (the
+// lowest sequence returned, or the request value when empty) and leave
+// next_after_sequence at the request value. has_more tells whether another
+// page exists in the paging direction.
 type ListNotificationsResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Items             []*NotificationItem    `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	NextAfterSequence uint64                 `protobuf:"varint,2,opt,name=next_after_sequence,json=nextAfterSequence,proto3" json:"next_after_sequence,omitempty"`
-	HasMore           bool                   `protobuf:"varint,3,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Items              []*NotificationItem    `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	NextAfterSequence  uint64                 `protobuf:"varint,2,opt,name=next_after_sequence,json=nextAfterSequence,proto3" json:"next_after_sequence,omitempty"`
+	HasMore            bool                   `protobuf:"varint,3,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`
+	NextBeforeSequence uint64                 `protobuf:"varint,4,opt,name=next_before_sequence,json=nextBeforeSequence,proto3" json:"next_before_sequence,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ListNotificationsResponse) Reset() {
@@ -430,6 +459,13 @@ func (x *ListNotificationsResponse) GetHasMore() bool {
 		return x.HasMore
 	}
 	return false
+}
+
+func (x *ListNotificationsResponse) GetNextBeforeSequence() uint64 {
+	if x != nil {
+		return x.NextBeforeSequence
+	}
+	return 0
 }
 
 type MarkNotificationsReadRequest struct {
@@ -663,17 +699,20 @@ const file_syntra_v1_notification_proto_rawDesc = "" +
 	"\x1eGetNotificationSummaryResponse\x12!\n" +
 	"\funread_count\x18\x01 \x01(\x04R\vunreadCount\x12#\n" +
 	"\rlast_sequence\x18\x02 \x01(\x04R\flastSequence\x122\n" +
-	"\x15poll_interval_seconds\x18\x03 \x01(\rR\x13pollIntervalSeconds\"\xa2\x01\n" +
+	"\x15poll_interval_seconds\x18\x03 \x01(\rR\x13pollIntervalSeconds\"\xee\x01\n" +
 	"\x18ListNotificationsRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12%\n" +
 	"\x0eafter_sequence\x18\x02 \x01(\x04R\rafterSequence\x12\x1b\n" +
 	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1f\n" +
 	"\vunread_only\x18\x04 \x01(\bR\n" +
-	"unreadOnly\"\x99\x01\n" +
+	"unreadOnly\x12!\n" +
+	"\fnewest_first\x18\x05 \x01(\bR\vnewestFirst\x12'\n" +
+	"\x0fbefore_sequence\x18\x06 \x01(\x04R\x0ebeforeSequence\"\xcb\x01\n" +
 	"\x19ListNotificationsResponse\x121\n" +
 	"\x05items\x18\x01 \x03(\v2\x1b.syntra.v1.NotificationItemR\x05items\x12.\n" +
 	"\x13next_after_sequence\x18\x02 \x01(\x04R\x11nextAfterSequence\x12\x19\n" +
-	"\bhas_more\x18\x03 \x01(\bR\ahasMore\"_\n" +
+	"\bhas_more\x18\x03 \x01(\bR\ahasMore\x120\n" +
+	"\x14next_before_sequence\x18\x04 \x01(\x04R\x12nextBeforeSequence\"_\n" +
 	"\x1cMarkNotificationsReadRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1c\n" +
 	"\tsequences\x18\x02 \x03(\x04R\tsequences\"g\n" +
@@ -685,7 +724,7 @@ const file_syntra_v1_notification_proto_rawDesc = "" +
 	"\x0eup_to_sequence\x18\x02 \x01(\x04R\fupToSequence\"j\n" +
 	" MarkAllNotificationsReadResponse\x12!\n" +
 	"\funread_count\x18\x01 \x01(\x04R\vunreadCount\x12#\n" +
-	"\rlast_sequence\x18\x02 \x01(\x04R\flastSequence*\x9b\x03\n" +
+	"\rlast_sequence\x18\x02 \x01(\x04R\flastSequence*\xc4\x03\n" +
 	"\x10NotificationKind\x12!\n" +
 	"\x1dNOTIFICATION_KIND_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"NOTIFICATION_KIND_MESSAGE_RECEIVED\x10\x01\x12#\n" +
@@ -693,10 +732,11 @@ const file_syntra_v1_notification_proto_rawDesc = "" +
 	"!NOTIFICATION_KIND_THREAD_REOPENED\x10\x03\x12&\n" +
 	"\"NOTIFICATION_KIND_ADDED_TO_PROJECT\x10\x04\x12#\n" +
 	"\x1fNOTIFICATION_KIND_ADDED_TO_TEAM\x10\x05\x12\"\n" +
-	"\x1eNOTIFICATION_KIND_ROLE_CHANGED\x10\x06\x12$\n" +
-	" NOTIFICATION_KIND_ACCESS_REVOKED\x10\a\x12.\n" +
+	"\x1eNOTIFICATION_KIND_ROLE_CHANGED\x10\x06\x12.\n" +
 	"*NOTIFICATION_KIND_INTEGRATION_NEEDS_REVIEW\x10\b\x12)\n" +
-	"%NOTIFICATION_KIND_INVITATION_ACCEPTED\x10\t2\xc5\x03\n" +
+	"%NOTIFICATION_KIND_INVITATION_ACCEPTED\x10\t\x12%\n" +
+	"!NOTIFICATION_KIND_ADDED_TO_THREAD\x10\n" +
+	"\"\x04\b\a\x10\a* NOTIFICATION_KIND_ACCESS_REVOKED2\xc5\x03\n" +
 	"\x13NotificationService\x12m\n" +
 	"\x16GetNotificationSummary\x12(.syntra.v1.GetNotificationSummaryRequest\x1a).syntra.v1.GetNotificationSummaryResponse\x12^\n" +
 	"\x11ListNotifications\x12#.syntra.v1.ListNotificationsRequest\x1a$.syntra.v1.ListNotificationsResponse\x12j\n" +
