@@ -287,20 +287,23 @@ const (
 	ThreadEventKind_THREAD_EVENT_KIND_MESSAGE_REVIEWED  ThreadEventKind = 6
 	ThreadEventKind_THREAD_EVENT_KIND_THREAD_CLOSED     ThreadEventKind = 8
 	ThreadEventKind_THREAD_EVENT_KIND_THREAD_REOPENED   ThreadEventKind = 9
+	// A person was included in a published thread without a message; actor is who added, target_user_id who was added.
+	ThreadEventKind_THREAD_EVENT_KIND_PARTICIPANT_ADDED ThreadEventKind = 10
 )
 
 // Enum value maps for ThreadEventKind.
 var (
 	ThreadEventKind_name = map[int32]string{
-		0: "THREAD_EVENT_KIND_UNSPECIFIED",
-		1: "THREAD_EVENT_KIND_THREAD_PUBLISHED",
-		2: "THREAD_EVENT_KIND_THREAD_UPDATED",
-		3: "THREAD_EVENT_KIND_THREAD_ASSIGNED",
-		4: "THREAD_EVENT_KIND_MESSAGE_PUBLISHED",
-		5: "THREAD_EVENT_KIND_MESSAGE_READ",
-		6: "THREAD_EVENT_KIND_MESSAGE_REVIEWED",
-		8: "THREAD_EVENT_KIND_THREAD_CLOSED",
-		9: "THREAD_EVENT_KIND_THREAD_REOPENED",
+		0:  "THREAD_EVENT_KIND_UNSPECIFIED",
+		1:  "THREAD_EVENT_KIND_THREAD_PUBLISHED",
+		2:  "THREAD_EVENT_KIND_THREAD_UPDATED",
+		3:  "THREAD_EVENT_KIND_THREAD_ASSIGNED",
+		4:  "THREAD_EVENT_KIND_MESSAGE_PUBLISHED",
+		5:  "THREAD_EVENT_KIND_MESSAGE_READ",
+		6:  "THREAD_EVENT_KIND_MESSAGE_REVIEWED",
+		8:  "THREAD_EVENT_KIND_THREAD_CLOSED",
+		9:  "THREAD_EVENT_KIND_THREAD_REOPENED",
+		10: "THREAD_EVENT_KIND_PARTICIPANT_ADDED",
 	}
 	ThreadEventKind_value = map[string]int32{
 		"THREAD_EVENT_KIND_UNSPECIFIED":       0,
@@ -312,6 +315,7 @@ var (
 		"THREAD_EVENT_KIND_MESSAGE_REVIEWED":  6,
 		"THREAD_EVENT_KIND_THREAD_CLOSED":     8,
 		"THREAD_EVENT_KIND_THREAD_REOPENED":   9,
+		"THREAD_EVENT_KIND_PARTICIPANT_ADDED": 10,
 	}
 )
 
@@ -1358,7 +1362,9 @@ type ThreadEvent struct {
 	// Close/reopen reason, <=1000 scalars/4000 bytes; nonblank for WITHOUT_VALIDATION or reopening.
 	Reason string `protobuf:"bytes,13,opt,name=reason,proto3" json:"reason,omitempty"`
 	// Monotonic per-thread causal order; independent of wall-clock time and UUIDs.
-	Sequence      int64 `protobuf:"varint,14,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	Sequence int64 `protobuf:"varint,14,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	// Set only for THREAD_EVENT_KIND_PARTICIPANT_ADDED: the person added.
+	TargetUserId  *string `protobuf:"bytes,15,opt,name=target_user_id,json=targetUserId,proto3,oneof" json:"target_user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1475,6 +1481,13 @@ func (x *ThreadEvent) GetSequence() int64 {
 		return x.Sequence
 	}
 	return 0
+}
+
+func (x *ThreadEvent) GetTargetUserId() string {
+	if x != nil && x.TargetUserId != nil {
+		return *x.TargetUserId
+	}
+	return ""
 }
 
 // Exactly one published message OR own prepared message, selected by the required inbox view.
@@ -2627,7 +2640,7 @@ type ListThreadsRequest struct {
 	WorkspaceId string      `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
 	ProjectId   *string     `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
 	State       ThreadState `protobuf:"varint,4,opt,name=state,proto3,enum=syntra.v1.ThreadState" json:"state,omitempty"`
-	// Only threads in which this person participates (creator, or author/recipient of a published message).
+	// Only threads in which this person participates (creator, author/recipient of a published message, or added without a message).
 	ParticipantUserId *string `protobuf:"bytes,5,opt,name=participant_user_id,json=participantUserId,proto3,oneof" json:"participant_user_id,omitempty"`
 	// Exact literal case-sensitive substring of title, 0..120 scalars/480 bytes. No wildcards, ranking or Markdown search.
 	Query      string           `protobuf:"bytes,6,opt,name=query,proto3" json:"query,omitempty"`
@@ -3409,6 +3422,135 @@ func (x *ReopenThreadResponse) GetThread() *Thread {
 	return nil
 }
 
+// Includes an active enabled workspace member as participant of a published (open or closed) thread without sending a message.
+// Callable by any participant of the thread and by workspace administrators; every other member is denied and a pending thread is never reachable.
+// Adding the creator or an existing participant is a successful no-op: no event and no notification. The added person becomes a full participant
+// (reply, close, reopen, reply-to-all) and earlier messages are not unread for them. Agent connections need the PUBLISH capability and act for their owner.
+type AddThreadParticipantRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
+	WorkspaceId string `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	ThreadId    string `protobuf:"bytes,2,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	// The workspace member to add; must be an active enabled member.
+	UserId string `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	// Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
+	RequestId     string `protobuf:"bytes,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddThreadParticipantRequest) Reset() {
+	*x = AddThreadParticipantRequest{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddThreadParticipantRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddThreadParticipantRequest) ProtoMessage() {}
+
+func (x *AddThreadParticipantRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddThreadParticipantRequest.ProtoReflect.Descriptor instead.
+func (*AddThreadParticipantRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *AddThreadParticipantRequest) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
+func (x *AddThreadParticipantRequest) GetThreadId() string {
+	if x != nil {
+		return x.ThreadId
+	}
+	return ""
+}
+
+func (x *AddThreadParticipantRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *AddThreadParticipantRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+type AddThreadParticipantResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The thread with its current participants list.
+	Thread *Thread `protobuf:"bytes,1,opt,name=thread,proto3" json:"thread,omitempty"`
+	// True when this call (or its exact retry) added the person; false when they already took part.
+	Added         bool `protobuf:"varint,2,opt,name=added,proto3" json:"added,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddThreadParticipantResponse) Reset() {
+	*x = AddThreadParticipantResponse{}
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddThreadParticipantResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddThreadParticipantResponse) ProtoMessage() {}
+
+func (x *AddThreadParticipantResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddThreadParticipantResponse.ProtoReflect.Descriptor instead.
+func (*AddThreadParticipantResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *AddThreadParticipantResponse) GetThread() *Thread {
+	if x != nil {
+		return x.Thread
+	}
+	return nil
+}
+
+func (x *AddThreadParticipantResponse) GetAdded() bool {
+	if x != nil {
+		return x.Added
+	}
+	return false
+}
+
 // Explicit view required. PUBLISHED returns only messages; OWN_PREPARED only caller prepared messages. No mixed visibility pages.
 type ListMessagesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -3428,7 +3570,7 @@ type ListMessagesRequest struct {
 
 func (x *ListMessagesRequest) Reset() {
 	*x = ListMessagesRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3440,7 +3582,7 @@ func (x *ListMessagesRequest) String() string {
 func (*ListMessagesRequest) ProtoMessage() {}
 
 func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[40]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3453,7 +3595,7 @@ func (x *ListMessagesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesRequest.ProtoReflect.Descriptor instead.
 func (*ListMessagesRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{40}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ListMessagesRequest) GetWorkspaceId() string {
@@ -3510,7 +3652,7 @@ type ListMessagesResponse struct {
 
 func (x *ListMessagesResponse) Reset() {
 	*x = ListMessagesResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3522,7 +3664,7 @@ func (x *ListMessagesResponse) String() string {
 func (*ListMessagesResponse) ProtoMessage() {}
 
 func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[41]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3535,7 +3677,7 @@ func (x *ListMessagesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMessagesResponse.ProtoReflect.Descriptor instead.
 func (*ListMessagesResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{41}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ListMessagesResponse) GetMessages() []*PublishedMessage {
@@ -3584,7 +3726,7 @@ type SavePreparedMessageRequest struct {
 
 func (x *SavePreparedMessageRequest) Reset() {
 	*x = SavePreparedMessageRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3596,7 +3738,7 @@ func (x *SavePreparedMessageRequest) String() string {
 func (*SavePreparedMessageRequest) ProtoMessage() {}
 
 func (x *SavePreparedMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[42]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3609,7 +3751,7 @@ func (x *SavePreparedMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SavePreparedMessageRequest.ProtoReflect.Descriptor instead.
 func (*SavePreparedMessageRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{42}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *SavePreparedMessageRequest) GetWorkspaceId() string {
@@ -3686,7 +3828,7 @@ type SavePreparedMessageResponse struct {
 
 func (x *SavePreparedMessageResponse) Reset() {
 	*x = SavePreparedMessageResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3698,7 +3840,7 @@ func (x *SavePreparedMessageResponse) String() string {
 func (*SavePreparedMessageResponse) ProtoMessage() {}
 
 func (x *SavePreparedMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[43]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3711,7 +3853,7 @@ func (x *SavePreparedMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SavePreparedMessageResponse.ProtoReflect.Descriptor instead.
 func (*SavePreparedMessageResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{43}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *SavePreparedMessageResponse) GetPreparedMessage() *PreparedMessage {
@@ -3747,7 +3889,7 @@ type PublishMessageRequest struct {
 
 func (x *PublishMessageRequest) Reset() {
 	*x = PublishMessageRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3759,7 +3901,7 @@ func (x *PublishMessageRequest) String() string {
 func (*PublishMessageRequest) ProtoMessage() {}
 
 func (x *PublishMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[44]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3772,7 +3914,7 @@ func (x *PublishMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishMessageRequest.ProtoReflect.Descriptor instead.
 func (*PublishMessageRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{44}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *PublishMessageRequest) GetWorkspaceId() string {
@@ -3828,7 +3970,7 @@ type PublishMessageResponse struct {
 
 func (x *PublishMessageResponse) Reset() {
 	*x = PublishMessageResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3840,7 +3982,7 @@ func (x *PublishMessageResponse) String() string {
 func (*PublishMessageResponse) ProtoMessage() {}
 
 func (x *PublishMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[45]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3853,7 +3995,7 @@ func (x *PublishMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishMessageResponse.ProtoReflect.Descriptor instead.
 func (*PublishMessageResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{45}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *PublishMessageResponse) GetThread() *Thread {
@@ -3889,7 +4031,7 @@ type DiscardPreparedMessageRequest struct {
 
 func (x *DiscardPreparedMessageRequest) Reset() {
 	*x = DiscardPreparedMessageRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3901,7 +4043,7 @@ func (x *DiscardPreparedMessageRequest) String() string {
 func (*DiscardPreparedMessageRequest) ProtoMessage() {}
 
 func (x *DiscardPreparedMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[46]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3914,7 +4056,7 @@ func (x *DiscardPreparedMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiscardPreparedMessageRequest.ProtoReflect.Descriptor instead.
 func (*DiscardPreparedMessageRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{46}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *DiscardPreparedMessageRequest) GetWorkspaceId() string {
@@ -3969,7 +4111,7 @@ type DiscardPreparedMessageResponse struct {
 
 func (x *DiscardPreparedMessageResponse) Reset() {
 	*x = DiscardPreparedMessageResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3981,7 +4123,7 @@ func (x *DiscardPreparedMessageResponse) String() string {
 func (*DiscardPreparedMessageResponse) ProtoMessage() {}
 
 func (x *DiscardPreparedMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[47]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3994,7 +4136,7 @@ func (x *DiscardPreparedMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiscardPreparedMessageResponse.ProtoReflect.Descriptor instead.
 func (*DiscardPreparedMessageResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{47}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *DiscardPreparedMessageResponse) GetPreparedMessageId() string {
@@ -4026,7 +4168,7 @@ type MarkThreadReadRequest struct {
 
 func (x *MarkThreadReadRequest) Reset() {
 	*x = MarkThreadReadRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4038,7 +4180,7 @@ func (x *MarkThreadReadRequest) String() string {
 func (*MarkThreadReadRequest) ProtoMessage() {}
 
 func (x *MarkThreadReadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[48]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4051,7 +4193,7 @@ func (x *MarkThreadReadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkThreadReadRequest.ProtoReflect.Descriptor instead.
 func (*MarkThreadReadRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{48}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *MarkThreadReadRequest) GetWorkspaceId() string {
@@ -4078,7 +4220,7 @@ type MarkThreadReadResponse struct {
 
 func (x *MarkThreadReadResponse) Reset() {
 	*x = MarkThreadReadResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4090,7 +4232,7 @@ func (x *MarkThreadReadResponse) String() string {
 func (*MarkThreadReadResponse) ProtoMessage() {}
 
 func (x *MarkThreadReadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[49]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4103,7 +4245,7 @@ func (x *MarkThreadReadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkThreadReadResponse.ProtoReflect.Descriptor instead.
 func (*MarkThreadReadResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{49}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *MarkThreadReadResponse) GetReceipts() []*RecipientReceipt {
@@ -4129,7 +4271,7 @@ type MarkReviewedRequest struct {
 
 func (x *MarkReviewedRequest) Reset() {
 	*x = MarkReviewedRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4141,7 +4283,7 @@ func (x *MarkReviewedRequest) String() string {
 func (*MarkReviewedRequest) ProtoMessage() {}
 
 func (x *MarkReviewedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[50]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4154,7 +4296,7 @@ func (x *MarkReviewedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReviewedRequest.ProtoReflect.Descriptor instead.
 func (*MarkReviewedRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{50}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *MarkReviewedRequest) GetWorkspaceId() string {
@@ -4194,7 +4336,7 @@ type MarkReviewedResponse struct {
 
 func (x *MarkReviewedResponse) Reset() {
 	*x = MarkReviewedResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4206,7 +4348,7 @@ func (x *MarkReviewedResponse) String() string {
 func (*MarkReviewedResponse) ProtoMessage() {}
 
 func (x *MarkReviewedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[51]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4219,7 +4361,7 @@ func (x *MarkReviewedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkReviewedResponse.ProtoReflect.Descriptor instead.
 func (*MarkReviewedResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{51}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *MarkReviewedResponse) GetReceipt() *RecipientReceipt {
@@ -4245,7 +4387,7 @@ type ListInboxItemsRequest struct {
 
 func (x *ListInboxItemsRequest) Reset() {
 	*x = ListInboxItemsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4257,7 +4399,7 @@ func (x *ListInboxItemsRequest) String() string {
 func (*ListInboxItemsRequest) ProtoMessage() {}
 
 func (x *ListInboxItemsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[52]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4270,7 +4412,7 @@ func (x *ListInboxItemsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInboxItemsRequest.ProtoReflect.Descriptor instead.
 func (*ListInboxItemsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{52}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *ListInboxItemsRequest) GetWorkspaceId() string {
@@ -4312,7 +4454,7 @@ type ListInboxItemsResponse struct {
 
 func (x *ListInboxItemsResponse) Reset() {
 	*x = ListInboxItemsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4324,7 +4466,7 @@ func (x *ListInboxItemsResponse) String() string {
 func (*ListInboxItemsResponse) ProtoMessage() {}
 
 func (x *ListInboxItemsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[53]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4337,7 +4479,7 @@ func (x *ListInboxItemsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInboxItemsResponse.ProtoReflect.Descriptor instead.
 func (*ListInboxItemsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{53}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *ListInboxItemsResponse) GetItems() []*InboxItem {
@@ -4372,7 +4514,7 @@ type ListThreadEventsRequest struct {
 
 func (x *ListThreadEventsRequest) Reset() {
 	*x = ListThreadEventsRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4384,7 +4526,7 @@ func (x *ListThreadEventsRequest) String() string {
 func (*ListThreadEventsRequest) ProtoMessage() {}
 
 func (x *ListThreadEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[54]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4397,7 +4539,7 @@ func (x *ListThreadEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListThreadEventsRequest.ProtoReflect.Descriptor instead.
 func (*ListThreadEventsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{54}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *ListThreadEventsRequest) GetWorkspaceId() string {
@@ -4446,7 +4588,7 @@ type ListThreadEventsResponse struct {
 
 func (x *ListThreadEventsResponse) Reset() {
 	*x = ListThreadEventsResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4458,7 +4600,7 @@ func (x *ListThreadEventsResponse) String() string {
 func (*ListThreadEventsResponse) ProtoMessage() {}
 
 func (x *ListThreadEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[55]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4471,7 +4613,7 @@ func (x *ListThreadEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListThreadEventsResponse.ProtoReflect.Descriptor instead.
 func (*ListThreadEventsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{55}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *ListThreadEventsResponse) GetEvents() []*ThreadEvent {
@@ -4498,7 +4640,7 @@ type GetOverviewRequest struct {
 
 func (x *GetOverviewRequest) Reset() {
 	*x = GetOverviewRequest{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4510,7 +4652,7 @@ func (x *GetOverviewRequest) String() string {
 func (*GetOverviewRequest) ProtoMessage() {}
 
 func (x *GetOverviewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[56]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4523,7 +4665,7 @@ func (x *GetOverviewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewRequest.ProtoReflect.Descriptor instead.
 func (*GetOverviewRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{56}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *GetOverviewRequest) GetWorkspaceId() string {
@@ -4542,7 +4684,7 @@ type GetOverviewResponse struct {
 
 func (x *GetOverviewResponse) Reset() {
 	*x = GetOverviewResponse{}
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4554,7 +4696,7 @@ func (x *GetOverviewResponse) String() string {
 func (*GetOverviewResponse) ProtoMessage() {}
 
 func (x *GetOverviewResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_collaboration_proto_msgTypes[57]
+	mi := &file_syntra_v1_collaboration_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4567,7 +4709,7 @@ func (x *GetOverviewResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewResponse.ProtoReflect.Descriptor instead.
 func (*GetOverviewResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{57}
+	return file_syntra_v1_collaboration_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *GetOverviewResponse) GetOverview() *Overview {
@@ -4694,7 +4836,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x11recipient_user_id\x18\x02 \x01(\tR\x0frecipientUserId\x123\n" +
 	"\aread_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06readAt\x12;\n" +
 	"\vreviewed_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"reviewedAt\"\xb6\x04\n" +
+	"reviewedAt\"\xf4\x04\n" +
 	"\vThreadEvent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x1b\n" +
@@ -4710,8 +4852,10 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x05state\x18\v \x01(\x0e2\x16.syntra.v1.ThreadStateR\x05state\x129\n" +
 	"\fclosure_kind\x18\f \x01(\x0e2\x16.syntra.v1.ClosureKindR\vclosureKind\x12\x16\n" +
 	"\x06reason\x18\r \x01(\tR\x06reason\x12\x1a\n" +
-	"\bsequence\x18\x0e \x01(\x03R\bsequenceB\r\n" +
-	"\v_message_idJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
+	"\bsequence\x18\x0e \x01(\x03R\bsequence\x12)\n" +
+	"\x0etarget_user_id\x18\x0f \x01(\tH\x01R\ftargetUserId\x88\x01\x01B\r\n" +
+	"\v_message_idB\x11\n" +
+	"\x0f_target_user_idJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
 	"R\x19previous_assignee_user_idR\x10assignee_user_id\"\xb4\x01\n" +
 	"\tInboxItem\x125\n" +
 	"\amessage\x18\x01 \x01(\v2\x1b.syntra.v1.PublishedMessageR\amessage\x12)\n" +
@@ -4866,7 +5010,16 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\n" +
 	"request_id\x18\x05 \x01(\tR\trequestId\"A\n" +
 	"\x14ReopenThreadResponse\x12)\n" +
-	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\xe0\x01\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\"\x95\x01\n" +
+	"\x1bAddThreadParticipantRequest\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
+	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x04 \x01(\tR\trequestId\"_\n" +
+	"\x1cAddThreadParticipantResponse\x12)\n" +
+	"\x06thread\x18\x01 \x01(\v2\x11.syntra.v1.ThreadR\x06thread\x12\x14\n" +
+	"\x05added\x18\x02 \x01(\bR\x05added\"\xe0\x01\n" +
 	"\x13ListMessagesRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x1b\n" +
 	"\tthread_id\x18\x02 \x01(\tR\bthreadId\x12*\n" +
@@ -4975,7 +5128,7 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\vClosureKind\x12\x1c\n" +
 	"\x18CLOSURE_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16CLOSURE_KIND_VALIDATED\x10\x01\x12#\n" +
-	"\x1fCLOSURE_KIND_WITHOUT_VALIDATION\x10\x02*\xea\x02\n" +
+	"\x1fCLOSURE_KIND_WITHOUT_VALIDATION\x10\x02*\x93\x03\n" +
 	"\x0fThreadEventKind\x12!\n" +
 	"\x1dTHREAD_EVENT_KIND_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"THREAD_EVENT_KIND_THREAD_PUBLISHED\x10\x01\x12$\n" +
@@ -4985,7 +5138,9 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x1eTHREAD_EVENT_KIND_MESSAGE_READ\x10\x05\x12&\n" +
 	"\"THREAD_EVENT_KIND_MESSAGE_REVIEWED\x10\x06\x12#\n" +
 	"\x1fTHREAD_EVENT_KIND_THREAD_CLOSED\x10\b\x12%\n" +
-	"!THREAD_EVENT_KIND_THREAD_REOPENED\x10\t2\xa8\x03\n" +
+	"!THREAD_EVENT_KIND_THREAD_REOPENED\x10\t\x12'\n" +
+	"#THREAD_EVENT_KIND_PARTICIPANT_ADDED\x10\n" +
+	"2\xa8\x03\n" +
 	"\x0eProjectService\x12O\n" +
 	"\fListProjects\x12\x1e.syntra.v1.ListProjectsRequest\x1a\x1f.syntra.v1.ListProjectsResponse\x12I\n" +
 	"\n" +
@@ -4996,14 +5151,15 @@ const file_syntra_v1_collaboration_proto_rawDesc = "" +
 	"\x12ProjectTeamService\x12[\n" +
 	"\x10ListProjectTeams\x12\".syntra.v1.ListProjectTeamsRequest\x1a#.syntra.v1.ListProjectTeamsResponse\x12U\n" +
 	"\x0eSetProjectTeam\x12 .syntra.v1.SetProjectTeamRequest\x1a!.syntra.v1.SetProjectTeamResponse\x12^\n" +
-	"\x11RemoveProjectTeam\x12#.syntra.v1.RemoveProjectTeamRequest\x1a$.syntra.v1.RemoveProjectTeamResponse2\xe6\x03\n" +
+	"\x11RemoveProjectTeam\x12#.syntra.v1.RemoveProjectTeamRequest\x1a$.syntra.v1.RemoveProjectTeamResponse2\xcf\x04\n" +
 	"\rThreadService\x12L\n" +
 	"\vListThreads\x12\x1d.syntra.v1.ListThreadsRequest\x1a\x1e.syntra.v1.ListThreadsResponse\x12F\n" +
 	"\tGetThread\x12\x1b.syntra.v1.GetThreadRequest\x1a\x1c.syntra.v1.GetThreadResponse\x12O\n" +
 	"\fCreateThread\x12\x1e.syntra.v1.CreateThreadRequest\x1a\x1f.syntra.v1.CreateThreadResponse\x12O\n" +
 	"\fUpdateThread\x12\x1e.syntra.v1.UpdateThreadRequest\x1a\x1f.syntra.v1.UpdateThreadResponse\x12L\n" +
 	"\vCloseThread\x12\x1d.syntra.v1.CloseThreadRequest\x1a\x1e.syntra.v1.CloseThreadResponse\x12O\n" +
-	"\fReopenThread\x12\x1e.syntra.v1.ReopenThreadRequest\x1a\x1f.syntra.v1.ReopenThreadResponse2\xb5\x04\n" +
+	"\fReopenThread\x12\x1e.syntra.v1.ReopenThreadRequest\x1a\x1f.syntra.v1.ReopenThreadResponse\x12g\n" +
+	"\x14AddThreadParticipant\x12&.syntra.v1.AddThreadParticipantRequest\x1a'.syntra.v1.AddThreadParticipantResponse2\xb5\x04\n" +
 	"\x0eMessageService\x12O\n" +
 	"\fListMessages\x12\x1e.syntra.v1.ListMessagesRequest\x1a\x1f.syntra.v1.ListMessagesResponse\x12d\n" +
 	"\x13SavePreparedMessage\x12%.syntra.v1.SavePreparedMessageRequest\x1a&.syntra.v1.SavePreparedMessageResponse\x12U\n" +
@@ -5031,7 +5187,7 @@ func file_syntra_v1_collaboration_proto_rawDescGZIP() []byte {
 }
 
 var file_syntra_v1_collaboration_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_syntra_v1_collaboration_proto_msgTypes = make([]protoimpl.MessageInfo, 58)
+var file_syntra_v1_collaboration_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
 var file_syntra_v1_collaboration_proto_goTypes = []any{
 	(ThreadState)(0),                       // 0: syntra.v1.ThreadState
 	(ThreadVisibility)(0),                  // 1: syntra.v1.ThreadVisibility
@@ -5079,58 +5235,60 @@ var file_syntra_v1_collaboration_proto_goTypes = []any{
 	(*CloseThreadResponse)(nil),            // 43: syntra.v1.CloseThreadResponse
 	(*ReopenThreadRequest)(nil),            // 44: syntra.v1.ReopenThreadRequest
 	(*ReopenThreadResponse)(nil),           // 45: syntra.v1.ReopenThreadResponse
-	(*ListMessagesRequest)(nil),            // 46: syntra.v1.ListMessagesRequest
-	(*ListMessagesResponse)(nil),           // 47: syntra.v1.ListMessagesResponse
-	(*SavePreparedMessageRequest)(nil),     // 48: syntra.v1.SavePreparedMessageRequest
-	(*SavePreparedMessageResponse)(nil),    // 49: syntra.v1.SavePreparedMessageResponse
-	(*PublishMessageRequest)(nil),          // 50: syntra.v1.PublishMessageRequest
-	(*PublishMessageResponse)(nil),         // 51: syntra.v1.PublishMessageResponse
-	(*DiscardPreparedMessageRequest)(nil),  // 52: syntra.v1.DiscardPreparedMessageRequest
-	(*DiscardPreparedMessageResponse)(nil), // 53: syntra.v1.DiscardPreparedMessageResponse
-	(*MarkThreadReadRequest)(nil),          // 54: syntra.v1.MarkThreadReadRequest
-	(*MarkThreadReadResponse)(nil),         // 55: syntra.v1.MarkThreadReadResponse
-	(*MarkReviewedRequest)(nil),            // 56: syntra.v1.MarkReviewedRequest
-	(*MarkReviewedResponse)(nil),           // 57: syntra.v1.MarkReviewedResponse
-	(*ListInboxItemsRequest)(nil),          // 58: syntra.v1.ListInboxItemsRequest
-	(*ListInboxItemsResponse)(nil),         // 59: syntra.v1.ListInboxItemsResponse
-	(*ListThreadEventsRequest)(nil),        // 60: syntra.v1.ListThreadEventsRequest
-	(*ListThreadEventsResponse)(nil),       // 61: syntra.v1.ListThreadEventsResponse
-	(*GetOverviewRequest)(nil),             // 62: syntra.v1.GetOverviewRequest
-	(*GetOverviewResponse)(nil),            // 63: syntra.v1.GetOverviewResponse
-	(*timestamppb.Timestamp)(nil),          // 64: google.protobuf.Timestamp
+	(*AddThreadParticipantRequest)(nil),    // 46: syntra.v1.AddThreadParticipantRequest
+	(*AddThreadParticipantResponse)(nil),   // 47: syntra.v1.AddThreadParticipantResponse
+	(*ListMessagesRequest)(nil),            // 48: syntra.v1.ListMessagesRequest
+	(*ListMessagesResponse)(nil),           // 49: syntra.v1.ListMessagesResponse
+	(*SavePreparedMessageRequest)(nil),     // 50: syntra.v1.SavePreparedMessageRequest
+	(*SavePreparedMessageResponse)(nil),    // 51: syntra.v1.SavePreparedMessageResponse
+	(*PublishMessageRequest)(nil),          // 52: syntra.v1.PublishMessageRequest
+	(*PublishMessageResponse)(nil),         // 53: syntra.v1.PublishMessageResponse
+	(*DiscardPreparedMessageRequest)(nil),  // 54: syntra.v1.DiscardPreparedMessageRequest
+	(*DiscardPreparedMessageResponse)(nil), // 55: syntra.v1.DiscardPreparedMessageResponse
+	(*MarkThreadReadRequest)(nil),          // 56: syntra.v1.MarkThreadReadRequest
+	(*MarkThreadReadResponse)(nil),         // 57: syntra.v1.MarkThreadReadResponse
+	(*MarkReviewedRequest)(nil),            // 58: syntra.v1.MarkReviewedRequest
+	(*MarkReviewedResponse)(nil),           // 59: syntra.v1.MarkReviewedResponse
+	(*ListInboxItemsRequest)(nil),          // 60: syntra.v1.ListInboxItemsRequest
+	(*ListInboxItemsResponse)(nil),         // 61: syntra.v1.ListInboxItemsResponse
+	(*ListThreadEventsRequest)(nil),        // 62: syntra.v1.ListThreadEventsRequest
+	(*ListThreadEventsResponse)(nil),       // 63: syntra.v1.ListThreadEventsResponse
+	(*GetOverviewRequest)(nil),             // 64: syntra.v1.GetOverviewRequest
+	(*GetOverviewResponse)(nil),            // 65: syntra.v1.GetOverviewResponse
+	(*timestamppb.Timestamp)(nil),          // 66: google.protobuf.Timestamp
 }
 var file_syntra_v1_collaboration_proto_depIdxs = []int32{
-	64, // 0: syntra.v1.Project.created_at:type_name -> google.protobuf.Timestamp
-	64, // 1: syntra.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 0: syntra.v1.Project.created_at:type_name -> google.protobuf.Timestamp
+	66, // 1: syntra.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
 	8,  // 2: syntra.v1.ProjectTeam.members:type_name -> syntra.v1.ProjectTeamMember
-	64, // 3: syntra.v1.ProjectTeam.created_at:type_name -> google.protobuf.Timestamp
-	64, // 4: syntra.v1.ProjectTeam.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 3: syntra.v1.ProjectTeam.created_at:type_name -> google.protobuf.Timestamp
+	66, // 4: syntra.v1.ProjectTeam.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 5: syntra.v1.Thread.state:type_name -> syntra.v1.ThreadState
-	64, // 6: syntra.v1.Thread.created_at:type_name -> google.protobuf.Timestamp
-	64, // 7: syntra.v1.Thread.updated_at:type_name -> google.protobuf.Timestamp
-	64, // 8: syntra.v1.Thread.published_at:type_name -> google.protobuf.Timestamp
+	66, // 6: syntra.v1.Thread.created_at:type_name -> google.protobuf.Timestamp
+	66, // 7: syntra.v1.Thread.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 8: syntra.v1.Thread.published_at:type_name -> google.protobuf.Timestamp
 	4,  // 9: syntra.v1.Thread.closure_kind:type_name -> syntra.v1.ClosureKind
-	64, // 10: syntra.v1.Thread.closed_at:type_name -> google.protobuf.Timestamp
+	66, // 10: syntra.v1.Thread.closed_at:type_name -> google.protobuf.Timestamp
 	9,  // 11: syntra.v1.Thread.participants:type_name -> syntra.v1.ThreadParticipant
-	64, // 12: syntra.v1.PreparedMessage.created_at:type_name -> google.protobuf.Timestamp
-	64, // 13: syntra.v1.PreparedMessage.updated_at:type_name -> google.protobuf.Timestamp
+	66, // 12: syntra.v1.PreparedMessage.created_at:type_name -> google.protobuf.Timestamp
+	66, // 13: syntra.v1.PreparedMessage.updated_at:type_name -> google.protobuf.Timestamp
 	13, // 14: syntra.v1.PreparedMessage.recipients:type_name -> syntra.v1.MessageRecipient
-	64, // 15: syntra.v1.PublishedMessage.published_at:type_name -> google.protobuf.Timestamp
+	66, // 15: syntra.v1.PublishedMessage.published_at:type_name -> google.protobuf.Timestamp
 	14, // 16: syntra.v1.PublishedMessage.receipt:type_name -> syntra.v1.RecipientReceipt
 	13, // 17: syntra.v1.PublishedMessage.recipients:type_name -> syntra.v1.MessageRecipient
-	64, // 18: syntra.v1.MessageRecipient.read_at:type_name -> google.protobuf.Timestamp
-	64, // 19: syntra.v1.MessageRecipient.reviewed_at:type_name -> google.protobuf.Timestamp
-	64, // 20: syntra.v1.RecipientReceipt.read_at:type_name -> google.protobuf.Timestamp
-	64, // 21: syntra.v1.RecipientReceipt.reviewed_at:type_name -> google.protobuf.Timestamp
+	66, // 18: syntra.v1.MessageRecipient.read_at:type_name -> google.protobuf.Timestamp
+	66, // 19: syntra.v1.MessageRecipient.reviewed_at:type_name -> google.protobuf.Timestamp
+	66, // 20: syntra.v1.RecipientReceipt.read_at:type_name -> google.protobuf.Timestamp
+	66, // 21: syntra.v1.RecipientReceipt.reviewed_at:type_name -> google.protobuf.Timestamp
 	5,  // 22: syntra.v1.ThreadEvent.kind:type_name -> syntra.v1.ThreadEventKind
-	64, // 23: syntra.v1.ThreadEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	66, // 23: syntra.v1.ThreadEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	0,  // 24: syntra.v1.ThreadEvent.previous_state:type_name -> syntra.v1.ThreadState
 	0,  // 25: syntra.v1.ThreadEvent.state:type_name -> syntra.v1.ThreadState
 	4,  // 26: syntra.v1.ThreadEvent.closure_kind:type_name -> syntra.v1.ClosureKind
 	12, // 27: syntra.v1.InboxItem.message:type_name -> syntra.v1.PublishedMessage
 	10, // 28: syntra.v1.InboxItem.thread:type_name -> syntra.v1.Thread
 	11, // 29: syntra.v1.InboxItem.prepared_message:type_name -> syntra.v1.PreparedMessage
-	64, // 30: syntra.v1.Overview.as_of:type_name -> google.protobuf.Timestamp
+	66, // 30: syntra.v1.Overview.as_of:type_name -> google.protobuf.Timestamp
 	6,  // 31: syntra.v1.ListProjectsResponse.projects:type_name -> syntra.v1.Project
 	6,  // 32: syntra.v1.GetProjectResponse.project:type_name -> syntra.v1.Project
 	6,  // 33: syntra.v1.CreateProjectResponse.project:type_name -> syntra.v1.Project
@@ -5147,70 +5305,73 @@ var file_syntra_v1_collaboration_proto_depIdxs = []int32{
 	4,  // 44: syntra.v1.CloseThreadRequest.kind:type_name -> syntra.v1.ClosureKind
 	10, // 45: syntra.v1.CloseThreadResponse.thread:type_name -> syntra.v1.Thread
 	10, // 46: syntra.v1.ReopenThreadResponse.thread:type_name -> syntra.v1.Thread
-	2,  // 47: syntra.v1.ListMessagesRequest.view:type_name -> syntra.v1.MessageView
-	12, // 48: syntra.v1.ListMessagesResponse.messages:type_name -> syntra.v1.PublishedMessage
-	11, // 49: syntra.v1.ListMessagesResponse.prepared_messages:type_name -> syntra.v1.PreparedMessage
-	11, // 50: syntra.v1.SavePreparedMessageResponse.prepared_message:type_name -> syntra.v1.PreparedMessage
-	10, // 51: syntra.v1.SavePreparedMessageResponse.thread:type_name -> syntra.v1.Thread
-	10, // 52: syntra.v1.PublishMessageResponse.thread:type_name -> syntra.v1.Thread
-	12, // 53: syntra.v1.PublishMessageResponse.message:type_name -> syntra.v1.PublishedMessage
-	14, // 54: syntra.v1.MarkThreadReadResponse.receipts:type_name -> syntra.v1.RecipientReceipt
-	14, // 55: syntra.v1.MarkReviewedResponse.receipt:type_name -> syntra.v1.RecipientReceipt
-	3,  // 56: syntra.v1.ListInboxItemsRequest.view:type_name -> syntra.v1.InboxView
-	16, // 57: syntra.v1.ListInboxItemsResponse.items:type_name -> syntra.v1.InboxItem
-	15, // 58: syntra.v1.ListThreadEventsResponse.events:type_name -> syntra.v1.ThreadEvent
-	17, // 59: syntra.v1.GetOverviewResponse.overview:type_name -> syntra.v1.Overview
-	18, // 60: syntra.v1.ProjectService.ListProjects:input_type -> syntra.v1.ListProjectsRequest
-	20, // 61: syntra.v1.ProjectService.GetProject:input_type -> syntra.v1.GetProjectRequest
-	22, // 62: syntra.v1.ProjectService.CreateProject:input_type -> syntra.v1.CreateProjectRequest
-	24, // 63: syntra.v1.ProjectService.UpdateProject:input_type -> syntra.v1.UpdateProjectRequest
-	26, // 64: syntra.v1.ProjectService.DeleteProject:input_type -> syntra.v1.DeleteProjectRequest
-	28, // 65: syntra.v1.ProjectTeamService.ListProjectTeams:input_type -> syntra.v1.ListProjectTeamsRequest
-	30, // 66: syntra.v1.ProjectTeamService.SetProjectTeam:input_type -> syntra.v1.SetProjectTeamRequest
-	32, // 67: syntra.v1.ProjectTeamService.RemoveProjectTeam:input_type -> syntra.v1.RemoveProjectTeamRequest
-	34, // 68: syntra.v1.ThreadService.ListThreads:input_type -> syntra.v1.ListThreadsRequest
-	36, // 69: syntra.v1.ThreadService.GetThread:input_type -> syntra.v1.GetThreadRequest
-	38, // 70: syntra.v1.ThreadService.CreateThread:input_type -> syntra.v1.CreateThreadRequest
-	40, // 71: syntra.v1.ThreadService.UpdateThread:input_type -> syntra.v1.UpdateThreadRequest
-	42, // 72: syntra.v1.ThreadService.CloseThread:input_type -> syntra.v1.CloseThreadRequest
-	44, // 73: syntra.v1.ThreadService.ReopenThread:input_type -> syntra.v1.ReopenThreadRequest
-	46, // 74: syntra.v1.MessageService.ListMessages:input_type -> syntra.v1.ListMessagesRequest
-	48, // 75: syntra.v1.MessageService.SavePreparedMessage:input_type -> syntra.v1.SavePreparedMessageRequest
-	50, // 76: syntra.v1.MessageService.PublishMessage:input_type -> syntra.v1.PublishMessageRequest
-	52, // 77: syntra.v1.MessageService.DiscardPreparedMessage:input_type -> syntra.v1.DiscardPreparedMessageRequest
-	54, // 78: syntra.v1.MessageService.MarkThreadRead:input_type -> syntra.v1.MarkThreadReadRequest
-	56, // 79: syntra.v1.MessageService.MarkReviewed:input_type -> syntra.v1.MarkReviewedRequest
-	58, // 80: syntra.v1.InboxService.ListInboxItems:input_type -> syntra.v1.ListInboxItemsRequest
-	60, // 81: syntra.v1.ActivityService.ListThreadEvents:input_type -> syntra.v1.ListThreadEventsRequest
-	62, // 82: syntra.v1.DashboardService.GetOverview:input_type -> syntra.v1.GetOverviewRequest
-	19, // 83: syntra.v1.ProjectService.ListProjects:output_type -> syntra.v1.ListProjectsResponse
-	21, // 84: syntra.v1.ProjectService.GetProject:output_type -> syntra.v1.GetProjectResponse
-	23, // 85: syntra.v1.ProjectService.CreateProject:output_type -> syntra.v1.CreateProjectResponse
-	25, // 86: syntra.v1.ProjectService.UpdateProject:output_type -> syntra.v1.UpdateProjectResponse
-	27, // 87: syntra.v1.ProjectService.DeleteProject:output_type -> syntra.v1.DeleteProjectResponse
-	29, // 88: syntra.v1.ProjectTeamService.ListProjectTeams:output_type -> syntra.v1.ListProjectTeamsResponse
-	31, // 89: syntra.v1.ProjectTeamService.SetProjectTeam:output_type -> syntra.v1.SetProjectTeamResponse
-	33, // 90: syntra.v1.ProjectTeamService.RemoveProjectTeam:output_type -> syntra.v1.RemoveProjectTeamResponse
-	35, // 91: syntra.v1.ThreadService.ListThreads:output_type -> syntra.v1.ListThreadsResponse
-	37, // 92: syntra.v1.ThreadService.GetThread:output_type -> syntra.v1.GetThreadResponse
-	39, // 93: syntra.v1.ThreadService.CreateThread:output_type -> syntra.v1.CreateThreadResponse
-	41, // 94: syntra.v1.ThreadService.UpdateThread:output_type -> syntra.v1.UpdateThreadResponse
-	43, // 95: syntra.v1.ThreadService.CloseThread:output_type -> syntra.v1.CloseThreadResponse
-	45, // 96: syntra.v1.ThreadService.ReopenThread:output_type -> syntra.v1.ReopenThreadResponse
-	47, // 97: syntra.v1.MessageService.ListMessages:output_type -> syntra.v1.ListMessagesResponse
-	49, // 98: syntra.v1.MessageService.SavePreparedMessage:output_type -> syntra.v1.SavePreparedMessageResponse
-	51, // 99: syntra.v1.MessageService.PublishMessage:output_type -> syntra.v1.PublishMessageResponse
-	53, // 100: syntra.v1.MessageService.DiscardPreparedMessage:output_type -> syntra.v1.DiscardPreparedMessageResponse
-	55, // 101: syntra.v1.MessageService.MarkThreadRead:output_type -> syntra.v1.MarkThreadReadResponse
-	57, // 102: syntra.v1.MessageService.MarkReviewed:output_type -> syntra.v1.MarkReviewedResponse
-	59, // 103: syntra.v1.InboxService.ListInboxItems:output_type -> syntra.v1.ListInboxItemsResponse
-	61, // 104: syntra.v1.ActivityService.ListThreadEvents:output_type -> syntra.v1.ListThreadEventsResponse
-	63, // 105: syntra.v1.DashboardService.GetOverview:output_type -> syntra.v1.GetOverviewResponse
-	83, // [83:106] is the sub-list for method output_type
-	60, // [60:83] is the sub-list for method input_type
-	60, // [60:60] is the sub-list for extension type_name
-	60, // [60:60] is the sub-list for extension extendee
-	0,  // [0:60] is the sub-list for field type_name
+	10, // 47: syntra.v1.AddThreadParticipantResponse.thread:type_name -> syntra.v1.Thread
+	2,  // 48: syntra.v1.ListMessagesRequest.view:type_name -> syntra.v1.MessageView
+	12, // 49: syntra.v1.ListMessagesResponse.messages:type_name -> syntra.v1.PublishedMessage
+	11, // 50: syntra.v1.ListMessagesResponse.prepared_messages:type_name -> syntra.v1.PreparedMessage
+	11, // 51: syntra.v1.SavePreparedMessageResponse.prepared_message:type_name -> syntra.v1.PreparedMessage
+	10, // 52: syntra.v1.SavePreparedMessageResponse.thread:type_name -> syntra.v1.Thread
+	10, // 53: syntra.v1.PublishMessageResponse.thread:type_name -> syntra.v1.Thread
+	12, // 54: syntra.v1.PublishMessageResponse.message:type_name -> syntra.v1.PublishedMessage
+	14, // 55: syntra.v1.MarkThreadReadResponse.receipts:type_name -> syntra.v1.RecipientReceipt
+	14, // 56: syntra.v1.MarkReviewedResponse.receipt:type_name -> syntra.v1.RecipientReceipt
+	3,  // 57: syntra.v1.ListInboxItemsRequest.view:type_name -> syntra.v1.InboxView
+	16, // 58: syntra.v1.ListInboxItemsResponse.items:type_name -> syntra.v1.InboxItem
+	15, // 59: syntra.v1.ListThreadEventsResponse.events:type_name -> syntra.v1.ThreadEvent
+	17, // 60: syntra.v1.GetOverviewResponse.overview:type_name -> syntra.v1.Overview
+	18, // 61: syntra.v1.ProjectService.ListProjects:input_type -> syntra.v1.ListProjectsRequest
+	20, // 62: syntra.v1.ProjectService.GetProject:input_type -> syntra.v1.GetProjectRequest
+	22, // 63: syntra.v1.ProjectService.CreateProject:input_type -> syntra.v1.CreateProjectRequest
+	24, // 64: syntra.v1.ProjectService.UpdateProject:input_type -> syntra.v1.UpdateProjectRequest
+	26, // 65: syntra.v1.ProjectService.DeleteProject:input_type -> syntra.v1.DeleteProjectRequest
+	28, // 66: syntra.v1.ProjectTeamService.ListProjectTeams:input_type -> syntra.v1.ListProjectTeamsRequest
+	30, // 67: syntra.v1.ProjectTeamService.SetProjectTeam:input_type -> syntra.v1.SetProjectTeamRequest
+	32, // 68: syntra.v1.ProjectTeamService.RemoveProjectTeam:input_type -> syntra.v1.RemoveProjectTeamRequest
+	34, // 69: syntra.v1.ThreadService.ListThreads:input_type -> syntra.v1.ListThreadsRequest
+	36, // 70: syntra.v1.ThreadService.GetThread:input_type -> syntra.v1.GetThreadRequest
+	38, // 71: syntra.v1.ThreadService.CreateThread:input_type -> syntra.v1.CreateThreadRequest
+	40, // 72: syntra.v1.ThreadService.UpdateThread:input_type -> syntra.v1.UpdateThreadRequest
+	42, // 73: syntra.v1.ThreadService.CloseThread:input_type -> syntra.v1.CloseThreadRequest
+	44, // 74: syntra.v1.ThreadService.ReopenThread:input_type -> syntra.v1.ReopenThreadRequest
+	46, // 75: syntra.v1.ThreadService.AddThreadParticipant:input_type -> syntra.v1.AddThreadParticipantRequest
+	48, // 76: syntra.v1.MessageService.ListMessages:input_type -> syntra.v1.ListMessagesRequest
+	50, // 77: syntra.v1.MessageService.SavePreparedMessage:input_type -> syntra.v1.SavePreparedMessageRequest
+	52, // 78: syntra.v1.MessageService.PublishMessage:input_type -> syntra.v1.PublishMessageRequest
+	54, // 79: syntra.v1.MessageService.DiscardPreparedMessage:input_type -> syntra.v1.DiscardPreparedMessageRequest
+	56, // 80: syntra.v1.MessageService.MarkThreadRead:input_type -> syntra.v1.MarkThreadReadRequest
+	58, // 81: syntra.v1.MessageService.MarkReviewed:input_type -> syntra.v1.MarkReviewedRequest
+	60, // 82: syntra.v1.InboxService.ListInboxItems:input_type -> syntra.v1.ListInboxItemsRequest
+	62, // 83: syntra.v1.ActivityService.ListThreadEvents:input_type -> syntra.v1.ListThreadEventsRequest
+	64, // 84: syntra.v1.DashboardService.GetOverview:input_type -> syntra.v1.GetOverviewRequest
+	19, // 85: syntra.v1.ProjectService.ListProjects:output_type -> syntra.v1.ListProjectsResponse
+	21, // 86: syntra.v1.ProjectService.GetProject:output_type -> syntra.v1.GetProjectResponse
+	23, // 87: syntra.v1.ProjectService.CreateProject:output_type -> syntra.v1.CreateProjectResponse
+	25, // 88: syntra.v1.ProjectService.UpdateProject:output_type -> syntra.v1.UpdateProjectResponse
+	27, // 89: syntra.v1.ProjectService.DeleteProject:output_type -> syntra.v1.DeleteProjectResponse
+	29, // 90: syntra.v1.ProjectTeamService.ListProjectTeams:output_type -> syntra.v1.ListProjectTeamsResponse
+	31, // 91: syntra.v1.ProjectTeamService.SetProjectTeam:output_type -> syntra.v1.SetProjectTeamResponse
+	33, // 92: syntra.v1.ProjectTeamService.RemoveProjectTeam:output_type -> syntra.v1.RemoveProjectTeamResponse
+	35, // 93: syntra.v1.ThreadService.ListThreads:output_type -> syntra.v1.ListThreadsResponse
+	37, // 94: syntra.v1.ThreadService.GetThread:output_type -> syntra.v1.GetThreadResponse
+	39, // 95: syntra.v1.ThreadService.CreateThread:output_type -> syntra.v1.CreateThreadResponse
+	41, // 96: syntra.v1.ThreadService.UpdateThread:output_type -> syntra.v1.UpdateThreadResponse
+	43, // 97: syntra.v1.ThreadService.CloseThread:output_type -> syntra.v1.CloseThreadResponse
+	45, // 98: syntra.v1.ThreadService.ReopenThread:output_type -> syntra.v1.ReopenThreadResponse
+	47, // 99: syntra.v1.ThreadService.AddThreadParticipant:output_type -> syntra.v1.AddThreadParticipantResponse
+	49, // 100: syntra.v1.MessageService.ListMessages:output_type -> syntra.v1.ListMessagesResponse
+	51, // 101: syntra.v1.MessageService.SavePreparedMessage:output_type -> syntra.v1.SavePreparedMessageResponse
+	53, // 102: syntra.v1.MessageService.PublishMessage:output_type -> syntra.v1.PublishMessageResponse
+	55, // 103: syntra.v1.MessageService.DiscardPreparedMessage:output_type -> syntra.v1.DiscardPreparedMessageResponse
+	57, // 104: syntra.v1.MessageService.MarkThreadRead:output_type -> syntra.v1.MarkThreadReadResponse
+	59, // 105: syntra.v1.MessageService.MarkReviewed:output_type -> syntra.v1.MarkReviewedResponse
+	61, // 106: syntra.v1.InboxService.ListInboxItems:output_type -> syntra.v1.ListInboxItemsResponse
+	63, // 107: syntra.v1.ActivityService.ListThreadEvents:output_type -> syntra.v1.ListThreadEventsResponse
+	65, // 108: syntra.v1.DashboardService.GetOverview:output_type -> syntra.v1.GetOverviewResponse
+	85, // [85:109] is the sub-list for method output_type
+	61, // [61:85] is the sub-list for method input_type
+	61, // [61:61] is the sub-list for extension type_name
+	61, // [61:61] is the sub-list for extension extendee
+	0,  // [0:61] is the sub-list for field type_name
 }
 
 func init() { file_syntra_v1_collaboration_proto_init() }
@@ -5223,14 +5384,14 @@ func file_syntra_v1_collaboration_proto_init() {
 	file_syntra_v1_collaboration_proto_msgTypes[6].OneofWrappers = []any{}
 	file_syntra_v1_collaboration_proto_msgTypes[9].OneofWrappers = []any{}
 	file_syntra_v1_collaboration_proto_msgTypes[28].OneofWrappers = []any{}
-	file_syntra_v1_collaboration_proto_msgTypes[42].OneofWrappers = []any{}
+	file_syntra_v1_collaboration_proto_msgTypes[44].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_collaboration_proto_rawDesc), len(file_syntra_v1_collaboration_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   58,
+			NumMessages:   60,
 			NumExtensions: 0,
 			NumServices:   7,
 		},
