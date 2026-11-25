@@ -86,6 +86,9 @@ const (
 	// ThreadServiceReopenThreadProcedure is the fully-qualified name of the ThreadService's
 	// ReopenThread RPC.
 	ThreadServiceReopenThreadProcedure = "/syntra.v1.ThreadService/ReopenThread"
+	// ThreadServiceAddThreadParticipantProcedure is the fully-qualified name of the ThreadService's
+	// AddThreadParticipant RPC.
+	ThreadServiceAddThreadParticipantProcedure = "/syntra.v1.ThreadService/AddThreadParticipant"
 	// MessageServiceListMessagesProcedure is the fully-qualified name of the MessageService's
 	// ListMessages RPC.
 	MessageServiceListMessagesProcedure = "/syntra.v1.MessageService/ListMessages"
@@ -419,6 +422,7 @@ type ThreadServiceClient interface {
 	UpdateThread(context.Context, *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error)
 	CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error)
 	ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error)
+	AddThreadParticipant(context.Context, *connect.Request[v1.AddThreadParticipantRequest]) (*connect.Response[v1.AddThreadParticipantResponse], error)
 }
 
 // NewThreadServiceClient constructs a client for the syntra.v1.ThreadService service. By default,
@@ -468,17 +472,24 @@ func NewThreadServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(threadServiceMethods.ByName("ReopenThread")),
 			connect.WithClientOptions(opts...),
 		),
+		addThreadParticipant: connect.NewClient[v1.AddThreadParticipantRequest, v1.AddThreadParticipantResponse](
+			httpClient,
+			baseURL+ThreadServiceAddThreadParticipantProcedure,
+			connect.WithSchema(threadServiceMethods.ByName("AddThreadParticipant")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // threadServiceClient implements ThreadServiceClient.
 type threadServiceClient struct {
-	listThreads  *connect.Client[v1.ListThreadsRequest, v1.ListThreadsResponse]
-	getThread    *connect.Client[v1.GetThreadRequest, v1.GetThreadResponse]
-	createThread *connect.Client[v1.CreateThreadRequest, v1.CreateThreadResponse]
-	updateThread *connect.Client[v1.UpdateThreadRequest, v1.UpdateThreadResponse]
-	closeThread  *connect.Client[v1.CloseThreadRequest, v1.CloseThreadResponse]
-	reopenThread *connect.Client[v1.ReopenThreadRequest, v1.ReopenThreadResponse]
+	listThreads          *connect.Client[v1.ListThreadsRequest, v1.ListThreadsResponse]
+	getThread            *connect.Client[v1.GetThreadRequest, v1.GetThreadResponse]
+	createThread         *connect.Client[v1.CreateThreadRequest, v1.CreateThreadResponse]
+	updateThread         *connect.Client[v1.UpdateThreadRequest, v1.UpdateThreadResponse]
+	closeThread          *connect.Client[v1.CloseThreadRequest, v1.CloseThreadResponse]
+	reopenThread         *connect.Client[v1.ReopenThreadRequest, v1.ReopenThreadResponse]
+	addThreadParticipant *connect.Client[v1.AddThreadParticipantRequest, v1.AddThreadParticipantResponse]
 }
 
 // ListThreads calls syntra.v1.ThreadService.ListThreads.
@@ -511,6 +522,11 @@ func (c *threadServiceClient) ReopenThread(ctx context.Context, req *connect.Req
 	return c.reopenThread.CallUnary(ctx, req)
 }
 
+// AddThreadParticipant calls syntra.v1.ThreadService.AddThreadParticipant.
+func (c *threadServiceClient) AddThreadParticipant(ctx context.Context, req *connect.Request[v1.AddThreadParticipantRequest]) (*connect.Response[v1.AddThreadParticipantResponse], error) {
+	return c.addThreadParticipant.CallUnary(ctx, req)
+}
+
 // ThreadServiceHandler is an implementation of the syntra.v1.ThreadService service.
 type ThreadServiceHandler interface {
 	ListThreads(context.Context, *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error)
@@ -519,6 +535,7 @@ type ThreadServiceHandler interface {
 	UpdateThread(context.Context, *connect.Request[v1.UpdateThreadRequest]) (*connect.Response[v1.UpdateThreadResponse], error)
 	CloseThread(context.Context, *connect.Request[v1.CloseThreadRequest]) (*connect.Response[v1.CloseThreadResponse], error)
 	ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error)
+	AddThreadParticipant(context.Context, *connect.Request[v1.AddThreadParticipantRequest]) (*connect.Response[v1.AddThreadParticipantResponse], error)
 }
 
 // NewThreadServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -564,6 +581,12 @@ func NewThreadServiceHandler(svc ThreadServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(threadServiceMethods.ByName("ReopenThread")),
 		connect.WithHandlerOptions(opts...),
 	)
+	threadServiceAddThreadParticipantHandler := connect.NewUnaryHandler(
+		ThreadServiceAddThreadParticipantProcedure,
+		svc.AddThreadParticipant,
+		connect.WithSchema(threadServiceMethods.ByName("AddThreadParticipant")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/syntra.v1.ThreadService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ThreadServiceListThreadsProcedure:
@@ -578,6 +601,8 @@ func NewThreadServiceHandler(svc ThreadServiceHandler, opts ...connect.HandlerOp
 			threadServiceCloseThreadHandler.ServeHTTP(w, r)
 		case ThreadServiceReopenThreadProcedure:
 			threadServiceReopenThreadHandler.ServeHTTP(w, r)
+		case ThreadServiceAddThreadParticipantProcedure:
+			threadServiceAddThreadParticipantHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -609,6 +634,10 @@ func (UnimplementedThreadServiceHandler) CloseThread(context.Context, *connect.R
 
 func (UnimplementedThreadServiceHandler) ReopenThread(context.Context, *connect.Request[v1.ReopenThreadRequest]) (*connect.Response[v1.ReopenThreadResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.ReopenThread is not implemented"))
+}
+
+func (UnimplementedThreadServiceHandler) AddThreadParticipant(context.Context, *connect.Request[v1.AddThreadParticipantRequest]) (*connect.Response[v1.AddThreadParticipantResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.ThreadService.AddThreadParticipant is not implemented"))
 }
 
 // MessageServiceClient is a client for the syntra.v1.MessageService service.

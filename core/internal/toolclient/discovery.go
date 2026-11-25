@@ -18,6 +18,9 @@ type Candidate struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	Kind string `json:"kind"`
+	// Username is the member's unique @handle when the profile has one. A
+	// recipient may be named by it (with or without a leading "@").
+	Username string `json:"username,omitempty"`
 }
 type Clarification struct {
 	Kind       string      `json:"kind"`
@@ -205,10 +208,34 @@ func (a *App) Members(ctx context.Context, w string) ([]*v1.WorkspaceMember, err
 	}, func(m *v1.WorkspaceMember) string { return m.UserId })
 }
 func ciInput() error { return errors.New("invalid stable routing ID") }
+
+// usernames maps member IDs to their username from the workspace directory. It
+// only enriches roster candidates, so a failure leaves them name-only.
+func (a *App) usernames(ctx context.Context, w string) map[string]string {
+	out := map[string]string{}
+	members, err := a.Members(ctx, w)
+	if err != nil {
+		return out
+	}
+	for _, m := range members {
+		if m.Username != "" {
+			out[m.UserId] = m.Username
+		}
+	}
+	return out
+}
+
+// matchesUsername reports whether q names the username, ignoring case and one
+// leading "@". Usernames are unique, so a match never needs disambiguation.
+func matchesUsername(username, q string) bool {
+	q = strings.TrimPrefix(strings.TrimSpace(q), "@")
+	return username != "" && q != "" && strings.EqualFold(username, q)
+}
+
 func choose(kind, q string, candidates []Candidate, err error) (string, error) {
 	matches := []Candidate{}
 	for _, c := range candidates {
-		if c.ID == q || strings.EqualFold(c.Name, q) {
+		if c.ID == q || strings.EqualFold(c.Name, q) || (c.Kind == "member" && matchesUsername(c.Username, q)) {
 			matches = append(matches, c)
 		}
 	}
@@ -230,7 +257,7 @@ func (a *App) Resolve(ctx context.Context, s Selection) (*Resolution, error) {
 	ws, e := a.Workspaces(ctx)
 	c := []Candidate{}
 	for _, x := range ws {
-		c = append(c, Candidate{x.WorkspaceId, x.Name, "workspace"})
+		c = append(c, Candidate{ID: x.WorkspaceId, Name: x.Name, Kind: "workspace"})
 	}
 	w, e := choose("workspace", s.Workspace, c, e)
 	if e != nil {
@@ -243,7 +270,7 @@ func (a *App) Resolve(ctx context.Context, s Selection) (*Resolution, error) {
 		xs, e := a.Projects(ctx, w)
 		c = nil
 		for _, x := range xs {
-			c = append(c, Candidate{x.Id, x.Name, "project"})
+			c = append(c, Candidate{ID: x.Id, Name: x.Name, Kind: "project"})
 		}
 		id, e := choose("project", s.Project, c, e)
 		if e != nil {
@@ -258,7 +285,7 @@ func (a *App) Resolve(ctx context.Context, s Selection) (*Resolution, error) {
 	if s.Team != "" {
 		c = nil
 		for _, x := range teams {
-			c = append(c, Candidate{x.TeamId, x.TeamName, "team"})
+			c = append(c, Candidate{ID: x.TeamId, Name: x.TeamName, Kind: "team"})
 		}
 		id, e := choose("team", s.Team, c, teamsErr)
 		if e != nil {
@@ -299,21 +326,21 @@ func (a *App) Resolve(ctx context.Context, s Selection) (*Resolution, error) {
 		case teamsErr != nil:
 			recipientErr = teamsErr
 		case team != nil:
-			c = rosterCandidates([]*v1.ProjectTeam{team})
+			c = rosterCandidates([]*v1.ProjectTeam{team}, a.usernames(ctx, w))
 		case len(teams) > 0:
-			c = rosterCandidates(teams)
+			c = rosterCandidates(teams, a.usernames(ctx, w))
 		default:
 			xs, e := a.Members(ctx, w)
 			recipientErr = e
 			for _, x := range xs {
-				c = append(c, Candidate{x.UserId, x.DisplayName, "member"})
+				c = append(c, Candidate{ID: x.UserId, Name: x.DisplayName, Kind: "member", Username: x.Username})
 			}
 		}
 		// A single recipient may also name a whole team of the project: teams are destinations too.
 		withTeams := c
 		if len(intents) == 1 && s.Recipient != "" && team == nil && teamsErr == nil {
 			for _, x := range teams {
-				withTeams = append(withTeams, Candidate{x.TeamId, x.TeamName, "team"})
+				withTeams = append(withTeams, Candidate{ID: x.TeamId, Name: x.TeamName, Kind: "team"})
 			}
 		}
 		ids := []string{}
@@ -362,14 +389,14 @@ func (n *NotFound) Error() string {
 }
 
 // rosterCandidates returns the distinct ACTIVE roster members of the given project teams.
-func rosterCandidates(teams []*v1.ProjectTeam) []Candidate {
+func rosterCandidates(teams []*v1.ProjectTeam, usernames map[string]string) []Candidate {
 	out := []Candidate{}
 	seen := map[string]bool{}
 	for _, t := range teams {
 		for _, m := range t.Members {
 			if m.Active && !seen[m.UserId] {
 				seen[m.UserId] = true
-				out = append(out, Candidate{m.UserId, m.DisplayName, "member"})
+				out = append(out, Candidate{ID: m.UserId, Name: m.DisplayName, Kind: "member", Username: usernames[m.UserId]})
 			}
 		}
 	}
