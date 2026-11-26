@@ -104,6 +104,12 @@ const (
 	// MessageServiceDiscardPreparedMessageProcedure is the fully-qualified name of the MessageService's
 	// DiscardPreparedMessage RPC.
 	MessageServiceDiscardPreparedMessageProcedure = "/syntra.v1.MessageService/DiscardPreparedMessage"
+	// MessageServiceEditPublishedMessageProcedure is the fully-qualified name of the MessageService's
+	// EditPublishedMessage RPC.
+	MessageServiceEditPublishedMessageProcedure = "/syntra.v1.MessageService/EditPublishedMessage"
+	// MessageServiceDeletePublishedMessageProcedure is the fully-qualified name of the MessageService's
+	// DeletePublishedMessage RPC.
+	MessageServiceDeletePublishedMessageProcedure = "/syntra.v1.MessageService/DeletePublishedMessage"
 	// MessageServiceMarkThreadReadProcedure is the fully-qualified name of the MessageService's
 	// MarkThreadRead RPC.
 	MessageServiceMarkThreadReadProcedure = "/syntra.v1.MessageService/MarkThreadRead"
@@ -675,6 +681,8 @@ type MessageServiceClient interface {
 	SavePreparedMessage(context.Context, *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error)
 	PublishMessage(context.Context, *connect.Request[v1.PublishMessageRequest]) (*connect.Response[v1.PublishMessageResponse], error)
 	DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error)
+	EditPublishedMessage(context.Context, *connect.Request[v1.EditPublishedMessageRequest]) (*connect.Response[v1.EditPublishedMessageResponse], error)
+	DeletePublishedMessage(context.Context, *connect.Request[v1.DeletePublishedMessageRequest]) (*connect.Response[v1.DeletePublishedMessageResponse], error)
 	MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
 }
@@ -714,6 +722,18 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(messageServiceMethods.ByName("DiscardPreparedMessage")),
 			connect.WithClientOptions(opts...),
 		),
+		editPublishedMessage: connect.NewClient[v1.EditPublishedMessageRequest, v1.EditPublishedMessageResponse](
+			httpClient,
+			baseURL+MessageServiceEditPublishedMessageProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("EditPublishedMessage")),
+			connect.WithClientOptions(opts...),
+		),
+		deletePublishedMessage: connect.NewClient[v1.DeletePublishedMessageRequest, v1.DeletePublishedMessageResponse](
+			httpClient,
+			baseURL+MessageServiceDeletePublishedMessageProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("DeletePublishedMessage")),
+			connect.WithClientOptions(opts...),
+		),
 		markThreadRead: connect.NewClient[v1.MarkThreadReadRequest, v1.MarkThreadReadResponse](
 			httpClient,
 			baseURL+MessageServiceMarkThreadReadProcedure,
@@ -735,6 +755,8 @@ type messageServiceClient struct {
 	savePreparedMessage    *connect.Client[v1.SavePreparedMessageRequest, v1.SavePreparedMessageResponse]
 	publishMessage         *connect.Client[v1.PublishMessageRequest, v1.PublishMessageResponse]
 	discardPreparedMessage *connect.Client[v1.DiscardPreparedMessageRequest, v1.DiscardPreparedMessageResponse]
+	editPublishedMessage   *connect.Client[v1.EditPublishedMessageRequest, v1.EditPublishedMessageResponse]
+	deletePublishedMessage *connect.Client[v1.DeletePublishedMessageRequest, v1.DeletePublishedMessageResponse]
 	markThreadRead         *connect.Client[v1.MarkThreadReadRequest, v1.MarkThreadReadResponse]
 	markReviewed           *connect.Client[v1.MarkReviewedRequest, v1.MarkReviewedResponse]
 }
@@ -759,6 +781,16 @@ func (c *messageServiceClient) DiscardPreparedMessage(ctx context.Context, req *
 	return c.discardPreparedMessage.CallUnary(ctx, req)
 }
 
+// EditPublishedMessage calls syntra.v1.MessageService.EditPublishedMessage.
+func (c *messageServiceClient) EditPublishedMessage(ctx context.Context, req *connect.Request[v1.EditPublishedMessageRequest]) (*connect.Response[v1.EditPublishedMessageResponse], error) {
+	return c.editPublishedMessage.CallUnary(ctx, req)
+}
+
+// DeletePublishedMessage calls syntra.v1.MessageService.DeletePublishedMessage.
+func (c *messageServiceClient) DeletePublishedMessage(ctx context.Context, req *connect.Request[v1.DeletePublishedMessageRequest]) (*connect.Response[v1.DeletePublishedMessageResponse], error) {
+	return c.deletePublishedMessage.CallUnary(ctx, req)
+}
+
 // MarkThreadRead calls syntra.v1.MessageService.MarkThreadRead.
 func (c *messageServiceClient) MarkThreadRead(ctx context.Context, req *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error) {
 	return c.markThreadRead.CallUnary(ctx, req)
@@ -775,6 +807,8 @@ type MessageServiceHandler interface {
 	SavePreparedMessage(context.Context, *connect.Request[v1.SavePreparedMessageRequest]) (*connect.Response[v1.SavePreparedMessageResponse], error)
 	PublishMessage(context.Context, *connect.Request[v1.PublishMessageRequest]) (*connect.Response[v1.PublishMessageResponse], error)
 	DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error)
+	EditPublishedMessage(context.Context, *connect.Request[v1.EditPublishedMessageRequest]) (*connect.Response[v1.EditPublishedMessageResponse], error)
+	DeletePublishedMessage(context.Context, *connect.Request[v1.DeletePublishedMessageRequest]) (*connect.Response[v1.DeletePublishedMessageResponse], error)
 	MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
 }
@@ -810,6 +844,18 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 		connect.WithSchema(messageServiceMethods.ByName("DiscardPreparedMessage")),
 		connect.WithHandlerOptions(opts...),
 	)
+	messageServiceEditPublishedMessageHandler := connect.NewUnaryHandler(
+		MessageServiceEditPublishedMessageProcedure,
+		svc.EditPublishedMessage,
+		connect.WithSchema(messageServiceMethods.ByName("EditPublishedMessage")),
+		connect.WithHandlerOptions(opts...),
+	)
+	messageServiceDeletePublishedMessageHandler := connect.NewUnaryHandler(
+		MessageServiceDeletePublishedMessageProcedure,
+		svc.DeletePublishedMessage,
+		connect.WithSchema(messageServiceMethods.ByName("DeletePublishedMessage")),
+		connect.WithHandlerOptions(opts...),
+	)
 	messageServiceMarkThreadReadHandler := connect.NewUnaryHandler(
 		MessageServiceMarkThreadReadProcedure,
 		svc.MarkThreadRead,
@@ -832,6 +878,10 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 			messageServicePublishMessageHandler.ServeHTTP(w, r)
 		case MessageServiceDiscardPreparedMessageProcedure:
 			messageServiceDiscardPreparedMessageHandler.ServeHTTP(w, r)
+		case MessageServiceEditPublishedMessageProcedure:
+			messageServiceEditPublishedMessageHandler.ServeHTTP(w, r)
+		case MessageServiceDeletePublishedMessageProcedure:
+			messageServiceDeletePublishedMessageHandler.ServeHTTP(w, r)
 		case MessageServiceMarkThreadReadProcedure:
 			messageServiceMarkThreadReadHandler.ServeHTTP(w, r)
 		case MessageServiceMarkReviewedProcedure:
@@ -859,6 +909,14 @@ func (UnimplementedMessageServiceHandler) PublishMessage(context.Context, *conne
 
 func (UnimplementedMessageServiceHandler) DiscardPreparedMessage(context.Context, *connect.Request[v1.DiscardPreparedMessageRequest]) (*connect.Response[v1.DiscardPreparedMessageResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.DiscardPreparedMessage is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) EditPublishedMessage(context.Context, *connect.Request[v1.EditPublishedMessageRequest]) (*connect.Response[v1.EditPublishedMessageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.EditPublishedMessage is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) DeletePublishedMessage(context.Context, *connect.Request[v1.DeletePublishedMessageRequest]) (*connect.Response[v1.DeletePublishedMessageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.DeletePublishedMessage is not implemented"))
 }
 
 func (UnimplementedMessageServiceHandler) MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error) {

@@ -46,6 +46,8 @@ service MessageService {
   rpc SavePreparedMessage(SavePreparedMessageRequest) returns (SavePreparedMessageResponse);
   rpc PublishMessage(PublishMessageRequest) returns (PublishMessageResponse);
   rpc DiscardPreparedMessage(DiscardPreparedMessageRequest) returns (DiscardPreparedMessageResponse);
+  rpc EditPublishedMessage(EditPublishedMessageRequest) returns (EditPublishedMessageResponse);
+  rpc DeletePublishedMessage(DeletePublishedMessageRequest) returns (DeletePublishedMessageResponse);
   rpc MarkThreadRead(MarkThreadReadRequest) returns (MarkThreadReadResponse);
   rpc MarkReviewed(MarkReviewedRequest) returns (MarkReviewedResponse);
 }
@@ -112,6 +114,8 @@ enum ThreadEventKind {
   // A person was included in a published thread without a message; actor is who added, target_user_id who was added.
   THREAD_EVENT_KIND_PARTICIPANT_ADDED = 10;
   THREAD_EVENT_KIND_THREAD_FORKED = 11;
+  THREAD_EVENT_KIND_MESSAGE_EDITED = 12;
+  THREAD_EVENT_KIND_MESSAGE_DELETED = 13;
 }
 
 // Workspace catalog metadata; writes require current ADMIN. Names are 1..120 scalars/480 bytes, descriptions 0..2000 scalars/8000 bytes.
@@ -242,7 +246,7 @@ message PreparedMessage {
   optional string reply_to_message_id = 16;
 }
 
-// Immutable exact published content and server-derived author. Receipt is separate per message/recipient; no global reviewed flag.
+// Current version of the published content and server-derived author. Receipt is separate per message/recipient; no global reviewed flag.
 message PublishedMessage {
   string id = 1;
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
@@ -267,11 +271,18 @@ message PublishedMessage {
   optional string reply_to_message_id = 12;
   // The referenced message's author and at most 240 Unicode scalar values of its summary.
   ReplyParentPreview reply_parent_preview = 13;
+  string revision = 14;
+  google.protobuf.Timestamp edited_at = 15;
+  google.protobuf.Timestamp deleted_at = 16;
+  // Human actions on ListMessages and edit/delete responses. Rechecked inside each mutation.
+  bool can_edit = 17;
+  bool can_delete = 18;
 }
 
 message ReplyParentPreview {
   string author_user_id = 1;
   string summary_preview = 2;
+  bool deleted = 3;
 }
 
 // One member of a message's recipient set. Receipt facts are per recipient and independent.
@@ -670,7 +681,7 @@ message PublishMessageRequest {
   string request_id = 6;
 }
 
-// Published content is immutable; later publication preserves nonclosed lifecycle state and advances thread revision.
+// Later publication preserves nonclosed lifecycle state and advances thread revision.
 message PublishMessageResponse {
   Thread thread = 1;
   PublishedMessage message = 2;
@@ -768,4 +779,29 @@ message GetOverviewRequest {
 
 message GetOverviewResponse {
   Overview overview = 1;
+}
+
+message EditPublishedMessageRequest {
+  string workspace_id = 1;
+  string thread_id = 2;
+  string message_id = 3;
+  string request_id = 4;
+  string expected_revision = 5;
+  string summary = 6;
+  string context_markdown = 7;
+}
+message EditPublishedMessageResponse {
+  PublishedMessage message = 1;
+  bool replayed = 2;
+}
+message DeletePublishedMessageRequest {
+  string workspace_id = 1;
+  string thread_id = 2;
+  string message_id = 3;
+  string request_id = 4;
+  string expected_revision = 5;
+}
+message DeletePublishedMessageResponse {
+  PublishedMessage message = 1;
+  bool replayed = 2;
 }
