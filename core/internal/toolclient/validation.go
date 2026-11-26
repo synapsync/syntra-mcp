@@ -50,12 +50,27 @@ func clientExpectation(name string, e *v1.PreparedContentExpectation) error {
 	}
 	return nil
 }
+
+// ValidateReplyAnchor checks the anchor before opening a profile or sending a request.
+func ValidateReplyAnchor(field, thread, message string) error {
+	if thread == "" {
+		return clientField(field, "requires an existing thread")
+	}
+	return clientID(field, message)
+}
+
 func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 	if c == nil {
 		return clientField(name, "is required")
 	}
-	if c.FormatVersion != 1 {
-		return clientField(name+".formatVersion", "must be 1")
+	switch {
+	case c.FormatVersion == 1 && c.ReplyToMessageId == nil:
+	case c.FormatVersion == 2 && c.ReplyToMessageId != nil:
+		if err := ValidateReplyAnchor(name+".replyToMessageId", c.GetExistingThreadId(), *c.ReplyToMessageId); err != nil {
+			return err
+		}
+	default:
+		return clientField(name+".formatVersion", "use 1 without replyToMessageId or 2 with replyToMessageId")
 	}
 	for _, f := range []struct{ name, value string }{{"expectedAuthorUserId", c.ExpectedAuthorUserId}, {"workspaceId", c.WorkspaceId}} {
 		if err := clientID(name+"."+f.name, f.value); err != nil {

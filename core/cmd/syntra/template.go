@@ -11,7 +11,7 @@ import (
 	"syntra.local/mcp/internal/toolclient"
 )
 
-func printTemplate(kind, workspace, project, account string, thread *v1.Thread) error {
+func printTemplate(kind, workspace, project, account string, thread *v1.Thread, message string) error {
 	if workspace == "" {
 		return errors.New("--workspace is required for a template")
 	}
@@ -32,6 +32,10 @@ func printTemplate(kind, workspace, project, account string, thread *v1.Thread) 
 			return err
 		}
 		content["existingThreadId"] = thread.Id
+		if message != "" {
+			content["formatVersion"] = 2
+			content["replyToMessageId"] = message
+		}
 		content["title"] = thread.Title
 		request["expectedThreadRevision"] = thread.Revision
 		if thread.ProjectId != "" {

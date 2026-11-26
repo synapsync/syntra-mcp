@@ -67,6 +67,8 @@ type contentFixture struct {
 	threadState         v1.ThreadState
 	threadPrivate       bool
 	participantRequests []*v1.AddThreadParticipantRequest
+	forkRequests        int
+	forkResponse        *v1.Thread
 	tamper              string
 	hold                bool
 	committed           chan struct{}
@@ -173,6 +175,9 @@ func (f *contentFixture) apply(ctx context.Context, id string, req proto.Message
 	}
 	tamper := f.tamper
 	switch tamper {
+	case "reply-anchor":
+		out.Content.ReplyToMessageId = ptr(accountB)
+		out.Receipt.ContentDigest, _ = digest(out.Content)
 	case "content":
 		out.Content.ContextMarkdown += "altered"
 		h, _ := digest(out.Content)
@@ -1263,6 +1268,15 @@ func TestNestedThreadRevisionNormalization(t *testing.T) {
 }
 
 func TestCompiledReplyPublishesOnlyOnExplicitCommand(t *testing.T) {
+	for _, anchored := range []bool{false, true} {
+		name := "unanchored"
+		if anchored {
+			name = "anchored"
+		}
+		t.Run(name, func(t *testing.T) { compiledReplyPublishesOnlyOnExplicitCommand(t, anchored) })
+	}
+}
+func compiledReplyPublishesOnlyOnExplicitCommand(t *testing.T, anchored bool) {
 	a, f, dir, ca := setupContent(t)
 	binary := testsupport.BuildCLI(t, "../../cmd/syntra", ca)
 	a.store.Close()
@@ -1270,7 +1284,11 @@ func TestCompiledReplyPublishesOnlyOnExplicitCommand(t *testing.T) {
 	if err := os.WriteFile(contextPath, []byte("Details"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	out, err := cliCall(t, binary, "reply", "--profile-dir", dir, "--workspace", workspaceID, "--thread", threadID, "--summary", "Resolved", "--context-file", contextPath)
+	args := []string{"reply", "--profile-dir", dir, "--workspace", workspaceID, "--thread", threadID, "--summary", "Resolved", "--context-file", contextPath}
+	if anchored {
+		args = append(args, "--message", messageID)
+	}
+	out, err := cliCall(t, binary, args...)
 	if err != nil {
 		t.Fatalf("reply: %v %s", err, out)
 	}
@@ -1293,6 +1311,13 @@ func TestCompiledReplyPublishesOnlyOnExplicitCommand(t *testing.T) {
 	var snapshot v1.AuthoredContentSnapshot
 	if protojson.Unmarshal(published, &snapshot) != nil || snapshot.GetPublishedMessageId() != messageID {
 		t.Fatalf("not published: %s", published)
+	}
+	if anchored {
+		if snapshot.Content.FormatVersion != 2 || snapshot.Content.GetReplyToMessageId() != messageID {
+			t.Fatal("published reply lost the format 2 anchor")
+		}
+	} else if snapshot.Content.FormatVersion != 1 || snapshot.Content.ReplyToMessageId != nil {
+		t.Fatal("unanchored reply must retain format 1")
 	}
 }
 
