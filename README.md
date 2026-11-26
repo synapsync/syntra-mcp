@@ -44,6 +44,7 @@ For first-time setup without a global install, use
 | Show the projects and teams in a workspace | `workspaces`, `projects`, `teams` |
 | Find a teammate or read the latest replies in a thread | `members`, `resolve`, `threads`, `thread`, `messages` |
 | Prepare a reply for you to review | `prepare` |
+| Fork a published thread from a message (PUBLISH) | `fork` |
 | Send the exact message you authorized | `publish` |
 
 You can also use the CLI directly. Replace the placeholder UUIDs with IDs
@@ -56,6 +57,17 @@ syntra threads --workspace WORKSPACE_UUID
 syntra thread --workspace WORKSPACE_UUID --thread THREAD_UUID
 syntra reply --workspace WORKSPACE_UUID --thread THREAD_UUID --summary "Update" --context-file context.md
 ```
+
+Add `--message MESSAGE_UUID` to quote a published message in the same thread.
+In MCP `prepare`, set `request.content.replyToMessageId` and set
+`request.content.formatVersion` to 2.
+An unanchored reply uses format 1.
+
+To fork, run `syntra fork --workspace W --thread T --message M --title "Follow-up" --request-id R`.
+The new thread opens without a notification and seeds at most 11 participants,
+including its creator. Repeat `--member` to add active workspace members. Use
+repeated `--source-member` flags to select specific source participants, or
+`--no-source-members` to select none. Retry with the same arguments and request ID.
 
 To choose a different recipient, generate the reply request with
 `syntra prepare --template reply --workspace WORKSPACE_UUID --thread THREAD_UUID`,

@@ -30,10 +30,11 @@ const TARGETS = Object.freeze({
     binarySHA256: 'cd48398d28086823c9309f9b735c7f11ce0c9cd46735d2b7cd5fc7b7059654dc',
   }),
 });
-const EXPECTED_TOOLS = Object.freeze([
+const HANDOFF_TOOLS = Object.freeze([
   'identity', 'workspaces', 'projects', 'teams', 'members', 'resolve',
   'threads', 'thread', 'messages', 'snapshot', 'prepare', 'link', 'publish', 'discard', 'retry', 'add-participant',
 ]);
+const EXPECTED_TOOLS = Object.freeze([...HANDOFF_TOOLS, 'fork']);
 const EXPECTED_EMPTY_PROFILE_ERROR = /No Syntra connection\. Run: syntra login/;
 
 function fail(message) {
@@ -267,7 +268,7 @@ function runMCP(command, args, options) {
   });
 }
 
-function checkMCP(result) {
+function checkMCP(result, expectedTools = EXPECTED_TOOLS) {
   assert.equal(result.signal, null, `MCP was terminated by signal ${result.signal}`);
   assert.equal(result.status, 0, `MCP did not exit successfully after stdin EOF; stderr=${result.stderr}`);
   assert.equal(result.stderr, '', `MCP wrote unexpected stderr: ${result.stderr}`);
@@ -283,7 +284,7 @@ function checkMCP(result) {
   assert.ok(frames[0].result?.serverInfo?.name === 'syntra', 'MCP initialize did not identify the packaged server');
   const tools = frames[1].result?.tools;
   assert.ok(Array.isArray(tools), 'MCP tools/list did not return a tool catalog');
-  assert.deepEqual(tools.map(tool => tool.name).sort(), [...EXPECTED_TOOLS].sort(), 'MCP allowlist differs from the sixteen-tool contract');
+  assert.deepEqual(tools.map(tool => tool.name).sort(), [...expectedTools].sort(), 'MCP allowlist differs from the expected tool contract');
   assert.equal(frames[2].result?.isError, true, 'identity call without a profile must return a safe tool error');
   const text = (frames[2].result?.content || []).map(item => item.text || '').join('\n');
   assert.match(text, /No Syntra connection\. Run: syntra login/);
@@ -360,7 +361,7 @@ async function main() {
     ], { cwd: root, env }), 'npm exec');
 
     const mcp = await runMCP(command, ['mcp', '--profile-dir', profileDirectory], { cwd: root, env });
-    checkMCP(mcp);
+    checkMCP(mcp, HANDOFF_TOOLS);
     assert.deepEqual(fs.readdirSync(profileDirectory).sort(), ['.lock'], 'smoke must not synthesize or persist a connection profile');
 
     console.log(`PASS target=${targetKey} Node=${process.version} npm=${npmVersion.stdout.trim()}`);

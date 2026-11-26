@@ -30,3 +30,17 @@ For a reply, read the open thread with `thread` first. Set
 encoding 32 bytes. Use the thread's exact title and project ID. Omit
 `projectId` if the thread has none. Read the current tool schema for the other
 required fields.
+
+## Fork and quote a message
+
+Call `fork` with `workspaceId`, `sourceThreadId`, `anchorMessageId`, `title`,
+and a fresh `requestId`. The anchor must be published in the source thread.
+PUBLISH is required. The result contains the new open thread and its origin.
+Omit `sourceMemberIds` to seed active source participants or pass an empty array
+to select none. `extraMemberIds` adds active workspace members. The creator is
+included in the limit of 11 distinct participants. Creation sends no
+notification. Resend the same arguments and request ID to retry.
+
+In `prepare`, set `request.content.replyToMessageId` to a published message in
+the same thread and `request.content.formatVersion` to 2 to quote it. The
+anchor is part of the content digest. Keep format 1 for unanchored content.
