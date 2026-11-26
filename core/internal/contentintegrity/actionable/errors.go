@@ -35,6 +35,7 @@ const (
 	ForkParticipantLimit       Reason = "FORK_PARTICIPANT_LIMIT"
 	ForkSourcePending          Reason = "FORK_SOURCE_PENDING"
 	AnchorUnavailable          Reason = "ANCHOR_UNAVAILABLE"
+	ForkExtraMemberIneligible  Reason = "FORK_EXTRA_MEMBER_INELIGIBLE"
 	ForkSourceMemberInactive   Reason = "FORK_SOURCE_MEMBER_INACTIVE"
 	ForkWorkspaceUnavailable   Reason = "FORK_WORKSPACE_UNAVAILABLE"
 	ReplyParticipationRequired Reason = "REPLY_PARTICIPATION_REQUIRED"
@@ -49,6 +50,7 @@ var reasons = map[Reason]guidance{
 	ForkParticipantLimit:                   {connect.CodeInvalidArgument, "The fork participant limit is 11 including the creator; select a smaller explicit list of source participants with --source-member or sourceMemberIds, or use --no-source-members or an empty sourceMemberIds array. Reduce extra members if needed."},
 	ForkSourcePending:                      {connect.CodeFailedPrecondition, "Publish the source thread's initial message before forking from it."},
 	AnchorUnavailable:                      {connect.CodeNotFound, "Choose a published message from the selected thread. Use syntra messages or the MCP messages tool to find its message ID."},
+	ForkExtraMemberIneligible:              {connect.CodeFailedPrecondition, "Select only active extra members of the workspace. Refresh the member list before retrying."},
 	ForkSourceMemberInactive:               {connect.CodeFailedPrecondition, "Select only active participants of the source thread with --source-member or sourceMemberIds. Use syntra thread or the MCP thread tool to check its participants."},
 	ForkWorkspaceUnavailable:               {connect.CodeNotFound, "Choose a workspace where your connected account is an active member. Check syntra workspaces or the MCP workspaces tool."},
 	ReplyParticipationRequired:             {connect.CodePermissionDenied, "To reply, your connected account must be a thread participant or workspace administrator. Ask a participant or administrator to add you to the thread."},
