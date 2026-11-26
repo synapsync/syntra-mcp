@@ -63,8 +63,8 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 	if m == nil || !noUnknown(m) {
 		return Content{}, ErrWire
 	}
-	c := Content{FormatVersion: m.FormatVersion, ExpectedAuthorUserID: m.ExpectedAuthorUserId, WorkspaceID: m.WorkspaceId, ProjectID: m.ProjectId, ExistingThreadID: m.ExistingThreadId, Title: m.Title, OriginalDestinationIntent: m.OriginalDestinationIntent, Summary: m.Summary, ContextMarkdown: m.ContextMarkdown}
-	if c.FormatVersion != 1 {
+	c := Content{FormatVersion: m.FormatVersion, ExpectedAuthorUserID: m.ExpectedAuthorUserId, WorkspaceID: m.WorkspaceId, ProjectID: m.ProjectId, ExistingThreadID: m.ExistingThreadId, Title: m.Title, OriginalDestinationIntent: m.OriginalDestinationIntent, Summary: m.Summary, ContextMarkdown: m.ContextMarkdown, ReplyToMessageID: m.ReplyToMessageId}
+	if c.FormatVersion != 1 && c.FormatVersion != 2 {
 		return Content{}, invalidField("content.formatVersion")
 	}
 	for _, f := range []struct {
@@ -90,7 +90,7 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 	for _, f := range []struct {
 		name string
 		id   *string
-	}{{"content.projectId", c.ProjectID}, {"content.existingThreadId", c.ExistingThreadID}} {
+	}{{"content.projectId", c.ProjectID}, {"content.existingThreadId", c.ExistingThreadID}, {"content.replyToMessageId", c.ReplyToMessageID}} {
 		if f.id != nil && !validID(*f.id) {
 			return Content{}, invalidField(f.name)
 		}

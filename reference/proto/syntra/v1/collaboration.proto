@@ -37,6 +37,7 @@ service ThreadService {
   rpc CloseThread(CloseThreadRequest) returns (CloseThreadResponse);
   rpc ReopenThread(ReopenThreadRequest) returns (ReopenThreadResponse);
   rpc AddThreadParticipant(AddThreadParticipantRequest) returns (AddThreadParticipantResponse);
+  rpc ForkThread(ForkThreadRequest) returns (ForkThreadResponse);
 }
 
 // MessageService uses current workspace authorization on every request and retry.
@@ -110,6 +111,7 @@ enum ThreadEventKind {
   THREAD_EVENT_KIND_THREAD_REOPENED = 9;
   // A person was included in a published thread without a message; actor is who added, target_user_id who was added.
   THREAD_EVENT_KIND_PARTICIPANT_ADDED = 10;
+  THREAD_EVENT_KIND_THREAD_FORKED = 11;
 }
 
 // Workspace catalog metadata; writes require current ADMIN. Names are 1..120 scalars/480 bytes, descriptions 0..2000 scalars/8000 bytes.
@@ -199,6 +201,14 @@ message Thread {
   // GetThread and published ListThreads: how many messages are published in this thread, the initial one included. Prepared messages
   // of anyone are never counted. Zero everywhere else.
   uint64 message_count = 25;
+  // Direct source only. Its messages remain in the source thread.
+  ThreadForkOrigin forked_from = 26;
+}
+
+message ThreadForkOrigin {
+  string thread_id = 1;
+  string message_id = 2;
+  string title = 3;
 }
 
 // Author-private editable content, including against shared threads. Prepared existence/content is hidden from everyone else, including admins.
@@ -229,6 +239,7 @@ message PreparedMessage {
   repeated string current_team_user_ids = 14;
   // True when current_team_user_ids is not the same set as recipients (the roster changed after preparation).
   bool team_recipients_differ = 15;
+  optional string reply_to_message_id = 16;
 }
 
 // Immutable exact published content and server-derived author. Receipt is separate per message/recipient; no global reviewed flag.
@@ -253,6 +264,14 @@ message PublishedMessage {
   repeated MessageRecipient recipients = 10;
   // Set only when the message was sent to an explicit team that was expanded at send time.
   optional string origin_team_id = 11;
+  optional string reply_to_message_id = 12;
+  // The referenced message's author and at most 240 Unicode scalar values of its summary.
+  ReplyParentPreview reply_parent_preview = 13;
+}
+
+message ReplyParentPreview {
+  string author_user_id = 1;
+  string summary_preview = 2;
 }
 
 // One member of a message's recipient set. Receipt facts are per recipient and independent.
@@ -295,6 +314,8 @@ message ThreadEvent {
   int64 sequence = 14;
   // Set only for THREAD_EVENT_KIND_PARTICIPANT_ADDED: the person added.
   optional string target_user_id = 15;
+  // Direct origin of the new thread, set only for THREAD_FORKED.
+  ThreadForkOrigin forked_from = 16;
 }
 
 // Exactly one published message OR own prepared message, selected by the required inbox view.
@@ -565,6 +586,27 @@ message AddThreadParticipantResponse {
   bool added = 2;
 }
 
+// Creates an open thread from a published message. The caller is always a participant.
+message ForkThreadRequest {
+  string workspace_id = 1;
+  string source_thread_id = 2;
+  string anchor_message_id = 3;
+  string title = 4;
+  repeated string extra_member_ids = 5;
+  string request_id = 6;
+  // Absent uses all active source participants. Present uses this explicit selection.
+  // An empty selection retains only the caller and any extra members.
+  ForkParticipantSelection source_participants = 7;
+}
+
+message ForkParticipantSelection {
+  repeated string user_ids = 1;
+}
+
+message ForkThreadResponse {
+  Thread thread = 1;
+}
+
 // Explicit view required. PUBLISHED returns only messages; OWN_PREPARED only caller prepared messages. No mixed visibility pages.
 message ListMessagesRequest {
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
@@ -577,6 +619,8 @@ message ListMessagesRequest {
   string page_token = 5;
   // Page published messages from newest to oldest. Applies only to the published view.
   bool newest_first = 6;
+  // Published view only. Include the anchor and exclude later messages.
+  optional string through_message_id = 7;
 }
 
 message ListMessagesResponse {
