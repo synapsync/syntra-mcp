@@ -3,6 +3,7 @@
 
 import json
 import pathlib
+import runpy
 import shutil
 import subprocess
 import sys
@@ -53,6 +54,14 @@ class ProtocolParityTests(unittest.TestCase):
     def assert_passes(self):
         result = self.run_check()
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+
+    def test_anchor_requires_a_v2_reply(self):
+        encode = runpy.run_path(str(ROOT / CHECKER))["encode_content"]
+        fixture = ROOT / "core/fixtures/content-integrity-message-anchors.json"
+        content = json.loads(fixture.read_bytes())[1]["content"]
+        for change in ({"formatVersion": 1}, {"replyToMessageId": None}, {"existingThreadId": None}):
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                encode({**content, **change})
 
     def test_baseline_passes_without_git_metadata(self):
         self.assertFalse((self.project / ".git").exists())

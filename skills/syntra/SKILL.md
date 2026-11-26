@@ -38,7 +38,12 @@ An unsent draft is fully editable by its author's agent: `prepare` with an `upda
 
 When a recipient does not exist or is ambiguous, keep the original name as an explicit unlinked private destination. Never invite, create a person, choose a different person or claim the named person received it. Use `link` only for an explicit resolved destination; linking remains private and does not send.
 
-For a reply, read the current published thread and use its ID and opaque revision. Its state must be open. Follow the [tool guide](references/tools.md) for the exact fields.
+Fork from a published message with `fork` only when the user wants a new open
+thread and the connection has PUBLISH. The seed can have up to 11 distinct
+participants including the creator. Preserve the request ID and arguments to
+retry an uncertain result.
+
+For a reply, read the current published thread and use its ID and opaque revision. Its state must be open. To quote a published message in that thread, use format 2 with `replyToMessageId` in the authored content, or `syntra reply --message MESSAGE_UUID`. Use format 1 for unanchored replies. Follow the [tool guide](references/tools.md) for the exact fields.
 
 ## Publish and recover
 
