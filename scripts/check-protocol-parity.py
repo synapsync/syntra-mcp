@@ -189,13 +189,67 @@ def check_fingerprint_vector():
         )
 
 
+def encode_content(content):
+    """Encode the portable fixture fields independently of the Go client."""
+    version = content["formatVersion"]
+    thread = content.get("existingThreadId")
+    anchor = content.get("replyToMessageId")
+    if type(version) is not int or version not in (1, 2):
+        raise ValueError("unsupported content version")
+    if version == 1 and "replyToMessageId" in content:
+        raise ValueError("format v1 cannot carry a reply anchor")
+    if version == 2 and (thread is None or anchor is None):
+        raise ValueError("format v2 requires an anchored reply")
+
+    def field(value, limit, allow_empty=False):
+        if not isinstance(value, str):
+            raise ValueError("expected a string")
+        data = value.encode("utf-8")
+        if len(data) > limit or (not data and not allow_empty):
+            raise ValueError("invalid content field length")
+        return struct.pack(">I", len(data)) + data
+
+    def optional(value):
+        return b"\0" if value is None else b"\1" + field(value, 128)
+
+    dest = content["destination"]
+    kind = dest["kind"]
+    if kind == "linked":
+        target = b"\1" + field(dest["memberId"], 128)
+    elif kind == "unlinked":
+        target = b"\2" + field(dest["label"], 1024)
+    elif kind == "linkedSet":
+        ids = dest["memberIds"]
+        if not isinstance(ids, list) or not 2 <= len(ids) <= 10 or len(set(ids)) != len(ids):
+            raise ValueError("invalid recipient set")
+        target = b"\3" + struct.pack(">I", len(ids)) + b"".join(field(member, 128) for member in ids)
+    elif kind == "team":
+        target = b"\4" + field(dest["teamId"], 128)
+    elif kind == "replyAll" and dest.get("replyAll") is True and thread is not None:
+        target = b"\5"
+    else:
+        raise ValueError("invalid destination")
+
+    return b"".join((
+        b"syntra.authored-content\0", bytes([version]),
+        field(content["expectedAuthorUserId"], 128), field(content["workspaceId"], 128),
+        optional(content.get("projectId")), b"\0", optional(thread),
+        field(content["title"], 1024), field(content["originalDestinationIntent"], 1024),
+        target, field(content["summary"], 8192), field(content["contextMarkdown"], 131072, True),
+        optional(anchor) if version == 2 else b"",
+    ))
+
+
 def check_content_vectors(relative=CONTENT_VECTOR_REL):
     vectors = read_json(relative)
     if not isinstance(vectors, list):
         raise ParityError(f"{relative}: expected an array of vectors")
     for index, item in enumerate(vectors):
         try:
-            actual = sha256(bytes.fromhex(item["encodingHex"]))
+            encoded = encode_content(item["content"])
+            if encoded != bytes.fromhex(item["encodingHex"]):
+                raise ValueError("portable encoding mismatch")
+            actual = sha256(encoded)
             expected = item["sha256"]
         except (KeyError, TypeError, ValueError) as error:
             raise ParityError(f"{relative}: invalid vector at index {index}: {error}") from error
@@ -230,7 +284,7 @@ def main():
     print(
         "Protocol parity passed: "
         f"baseline {BASELINE_ID}; {proto_count} Protobuf files, "
-        f"{generated_count} generated wire files, 2 vector files, "
+        f"{generated_count} generated wire files, authored-content and fingerprint vectors, "
         f"intake manifest SHA-256 {MANIFEST_SHA256}, "
         f"reviewed transitions SHA-256 {TRANSITIONS_SHA256}"
     )
