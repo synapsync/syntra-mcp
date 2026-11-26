@@ -170,6 +170,8 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		out, e = app.Publish(ctx, args.request.(*v1.PublishContentRequest), args.base)
 	case "discard":
 		out, e = app.Discard(ctx, args.request.(*v1.DiscardContentRequest))
+	case "fork":
+		out, e = app.Fork(ctx, args.fork)
 	case "add-participant":
 		out, e = app.AddParticipant(ctx, args.workspace, args.thread, args.member, args.requestID)
 	case "retry":
@@ -224,6 +226,7 @@ func identityStatus(connection *v1.ToolConnection, status toolclient.ConnectionS
 }
 
 type arguments struct {
+	fork                                                                       *v1.ForkThreadRequest
 	workspace, project, team, recipient, thread, member, view, base, requestID string
 	recipients                                                                 []string
 	asTeam                                                                     bool
@@ -260,6 +263,9 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 		required = []string{"request"}
 	case "link", "publish":
 		required = []string{"request", "base"}
+	case "fork":
+		required = []string{"workspaceId", "sourceThreadId", "anchorMessageId", "title", "requestId"}
+		optional = []string{"extraMemberIds", "sourceMemberIds"}
 	case "add-participant":
 		required = []string{"workspaceId", "threadId", "userId", "requestId"}
 	case "retry":
@@ -295,6 +301,28 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 	m, e := object(raw, required, optional)
 	if e != nil {
 		return a, e
+	}
+	if name == "fork" {
+		q := &v1.ForkThreadRequest{}
+		for key, dest := range map[string]*string{"workspaceId": &q.WorkspaceId, "sourceThreadId": &q.SourceThreadId, "anchorMessageId": &q.AnchorMessageId, "title": &q.Title, "requestId": &q.RequestId} {
+			*dest, e = text(m, key, true)
+			if e != nil {
+				return a, e
+			}
+		}
+		if raw, ok := m["extraMemberIds"]; ok {
+			if json.Unmarshal(raw, &q.ExtraMemberIds) != nil || q.ExtraMemberIds == nil {
+				return a, errArguments
+			}
+		}
+		if raw, ok := m["sourceMemberIds"]; ok {
+			q.SourceParticipants = &v1.ForkParticipantSelection{}
+			if json.Unmarshal(raw, &q.SourceParticipants.UserIds) != nil || q.SourceParticipants.UserIds == nil {
+				return a, errArguments
+			}
+		}
+		a.fork = q
+		return a, nil
 	}
 	values := map[string]*string{"workspaceId": &a.workspace, "projectId": &a.project, "threadId": &a.thread, "userId": &a.member, "workspace": &a.workspace, "project": &a.project, "team": &a.team, "recipient": &a.recipient, "view": &a.view, "base": &a.base, "requestId": &a.requestID}
 	for k, p := range values {

@@ -54,6 +54,12 @@ const (
 	// AdministrationServiceChangeMemberProcedure is the fully-qualified name of the
 	// AdministrationService's ChangeMember RPC.
 	AdministrationServiceChangeMemberProcedure = "/syntra.v1.AdministrationService/ChangeMember"
+	// AdministrationServiceGetMemberSlackIdProcedure is the fully-qualified name of the
+	// AdministrationService's GetMemberSlackId RPC.
+	AdministrationServiceGetMemberSlackIdProcedure = "/syntra.v1.AdministrationService/GetMemberSlackId"
+	// AdministrationServiceSetMemberSlackIdProcedure is the fully-qualified name of the
+	// AdministrationService's SetMemberSlackId RPC.
+	AdministrationServiceSetMemberSlackIdProcedure = "/syntra.v1.AdministrationService/SetMemberSlackId"
 	// AdministrationServiceGetMemberDependenciesProcedure is the fully-qualified name of the
 	// AdministrationService's GetMemberDependencies RPC.
 	AdministrationServiceGetMemberDependenciesProcedure = "/syntra.v1.AdministrationService/GetMemberDependencies"
@@ -92,6 +98,8 @@ type AdministrationServiceClient interface {
 	RenameWorkspace(context.Context, *connect.Request[v1.RenameWorkspaceRequest]) (*connect.Response[v1.RenameWorkspaceResponse], error)
 	ListDirectoryMembers(context.Context, *connect.Request[v1.ListDirectoryMembersRequest]) (*connect.Response[v1.ListDirectoryMembersResponse], error)
 	ChangeMember(context.Context, *connect.Request[v1.ChangeMemberRequest]) (*connect.Response[v1.ChangeMemberResponse], error)
+	GetMemberSlackId(context.Context, *connect.Request[v1.GetMemberSlackIdRequest]) (*connect.Response[v1.GetMemberSlackIdResponse], error)
+	SetMemberSlackId(context.Context, *connect.Request[v1.SetMemberSlackIdRequest]) (*connect.Response[v1.SetMemberSlackIdResponse], error)
 	GetMemberDependencies(context.Context, *connect.Request[v1.GetMemberDependenciesRequest]) (*connect.Response[v1.GetMemberDependenciesResponse], error)
 	ListTeams(context.Context, *connect.Request[v1.ListTeamsRequest]) (*connect.Response[v1.ListTeamsResponse], error)
 	GetTeam(context.Context, *connect.Request[v1.GetTeamRequest]) (*connect.Response[v1.GetTeamResponse], error)
@@ -154,6 +162,18 @@ func NewAdministrationServiceClient(httpClient connect.HTTPClient, baseURL strin
 			httpClient,
 			baseURL+AdministrationServiceChangeMemberProcedure,
 			connect.WithSchema(administrationServiceMethods.ByName("ChangeMember")),
+			connect.WithClientOptions(opts...),
+		),
+		getMemberSlackId: connect.NewClient[v1.GetMemberSlackIdRequest, v1.GetMemberSlackIdResponse](
+			httpClient,
+			baseURL+AdministrationServiceGetMemberSlackIdProcedure,
+			connect.WithSchema(administrationServiceMethods.ByName("GetMemberSlackId")),
+			connect.WithClientOptions(opts...),
+		),
+		setMemberSlackId: connect.NewClient[v1.SetMemberSlackIdRequest, v1.SetMemberSlackIdResponse](
+			httpClient,
+			baseURL+AdministrationServiceSetMemberSlackIdProcedure,
+			connect.WithSchema(administrationServiceMethods.ByName("SetMemberSlackId")),
 			connect.WithClientOptions(opts...),
 		),
 		getMemberDependencies: connect.NewClient[v1.GetMemberDependenciesRequest, v1.GetMemberDependenciesResponse](
@@ -222,6 +242,8 @@ type administrationServiceClient struct {
 	renameWorkspace        *connect.Client[v1.RenameWorkspaceRequest, v1.RenameWorkspaceResponse]
 	listDirectoryMembers   *connect.Client[v1.ListDirectoryMembersRequest, v1.ListDirectoryMembersResponse]
 	changeMember           *connect.Client[v1.ChangeMemberRequest, v1.ChangeMemberResponse]
+	getMemberSlackId       *connect.Client[v1.GetMemberSlackIdRequest, v1.GetMemberSlackIdResponse]
+	setMemberSlackId       *connect.Client[v1.SetMemberSlackIdRequest, v1.SetMemberSlackIdResponse]
 	getMemberDependencies  *connect.Client[v1.GetMemberDependenciesRequest, v1.GetMemberDependenciesResponse]
 	listTeams              *connect.Client[v1.ListTeamsRequest, v1.ListTeamsResponse]
 	getTeam                *connect.Client[v1.GetTeamRequest, v1.GetTeamResponse]
@@ -266,6 +288,16 @@ func (c *administrationServiceClient) ListDirectoryMembers(ctx context.Context, 
 // ChangeMember calls syntra.v1.AdministrationService.ChangeMember.
 func (c *administrationServiceClient) ChangeMember(ctx context.Context, req *connect.Request[v1.ChangeMemberRequest]) (*connect.Response[v1.ChangeMemberResponse], error) {
 	return c.changeMember.CallUnary(ctx, req)
+}
+
+// GetMemberSlackId calls syntra.v1.AdministrationService.GetMemberSlackId.
+func (c *administrationServiceClient) GetMemberSlackId(ctx context.Context, req *connect.Request[v1.GetMemberSlackIdRequest]) (*connect.Response[v1.GetMemberSlackIdResponse], error) {
+	return c.getMemberSlackId.CallUnary(ctx, req)
+}
+
+// SetMemberSlackId calls syntra.v1.AdministrationService.SetMemberSlackId.
+func (c *administrationServiceClient) SetMemberSlackId(ctx context.Context, req *connect.Request[v1.SetMemberSlackIdRequest]) (*connect.Response[v1.SetMemberSlackIdResponse], error) {
+	return c.setMemberSlackId.CallUnary(ctx, req)
 }
 
 // GetMemberDependencies calls syntra.v1.AdministrationService.GetMemberDependencies.
@@ -322,6 +354,8 @@ type AdministrationServiceHandler interface {
 	RenameWorkspace(context.Context, *connect.Request[v1.RenameWorkspaceRequest]) (*connect.Response[v1.RenameWorkspaceResponse], error)
 	ListDirectoryMembers(context.Context, *connect.Request[v1.ListDirectoryMembersRequest]) (*connect.Response[v1.ListDirectoryMembersResponse], error)
 	ChangeMember(context.Context, *connect.Request[v1.ChangeMemberRequest]) (*connect.Response[v1.ChangeMemberResponse], error)
+	GetMemberSlackId(context.Context, *connect.Request[v1.GetMemberSlackIdRequest]) (*connect.Response[v1.GetMemberSlackIdResponse], error)
+	SetMemberSlackId(context.Context, *connect.Request[v1.SetMemberSlackIdRequest]) (*connect.Response[v1.SetMemberSlackIdResponse], error)
 	GetMemberDependencies(context.Context, *connect.Request[v1.GetMemberDependenciesRequest]) (*connect.Response[v1.GetMemberDependenciesResponse], error)
 	ListTeams(context.Context, *connect.Request[v1.ListTeamsRequest]) (*connect.Response[v1.ListTeamsResponse], error)
 	GetTeam(context.Context, *connect.Request[v1.GetTeamRequest]) (*connect.Response[v1.GetTeamResponse], error)
@@ -380,6 +414,18 @@ func NewAdministrationServiceHandler(svc AdministrationServiceHandler, opts ...c
 		AdministrationServiceChangeMemberProcedure,
 		svc.ChangeMember,
 		connect.WithSchema(administrationServiceMethods.ByName("ChangeMember")),
+		connect.WithHandlerOptions(opts...),
+	)
+	administrationServiceGetMemberSlackIdHandler := connect.NewUnaryHandler(
+		AdministrationServiceGetMemberSlackIdProcedure,
+		svc.GetMemberSlackId,
+		connect.WithSchema(administrationServiceMethods.ByName("GetMemberSlackId")),
+		connect.WithHandlerOptions(opts...),
+	)
+	administrationServiceSetMemberSlackIdHandler := connect.NewUnaryHandler(
+		AdministrationServiceSetMemberSlackIdProcedure,
+		svc.SetMemberSlackId,
+		connect.WithSchema(administrationServiceMethods.ByName("SetMemberSlackId")),
 		connect.WithHandlerOptions(opts...),
 	)
 	administrationServiceGetMemberDependenciesHandler := connect.NewUnaryHandler(
@@ -452,6 +498,10 @@ func NewAdministrationServiceHandler(svc AdministrationServiceHandler, opts ...c
 			administrationServiceListDirectoryMembersHandler.ServeHTTP(w, r)
 		case AdministrationServiceChangeMemberProcedure:
 			administrationServiceChangeMemberHandler.ServeHTTP(w, r)
+		case AdministrationServiceGetMemberSlackIdProcedure:
+			administrationServiceGetMemberSlackIdHandler.ServeHTTP(w, r)
+		case AdministrationServiceSetMemberSlackIdProcedure:
+			administrationServiceSetMemberSlackIdHandler.ServeHTTP(w, r)
 		case AdministrationServiceGetMemberDependenciesProcedure:
 			administrationServiceGetMemberDependenciesHandler.ServeHTTP(w, r)
 		case AdministrationServiceListTeamsProcedure:
@@ -505,6 +555,14 @@ func (UnimplementedAdministrationServiceHandler) ListDirectoryMembers(context.Co
 
 func (UnimplementedAdministrationServiceHandler) ChangeMember(context.Context, *connect.Request[v1.ChangeMemberRequest]) (*connect.Response[v1.ChangeMemberResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.AdministrationService.ChangeMember is not implemented"))
+}
+
+func (UnimplementedAdministrationServiceHandler) GetMemberSlackId(context.Context, *connect.Request[v1.GetMemberSlackIdRequest]) (*connect.Response[v1.GetMemberSlackIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.AdministrationService.GetMemberSlackId is not implemented"))
+}
+
+func (UnimplementedAdministrationServiceHandler) SetMemberSlackId(context.Context, *connect.Request[v1.SetMemberSlackIdRequest]) (*connect.Response[v1.SetMemberSlackIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.AdministrationService.SetMemberSlackId is not implemented"))
 }
 
 func (UnimplementedAdministrationServiceHandler) GetMemberDependencies(context.Context, *connect.Request[v1.GetMemberDependenciesRequest]) (*connect.Response[v1.GetMemberDependenciesResponse], error) {

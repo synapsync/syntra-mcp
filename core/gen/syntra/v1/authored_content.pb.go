@@ -263,8 +263,10 @@ type AuthoredContent struct {
 	Destination               *ContentDestination    `protobuf:"bytes,9,opt,name=destination,proto3" json:"destination,omitempty"`
 	Summary                   string                 `protobuf:"bytes,10,opt,name=summary,proto3" json:"summary,omitempty"`
 	ContextMarkdown           string                 `protobuf:"bytes,11,opt,name=context_markdown,json=contextMarkdown,proto3" json:"context_markdown,omitempty"`
-	unknownFields             protoimpl.UnknownFields
-	sizeCache                 protoimpl.SizeCache
+	// Present only in format v2 and only for replies to a published message in existing_thread_id.
+	ReplyToMessageId *string `protobuf:"bytes,12,opt,name=reply_to_message_id,json=replyToMessageId,proto3,oneof" json:"reply_to_message_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *AuthoredContent) Reset() {
@@ -363,6 +365,13 @@ func (x *AuthoredContent) GetSummary() string {
 func (x *AuthoredContent) GetContextMarkdown() string {
 	if x != nil {
 		return x.ContextMarkdown
+	}
+	return ""
+}
+
+func (x *AuthoredContent) GetReplyToMessageId() string {
+	if x != nil && x.ReplyToMessageId != nil {
+		return *x.ReplyToMessageId
 	}
 	return ""
 }
@@ -560,7 +569,7 @@ const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	"\x06target\"0\n" +
 	"\x0fLinkedMemberSet\x12\x1d\n" +
 	"\n" +
-	"member_ids\x18\x01 \x03(\tR\tmemberIds\"\xeb\x03\n" +
+	"member_ids\x18\x01 \x03(\tR\tmemberIds\"\xb7\x04\n" +
 	"\x0fAuthoredContent\x12%\n" +
 	"\x0eformat_version\x18\x01 \x01(\rR\rformatVersion\x125\n" +
 	"\x17expected_author_user_id\x18\x02 \x01(\tR\x14expectedAuthorUserId\x12!\n" +
@@ -573,9 +582,11 @@ const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	"\vdestination\x18\t \x01(\v2\x1d.syntra.v1.ContentDestinationR\vdestination\x12\x18\n" +
 	"\asummary\x18\n" +
 	" \x01(\tR\asummary\x12)\n" +
-	"\x10context_markdown\x18\v \x01(\tR\x0fcontextMarkdownB\r\n" +
+	"\x10context_markdown\x18\v \x01(\tR\x0fcontextMarkdown\x122\n" +
+	"\x13reply_to_message_id\x18\f \x01(\tH\x02R\x10replyToMessageId\x88\x01\x01B\r\n" +
 	"\v_project_idB\x15\n" +
-	"\x13_existing_thread_id\"\xae\x01\n" +
+	"\x13_existing_thread_idB\x16\n" +
+	"\x14_reply_to_message_id\"\xae\x01\n" +
 	"\x18ClientReportedProvenance\x12\x1f\n" +
 	"\bprovider\x18\x01 \x01(\tH\x00R\bprovider\x88\x01\x01\x12\x19\n" +
 	"\x05model\x18\x02 \x01(\tH\x01R\x05model\x88\x01\x01\x12\x17\n" +
