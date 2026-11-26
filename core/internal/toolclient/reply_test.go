@@ -222,3 +222,46 @@ func TestReplyRequiresExplicitOpen(t *testing.T) {
 		t.Fatal(e)
 	}
 }
+
+func TestAnchoredReplyRejectsSubstitutedAnchorOnRetry(t *testing.T) {
+	a, f, _, _ := setupContent(t)
+	r := fixtureReply()
+	r.Content.FormatVersion = 2
+	r.Content.ReplyToMessageId = ptr(messageID)
+	ctx := context.Background()
+	f.tamper = "reply-anchor"
+	if _, err := a.Prepare(ctx, r, ""); err == nil {
+		t.Fatal("accepted a different anchor with a valid substituted digest")
+	}
+	if _, err := a.Retry(ctx, r.RequestId); err == nil {
+		t.Fatal("retry accepted a different anchor with a valid substituted digest")
+	}
+	f.mu.Lock()
+	f.tamper = ""
+	f.mu.Unlock()
+	got, err := a.Retry(ctx, r.RequestId)
+	if err != nil || !proto.Equal(got.GetContent(), r.Content) {
+		t.Fatalf("exact retry lost the anchor: %v", err)
+	}
+}
+
+func TestClientReplyAnchorValidation(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		format         uint32
+		thread, anchor *string
+	}{
+		{"v1-with-anchor", 1, ptr(threadID), ptr(messageID)},
+		{"v2-without-anchor", 2, ptr(threadID), nil},
+		{"anchor-without-thread", 2, nil, ptr(messageID)},
+		{"malformed-anchor", 2, ptr(threadID), ptr("not-a-uuid")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := fixtureReply().Content
+			c.FormatVersion, c.ExistingThreadId, c.ReplyToMessageId = tc.format, tc.thread, tc.anchor
+			if err := clientContent("content", c, accountA); err == nil {
+				t.Fatal("invalid version or anchor was accepted")
+			}
+		})
+	}
+}

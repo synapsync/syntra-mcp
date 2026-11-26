@@ -14,7 +14,7 @@ import (
 )
 
 type replyOptions struct {
-	Account, Workspace, ThreadID, Summary, ContextMarkdown, ProfileDir string
+	Account, Workspace, ThreadID, MessageID, Summary, ContextMarkdown, ProfileDir string
 }
 
 func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
@@ -34,6 +34,10 @@ func reply(ctx context.Context, app *toolclient.App, opts replyOptions) error {
 		return e
 	}
 	content := &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: opts.Account, WorkspaceId: opts.Workspace, ExistingThreadId: &t.Id, Title: t.Title, OriginalDestinationIntent: "everyone in the thread", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_ReplyAll{ReplyAll: true}}, Summary: opts.Summary, ContextMarkdown: opts.ContextMarkdown}
+	if opts.MessageID != "" {
+		content.FormatVersion = 2
+		content.ReplyToMessageId = &opts.MessageID
+	}
 	if t.ProjectId != "" {
 		content.ProjectId = &t.ProjectId
 	}

@@ -1,0 +1,64 @@
+[
+  {
+    "name": "unquoted-reply",
+    "content": {
+      "formatVersion": 1,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": null,
+      "existingThreadId": "thread",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Thread participants",
+      "destination": {
+        "kind": "replyAll",
+        "replyAll": true
+      },
+      "summary": "Revisión",
+      "contextMarkdown": "\tLine one\r\nLine two"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740001000000056f776e657200000009776f726b7370616365000001000000067468726561640000000850726567756e746100000013546872656164207061727469636970616e7473050000000a5265766973696fcc816e00000013094c696e65206f6e650d0a4c696e652074776f",
+    "sha256": "dac72a9e0df9adda09adf8eb83f30932224f82d9055fd63335ffaef5dc9c4f7a"
+  },
+  {
+    "name": "anchored-reply",
+    "content": {
+      "formatVersion": 2,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": null,
+      "existingThreadId": "thread",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Thread participants",
+      "destination": {
+        "kind": "replyAll",
+        "replyAll": true
+      },
+      "summary": "Revisión",
+      "contextMarkdown": "\tLine one\r\nLine two",
+      "replyToMessageId": "parent"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740002000000056f776e657200000009776f726b7370616365000001000000067468726561640000000850726567756e746100000013546872656164207061727469636970616e7473050000000a5265766973696fcc816e00000013094c696e65206f6e650d0a4c696e652074776f0100000006706172656e74",
+    "sha256": "7379a3cff0b0d49e7b324137197cc36e6006c57383351de5a85d4ddfb14ce7e2"
+  },
+  {
+    "name": "different-anchor",
+    "content": {
+      "formatVersion": 2,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": null,
+      "existingThreadId": "thread",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Thread participants",
+      "destination": {
+        "kind": "replyAll",
+        "replyAll": true
+      },
+      "summary": "Revisión",
+      "contextMarkdown": "\tLine one\r\nLine two",
+      "replyToMessageId": "parent-2"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740002000000056f776e657200000009776f726b7370616365000001000000067468726561640000000850726567756e746100000013546872656164207061727469636970616e7473050000000a5265766973696fcc816e00000013094c696e65206f6e650d0a4c696e652074776f0100000008706172656e742d32",
+    "sha256": "e46b60288b4877b20b79490016757b383763856c48482d96265bb2b8eb6680cf"
+  }
+]

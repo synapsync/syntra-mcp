@@ -35,13 +35,23 @@ type Content struct {
 	Destination               Destination `json:"destination"`
 	Summary                   string      `json:"summary"`
 	ContextMarkdown           string      `json:"contextMarkdown"`
+	ReplyToMessageID          *string     `json:"replyToMessageId,omitempty"`
 }
 
 func Encode(c Content) ([]byte, error) {
-	if c.FormatVersion != 1 {
+	switch c.FormatVersion {
+	case 1:
+		if c.ReplyToMessageID != nil {
+			return nil, errors.New("format v1 cannot carry a reply anchor")
+		}
+	case 2:
+		if c.ExistingThreadID == nil || c.ReplyToMessageID == nil {
+			return nil, errors.New("format v2 requires an anchored reply")
+		}
+	default:
 		return nil, errors.New("unsupported content version")
 	}
-	out := append([]byte("syntra.authored-content\x00"), 1)
+	out := append([]byte("syntra.authored-content\x00"), byte(c.FormatVersion))
 	var failure error
 	field := func(s string, max int, allowEmpty bool) {
 		if failure != nil {
@@ -114,6 +124,9 @@ func Encode(c Content) ([]byte, error) {
 	}
 	field(c.Summary, 8192, false)
 	field(c.ContextMarkdown, 131072, true)
+	if c.FormatVersion == 2 {
+		optional(c.ReplyToMessageID)
+	}
 	if failure != nil {
 		return nil, failure
 	}

@@ -12,6 +12,8 @@ service AdministrationService {
   rpc RenameWorkspace(RenameWorkspaceRequest) returns (RenameWorkspaceResponse);
   rpc ListDirectoryMembers(ListDirectoryMembersRequest) returns (ListDirectoryMembersResponse);
   rpc ChangeMember(ChangeMemberRequest) returns (ChangeMemberResponse);
+  rpc GetMemberSlackId(GetMemberSlackIdRequest) returns (GetMemberSlackIdResponse);
+  rpc SetMemberSlackId(SetMemberSlackIdRequest) returns (SetMemberSlackIdResponse);
   rpc GetMemberDependencies(GetMemberDependenciesRequest) returns (GetMemberDependenciesResponse);
   rpc ListTeams(ListTeamsRequest) returns (ListTeamsResponse);
   rpc GetTeam(GetTeamRequest) returns (GetTeamResponse);
@@ -33,6 +35,31 @@ message ChangeMemberRequest {
   string workspace_id = 1; string user_id = 2; WorkspaceRole role = 3; bool revoke = 4;
   WorkspaceRole expected_role = 5; bool expected_revoked = 6; string request_id = 7;
 }
+// Restricted to current human workspace administrators.
+message GetMemberSlackIdRequest {
+  string workspace_id = 1;
+  string user_id = 2;
+}
+message GetMemberSlackIdResponse { MemberSlackId state = 1; }
+// Empty slack_member_id clears the assignment. Read the current revision before writing.
+// An exact request retry returns the current state without applying the write again.
+message SetMemberSlackIdRequest {
+  string workspace_id = 1;
+  string user_id = 2;
+  string slack_member_id = 3;
+  string expected_revision = 4;
+  string request_id = 5;
+}
+message SetMemberSlackIdResponse {
+  MemberSlackId state = 1;
+  bool replayed = 2;
+  bool changed = 3;
+}
+message MemberSlackId {
+  string slack_member_id = 1;
+  string revision = 2;
+}
+
 message GetMemberDependenciesRequest { string workspace_id = 1; string user_id = 2; int32 page_size = 3; string page_token = 4; }
 message MemberDependency { string kind = 1; string id = 2; string label = 3; string project_id = 4; MemberDependencyType type = 6; }
 message GetMemberDependenciesResponse {

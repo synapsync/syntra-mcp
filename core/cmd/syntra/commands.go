@@ -20,7 +20,7 @@ import (
 
 func isContentCommand(c string) bool {
 	switch c {
-	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "discard", "retry", "snapshot", "threads", "thread", "messages", "add-participant":
+	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "discard", "retry", "snapshot", "threads", "thread", "messages", "add-participant", "fork":
 		return true
 	}
 	return false
@@ -45,7 +45,18 @@ func runContent(parent context.Context, args []string) error {
 	asTeam := f.Bool("as-team", false, "resolve: address the whole selected --team")
 	thread := f.String("thread", "", "thread ID")
 	view := f.String("view", "published", "messages: published or own-prepared")
-	member := f.String("member", "", "add-participant: active workspace member UUID")
+	var members, sourceMembers []string
+	noSource := f.Bool("no-source-members", false, "fork: select no source participants")
+	title := f.String("title", "", "fork: new thread title")
+	messageID := f.String("message", "", "published message UUID")
+	f.Func("member", "active workspace member UUID", func(value string) error {
+		members = append(members, value)
+		return nil
+	})
+	f.Func("source-member", "fork: explicitly retain a source participant UUID", func(value string) error {
+		sourceMembers = append(sourceMembers, value)
+		return nil
+	})
 	requestID := f.String("request-id", "", "add-participant: fresh canonical UUID; resend it to retry")
 	if err := f.Parse(args[1:]); err != nil {
 		return optionError(args[0], err)
@@ -77,16 +88,20 @@ func runContent(parent context.Context, args []string) error {
 		}
 	case "retry":
 		allowed["request"] = true
+	case "fork":
+		for _, s := range []string{"workspace", "thread", "message", "title", "member", "source-member", "no-source-members", "request-id"} {
+			allowed[s] = true
+		}
 	case "add-participant":
 		for _, s := range []string{"workspace", "thread", "member", "request-id"} {
 			allowed[s] = true
 		}
 	case "reply":
-		for _, s := range []string{"workspace", "thread", "summary", "context-file"} {
+		for _, s := range []string{"workspace", "thread", "message", "summary", "context-file"} {
 			allowed[s] = true
 		}
 	case "prepare":
-		for _, s := range []string{"file", "base", "template", "workspace", "project", "thread"} {
+		for _, s := range []string{"file", "base", "template", "workspace", "project", "thread", "message"} {
 			allowed[s] = true
 		}
 	default:
@@ -94,13 +109,29 @@ func runContent(parent context.Context, args []string) error {
 		allowed["base"] = true
 	}
 	invalid := ""
+	messageSet := false
 	f.Visit(func(x *flag.Flag) {
+		messageSet = messageSet || x.Name == "message"
 		if !allowed[x.Name] {
 			invalid = x.Name
 		}
 	})
 	if invalid != "" {
 		return fmt.Errorf("option unavailable for this command: --%s. %s", invalid, usage(args[0]))
+	}
+	if args[0] == "add-participant" && len(members) != 1 {
+		return optionError(args[0], nil)
+	}
+	if args[0] == "fork" && (*title == "" || *messageID == "" || *requestID == "" || (*noSource && len(sourceMembers) != 0)) {
+		return optionError(args[0], nil)
+	}
+	if messageSet && args[0] != "fork" {
+		if args[0] == "prepare" && *template != "reply" {
+			return errors.New("--message requires --template reply for prepare; in a request file use content.replyToMessageId")
+		}
+		if err := toolclient.ValidateReplyAnchor("--message", *thread, *messageID); err != nil {
+			return err
+		}
 	}
 	ctx, cancel := context.WithTimeout(parent, *timeout)
 	defer cancel()
@@ -139,7 +170,7 @@ func runContent(parent context.Context, args []string) error {
 			return err
 		}
 	}
-	replyOpts := replyOptions{Workspace: *workspace, ThreadID: *thread, Summary: *summary}
+	replyOpts := replyOptions{Workspace: *workspace, ThreadID: *thread, MessageID: *messageID, Summary: *summary}
 	if args[0] == "reply" {
 		if *contextFile == "" {
 			return errors.New("reply requires --workspace, --thread, --summary and --context-file")
@@ -197,9 +228,9 @@ func runContent(parent context.Context, args []string) error {
 			if err != nil {
 				return err
 			}
-			return printTemplate(*template, *workspace, *project, p.AccountID, t)
+			return printTemplate(*template, *workspace, *project, p.AccountID, t, *messageID)
 		}
-		return printTemplate(*template, *workspace, *project, p.AccountID, nil)
+		return printTemplate(*template, *workspace, *project, p.AccountID, nil, "")
 	}
 	var result any
 	var message proto.Message
@@ -257,8 +288,14 @@ func runContent(parent context.Context, args []string) error {
 		message = t
 	case "resolve":
 		result, e = app.Resolve(ctx, toolclient.Selection{Workspace: *workspace, Project: *project, Team: *team, Recipient: *recipient, Recipients: splitRecipients(*recipients), AsTeam: *asTeam})
+	case "fork":
+		q := &v1.ForkThreadRequest{WorkspaceId: *workspace, SourceThreadId: *thread, AnchorMessageId: *messageID, Title: *title, ExtraMemberIds: members, RequestId: *requestID}
+		if *noSource || len(sourceMembers) != 0 {
+			q.SourceParticipants = &v1.ForkParticipantSelection{UserIds: sourceMembers}
+		}
+		message, e = app.Fork(ctx, q)
 	case "add-participant":
-		message, e = app.AddParticipant(ctx, *workspace, *thread, *member, *requestID)
+		message, e = app.AddParticipant(ctx, *workspace, *thread, members[0], *requestID)
 	case "retry":
 		message, e = app.Retry(ctx, *request)
 	default:

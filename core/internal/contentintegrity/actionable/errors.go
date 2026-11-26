@@ -31,12 +31,27 @@ const (
 	NoOtherParticipants                    Reason = "NO_OTHER_PARTICIPANTS"
 )
 
+const (
+	ForkParticipantLimit       Reason = "FORK_PARTICIPANT_LIMIT"
+	ForkSourcePending          Reason = "FORK_SOURCE_PENDING"
+	AnchorUnavailable          Reason = "ANCHOR_UNAVAILABLE"
+	ForkSourceMemberInactive   Reason = "FORK_SOURCE_MEMBER_INACTIVE"
+	ForkWorkspaceUnavailable   Reason = "FORK_WORKSPACE_UNAVAILABLE"
+	ReplyParticipationRequired Reason = "REPLY_PARTICIPATION_REQUIRED"
+)
+
 type guidance struct {
 	code connect.Code
 	text string
 }
 
 var reasons = map[Reason]guidance{
+	ForkParticipantLimit:                   {connect.CodeInvalidArgument, "The fork participant limit is 11 including the creator; select a smaller explicit list of source participants with --source-member or sourceMemberIds, or use --no-source-members or an empty sourceMemberIds array. Reduce extra members if needed."},
+	ForkSourcePending:                      {connect.CodeFailedPrecondition, "Publish the source thread's initial message before forking from it."},
+	AnchorUnavailable:                      {connect.CodeNotFound, "Choose a published message from the selected thread. Use syntra messages or the MCP messages tool to find its message ID."},
+	ForkSourceMemberInactive:               {connect.CodeFailedPrecondition, "Select only active participants of the source thread with --source-member or sourceMemberIds. Use syntra thread or the MCP thread tool to check its participants."},
+	ForkWorkspaceUnavailable:               {connect.CodeNotFound, "Choose a workspace where your connected account is an active member. Check syntra workspaces or the MCP workspaces tool."},
+	ReplyParticipationRequired:             {connect.CodePermissionDenied, "To reply, your connected account must be a thread participant or workspace administrator. Ask a participant or administrator to add you to the thread."},
 	ThreadClosed:                           {connect.CodeFailedPrecondition, "The thread is closed. Closed threads accept no agent publication until a person reopens the thread in the Syntra web app."},
 	ThreadNotPublished:                     {connect.CodeFailedPrecondition, "The thread is still a private prepared. Publish its initial message before preparing or publishing a reply."},
 	ThreadTitleMismatch:                    {connect.CodeFailedPrecondition, "A reply's title and project must match the thread exactly. Use syntra prepare --template reply or syntra reply. Current thread title: "},
@@ -56,8 +71,9 @@ var reasons = map[Reason]guidance{
 }
 
 type Error struct {
-	reason Reason
-	title  string
+	reason    Reason
+	title     string
+	forkRetry bool
 }
 
 func New(reason Reason) *Error { return &Error{reason: reason} }
@@ -66,7 +82,27 @@ func TitleMismatch(title string) *Error {
 	return &Error{reason: ThreadTitleMismatch, title: title}
 }
 
+// FromForkConnect accepts only fixed reasons that the fork RPC can return.
+// Fork retries resend the full request instead of consulting a local receipt.
+func FromForkConnect(err error) *Error {
+	public := FromConnect(err)
+	if public == nil {
+		return nil
+	}
+	switch public.reason {
+	case RequestIDConflict:
+		return &Error{reason: RequestIDConflict, forkRetry: true}
+	case ForkParticipantLimit, ForkSourcePending, AnchorUnavailable, ForkSourceMemberInactive, ForkWorkspaceUnavailable:
+		return public
+	default:
+		return nil
+	}
+}
+
 func (e *Error) Error() string {
+	if e.forkRetry {
+		return "reason=REQUEST_ID_CONFLICT; This requestId is already bound to a different fork. Resend the original fork arguments and requestId to recover its result, or use a fresh requestId for changed input."
+	}
 	message := "reason=" + string(e.reason) + "; " + reasons[e.reason].text
 	if e.reason == ThreadTitleMismatch {
 		message += strconv.Quote(e.title)

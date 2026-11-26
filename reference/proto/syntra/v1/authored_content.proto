@@ -35,6 +35,8 @@ message AuthoredContent {
   ContentDestination destination = 9;
   string summary = 10;
   string context_markdown = 11;
+  // Present only in format v2 and only for replies to a published message in existing_thread_id.
+  optional string reply_to_message_id = 12;
 }
 // Optional immutable client assertions; no model/provider attestation.
 message ClientReportedProvenance {

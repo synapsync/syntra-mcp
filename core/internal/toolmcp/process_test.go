@@ -69,6 +69,7 @@ type apiFixture struct {
 	syntrav1connect.UnimplementedProjectServiceHandler
 	syntrav1connect.UnimplementedWorkspaceServiceHandler
 	syntrav1connect.UnimplementedThreadServiceHandler
+	syntrav1connect.UnimplementedMessageServiceHandler
 	threadClosed  bool
 	mutationError error
 	mu            sync.Mutex
@@ -84,6 +85,22 @@ type apiFixture struct {
 	forbidden     bool
 	workspaces    []*v1.AccessibleWorkspace
 	publishes     int
+	forks         []*v1.ForkThreadRequest
+}
+
+func (f *apiFixture) ForkThread(_ context.Context, r *connect.Request[v1.ForkThreadRequest]) (*connect.Response[v1.ForkThreadResponse], error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	q := r.Msg
+	f.forks = append(f.forks, q)
+	if f.mutationError != nil {
+		return nil, f.mutationError
+	}
+	return connect.NewResponse(&v1.ForkThreadResponse{Thread: &v1.Thread{
+		Id: "99999999-9999-4999-8999-999999999999", WorkspaceId: q.WorkspaceId, Title: q.Title,
+		State:      v1.ThreadState_THREAD_STATE_OPEN,
+		ForkedFrom: &v1.ThreadForkOrigin{ThreadId: q.SourceThreadId, MessageId: q.AnchorMessageId},
+	}}), nil
 }
 
 func (f *apiFixture) GetIdentity(_ context.Context, r *connect.Request[v1.GetIdentityRequest]) (*connect.Response[v1.GetIdentityResponse], error) {
@@ -164,7 +181,31 @@ func (f *apiFixture) GetThread(_ context.Context, r *connect.Request[v1.GetThrea
 		state = v1.ThreadState_THREAD_STATE_CLOSED
 	}
 	thread := &v1.Thread{Id: r.Msg.ThreadId, WorkspaceId: r.Msg.WorkspaceId, Title: "Visible title", State: state, Revision: revision(1)}
+	if thread.Id == forkReadID {
+		thread.ForkedFrom = forkOrigin()
+	}
 	return connect.NewResponse(&v1.GetThreadResponse{Thread: thread}), nil
+}
+
+const forkReadID = "99999999-9999-4999-8999-999999999999"
+
+func forkOrigin() *v1.ThreadForkOrigin {
+	return &v1.ThreadForkOrigin{ThreadId: threadID, MessageId: messageID, Title: "Source"}
+}
+
+func (f *apiFixture) ListThreads(_ context.Context, r *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error) {
+	return connect.NewResponse(&v1.ListThreadsResponse{Threads: []*v1.Thread{
+		{Id: forkReadID, WorkspaceId: r.Msg.WorkspaceId, ForkedFrom: forkOrigin()},
+		{Id: threadID, WorkspaceId: r.Msg.WorkspaceId},
+	}}), nil
+}
+
+func (f *apiFixture) ListMessages(_ context.Context, r *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error) {
+	return connect.NewResponse(&v1.ListMessagesResponse{Messages: []*v1.PublishedMessage{
+		{Id: messageID, WorkspaceId: r.Msg.WorkspaceId, ThreadId: r.Msg.ThreadId},
+		{Id: preparedID, WorkspaceId: r.Msg.WorkspaceId, ThreadId: r.Msg.ThreadId, ReplyToMessageId: str(messageID),
+			ReplyParentPreview: &v1.ReplyParentPreview{AuthorUserId: ownerID, SummaryPreview: "Parent summary"}},
+	}}), nil
 }
 
 func (f *apiFixture) apply(id string, req proto.Message, c *v1.AuthoredContent, p *v1.ClientReportedProvenance, publish bool) (*v1.AuthoredContentSnapshot, error) {
@@ -430,6 +471,7 @@ func fixture(t *testing.T) *setup {
 	mux.Handle(syntrav1connect.NewProjectServiceHandler(f))
 	mux.Handle(syntrav1connect.NewWorkspaceServiceHandler(f))
 	mux.Handle(syntrav1connect.NewThreadServiceHandler(f))
+	mux.Handle(syntrav1connect.NewMessageServiceHandler(f))
 	server := httptest.NewTLSServer(mux)
 	t.Cleanup(server.Close)
 	cfg := toolclient.Config{APIOrigin: server.URL, ProviderOrigin: "https://provider.invalid", PublishableKey: "sb_publishable_fixture_public", Label: "Shared fixture", Capabilities: []v1.ToolCapability{1, 2, 3}, LifetimeSeconds: 300}
@@ -764,8 +806,129 @@ func TestMCPActionableErrorCLIParity(t *testing.T) {
 	})
 }
 
+func TestAnchorReadOutputsCLIAndMCP(t *testing.T) {
+	f := fixture(t)
+	p := spawn(t, f)
+	p.init(t)
+	for _, tc := range []struct {
+		name, thread string
+		fields       map[string]int
+	}{
+		{"thread", forkReadID, map[string]int{"forkedFrom": 1}},
+		{"thread", threadID, map[string]int{"forkedFrom": 0}},
+		{"threads", "", map[string]int{"forkedFrom": 1}},
+		{"messages", threadID, map[string]int{"replyToMessageId": 1, "replyParentPreview": 1, "Parent summary": 1}},
+	} {
+		args := map[string]any{"workspaceId": workspaceID}
+		cli := []string{tc.name, "--profile-dir", f.dir, "--workspace", workspaceID}
+		if tc.thread != "" {
+			args["threadId"] = tc.thread
+			cli = append(cli, "--thread", tc.thread)
+		}
+		mcp := toolResult(t, p.call(t, tc.name, args), false)
+		cmd := exec.Command(f.binary, cli...)
+		cmd.Env = testsupport.FixtureCLIEnv()
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("%s: %v", tc.name, err)
+		}
+		for _, raw := range [][]byte{out, mcp} {
+			for field, count := range tc.fields {
+				if bytes.Count(raw, []byte(field)) != count {
+					t.Fatalf("%s: expected %d %s fields, got %s", tc.name, count, field, raw)
+				}
+			}
+		}
+	}
+	f.api.mu.Lock()
+	defer f.api.mu.Unlock()
+	if f.api.mutations != 0 || len(f.api.forks) != 0 {
+		t.Fatal("read commands sent a write")
+	}
+}
+
+func TestForkProcessCLIParity(t *testing.T) {
+	f := fixture(t)
+	p := spawn(t, f)
+	p.init(t)
+	for _, tc := range []struct {
+		name      string
+		selection *v1.ForkParticipantSelection
+		flags     []string
+	}{
+		{name: "omitted"},
+		{name: "explicit", selection: &v1.ForkParticipantSelection{UserIds: []string{ownerID, recipientID}}, flags: []string{"--source-member", ownerID, "--source-member", recipientID}},
+		{name: "explicit empty", selection: &v1.ForkParticipantSelection{UserIds: []string{}}, flags: []string{"--no-source-members"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			requestID := id()
+			args := forkArgs(requestID)
+			args["extraMemberIds"] = []string{recipientID, ownerID}
+			if tc.selection != nil {
+				args["sourceMemberIds"] = tc.selection.UserIds
+			}
+			raw := toolResult(t, p.call(t, "fork", args), false)
+			cli, err := runForkCLI(f, requestID, append(tc.flags, "--member", recipientID, "--member", ownerID)...)
+			var a, b v1.ForkThreadResponse
+			if err != nil || protojson.Unmarshal(cli, &a) != nil || protojson.Unmarshal(raw, &b) != nil ||
+				!proto.Equal(&a, &b) || a.GetThread().GetState() != v1.ThreadState_THREAD_STATE_OPEN {
+				t.Fatalf("fork output differs between CLI and MCP: %v", err)
+			}
+			want := &v1.ForkThreadRequest{WorkspaceId: workspaceID, SourceThreadId: threadID, AnchorMessageId: messageID,
+				Title: "Follow-up", RequestId: requestID, SourceParticipants: tc.selection, ExtraMemberIds: []string{recipientID, ownerID}}
+			f.api.mu.Lock()
+			defer f.api.mu.Unlock()
+			if len(f.api.forks) < 2 {
+				t.Fatal("expected both fork requests")
+			}
+			requests := f.api.forks[len(f.api.forks)-2:]
+			if !proto.Equal(requests[0], want) {
+				t.Fatalf("MCP request = %v, want %v", requests[0], want)
+			}
+			if !proto.Equal(requests[1], want) {
+				t.Fatalf("CLI request = %v, want %v", requests[1], want)
+			}
+		})
+	}
+
+	store, err := toolclient.OpenStore(context.Background(), f.dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	profile, err := store.Load()
+	if err != nil {
+		store.Close()
+		t.Fatal(err)
+	}
+	profile.Config.Capabilities = []v1.ToolCapability{v1.ToolCapability_TOOL_CAPABILITY_READ, v1.ToolCapability_TOOL_CAPABILITY_PREPARE}
+	err = store.Save(profile)
+	store.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.api.mu.Lock()
+	f.api.p.Config.Capabilities = profile.Config.Capabilities
+	f.api.mu.Unlock()
+
+	deniedID := id()
+	rejected := toolResult(t, p.call(t, "fork", forkArgs(deniedID)), true)
+	if !bytes.Contains(rejected, []byte("Missing capability PUBLISH")) {
+		t.Fatalf("expected MCP publish denial: %s", rejected)
+	}
+	if out, err := runForkCLI(f, deniedID); err == nil || !bytes.Contains(out, []byte("Missing capability PUBLISH")) {
+		t.Fatalf("expected CLI publish denial: %v %s", err, out)
+	}
+
+	f.api.mu.Lock()
+	defer f.api.mu.Unlock()
+	if len(f.api.forks) != 6 {
+		t.Fatal("a denied fork reached the RPC")
+	}
+
+}
+
 func TestMCPActualProcessCLIParity(t *testing.T) {
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant", "fork"}
 	f := fixture(t)
 	p := spawn(t, f)
 	p.init(t)
@@ -969,13 +1132,13 @@ func TestBrowserCLIRecoveryThenMCPProcess(t *testing.T) {
 	process.next++
 	process.send(t, []byte(fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":"tools/list","params":{}}`, process.next)))
 	listed := process.receive(t)
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant", "fork"}
 	var catalog struct {
 		Tools []struct {
 			Name string `json:"name"`
 		} `json:"tools"`
 	}
-	if json.Unmarshal(listed["result"], &catalog) != nil || len(catalog.Tools) != 16 {
+	if json.Unmarshal(listed["result"], &catalog) != nil || len(catalog.Tools) != 17 {
 		t.Fatal("browser profile MCP tool allowlist changed", string(listed["result"]))
 	}
 	for _, tool := range catalog.Tools {
