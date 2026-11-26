@@ -110,3 +110,44 @@ func TestRejectInactiveDestinationVariant(t *testing.T) {
 		}
 	}
 }
+
+func TestMessageAnchorVectors(t *testing.T) {
+	data, err := os.ReadFile("../../fixtures/content-integrity-message-anchors.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var vectors []struct {
+		Name        string
+		Content     Content
+		EncodingHex string
+		SHA256      string
+	}
+	if err := json.Unmarshal(data, &vectors); err != nil {
+		t.Fatal(err)
+	}
+	for _, vector := range vectors {
+		t.Run(vector.Name, func(t *testing.T) {
+			encoded, err := Encode(vector.Content)
+			if err != nil || hex.EncodeToString(encoded) != vector.EncodingHex {
+				t.Fatalf("encoding mismatch: %v", err)
+			}
+			digest, err := Digest(vector.Content)
+			if err != nil || hex.EncodeToString(digest[:]) != vector.SHA256 {
+				t.Fatalf("digest mismatch: %v", err)
+			}
+		})
+	}
+	v1WithAnchor := vectors[1].Content
+	v1WithAnchor.FormatVersion = 1
+	v2WithoutAnchor := vectors[0].Content
+	v2WithoutAnchor.FormatVersion = 2
+	v2WithoutThread := vectors[1].Content
+	v2WithoutThread.ExistingThreadID = nil
+	v2EmptyAnchor := vectors[1].Content
+	v2EmptyAnchor.ReplyToMessageID = new(string)
+	for _, invalid := range []Content{v1WithAnchor, v2WithoutAnchor, v2WithoutThread, v2EmptyAnchor} {
+		if _, err := Encode(invalid); err == nil {
+			t.Fatal("invalid anchor/version combination accepted")
+		}
+	}
+}

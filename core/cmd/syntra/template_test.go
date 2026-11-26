@@ -23,7 +23,7 @@ func TestReplyTemplate(t *testing.T) {
 	}
 	old := os.Stdout
 	os.Stdout = write
-	err = printTemplate("reply", w, "", author, &v1.Thread{Id: id, WorkspaceId: w, CreatorUserId: creator, State: v1.ThreadState_THREAD_STATE_OPEN, Title: "Title", Revision: revision})
+	err = printTemplate("reply", w, "", author, &v1.Thread{Id: id, WorkspaceId: w, CreatorUserId: creator, State: v1.ThreadState_THREAD_STATE_OPEN, Title: "Title", Revision: revision}, "")
 	write.Close()
 	os.Stdout = old
 	if err != nil {

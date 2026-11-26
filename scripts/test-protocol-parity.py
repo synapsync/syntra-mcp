@@ -32,6 +32,8 @@ class ProtocolParityTests(unittest.TestCase):
             CONTENT_VECTOR_REL,
             "core/internal/toolclient/profile.go",
         ]
+        if (ROOT / "core/fixtures/content-integrity-message-anchors.json").is_file():
+            files.append("core/fixtures/content-integrity-message-anchors.json")
         for relative in files:
             source = ROOT / relative
             target = self.project / relative

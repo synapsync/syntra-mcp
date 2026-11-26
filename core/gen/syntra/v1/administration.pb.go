@@ -618,6 +618,293 @@ func (x *ChangeMemberRequest) GetRequestId() string {
 	return ""
 }
 
+// Restricted to current human workspace administrators.
+type GetMemberSlackIdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId   string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMemberSlackIdRequest) Reset() {
+	*x = GetMemberSlackIdRequest{}
+	mi := &file_syntra_v1_administration_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMemberSlackIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMemberSlackIdRequest) ProtoMessage() {}
+
+func (x *GetMemberSlackIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_administration_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMemberSlackIdRequest.ProtoReflect.Descriptor instead.
+func (*GetMemberSlackIdRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetMemberSlackIdRequest) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
+func (x *GetMemberSlackIdRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetMemberSlackIdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	State         *MemberSlackId         `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMemberSlackIdResponse) Reset() {
+	*x = GetMemberSlackIdResponse{}
+	mi := &file_syntra_v1_administration_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMemberSlackIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMemberSlackIdResponse) ProtoMessage() {}
+
+func (x *GetMemberSlackIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_administration_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMemberSlackIdResponse.ProtoReflect.Descriptor instead.
+func (*GetMemberSlackIdResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetMemberSlackIdResponse) GetState() *MemberSlackId {
+	if x != nil {
+		return x.State
+	}
+	return nil
+}
+
+// Empty slack_member_id clears the assignment. Read the current revision before writing.
+// An exact request retry returns the current state without applying the write again.
+type SetMemberSlackIdRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId      string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	UserId           string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	SlackMemberId    string                 `protobuf:"bytes,3,opt,name=slack_member_id,json=slackMemberId,proto3" json:"slack_member_id,omitempty"`
+	ExpectedRevision string                 `protobuf:"bytes,4,opt,name=expected_revision,json=expectedRevision,proto3" json:"expected_revision,omitempty"`
+	RequestId        string                 `protobuf:"bytes,5,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *SetMemberSlackIdRequest) Reset() {
+	*x = SetMemberSlackIdRequest{}
+	mi := &file_syntra_v1_administration_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMemberSlackIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMemberSlackIdRequest) ProtoMessage() {}
+
+func (x *SetMemberSlackIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_administration_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMemberSlackIdRequest.ProtoReflect.Descriptor instead.
+func (*SetMemberSlackIdRequest) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *SetMemberSlackIdRequest) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
+func (x *SetMemberSlackIdRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *SetMemberSlackIdRequest) GetSlackMemberId() string {
+	if x != nil {
+		return x.SlackMemberId
+	}
+	return ""
+}
+
+func (x *SetMemberSlackIdRequest) GetExpectedRevision() string {
+	if x != nil {
+		return x.ExpectedRevision
+	}
+	return ""
+}
+
+func (x *SetMemberSlackIdRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+type SetMemberSlackIdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	State         *MemberSlackId         `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	Replayed      bool                   `protobuf:"varint,2,opt,name=replayed,proto3" json:"replayed,omitempty"`
+	Changed       bool                   `protobuf:"varint,3,opt,name=changed,proto3" json:"changed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetMemberSlackIdResponse) Reset() {
+	*x = SetMemberSlackIdResponse{}
+	mi := &file_syntra_v1_administration_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMemberSlackIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMemberSlackIdResponse) ProtoMessage() {}
+
+func (x *SetMemberSlackIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_administration_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMemberSlackIdResponse.ProtoReflect.Descriptor instead.
+func (*SetMemberSlackIdResponse) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *SetMemberSlackIdResponse) GetState() *MemberSlackId {
+	if x != nil {
+		return x.State
+	}
+	return nil
+}
+
+func (x *SetMemberSlackIdResponse) GetReplayed() bool {
+	if x != nil {
+		return x.Replayed
+	}
+	return false
+}
+
+func (x *SetMemberSlackIdResponse) GetChanged() bool {
+	if x != nil {
+		return x.Changed
+	}
+	return false
+}
+
+type MemberSlackId struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SlackMemberId string                 `protobuf:"bytes,1,opt,name=slack_member_id,json=slackMemberId,proto3" json:"slack_member_id,omitempty"`
+	Revision      string                 `protobuf:"bytes,2,opt,name=revision,proto3" json:"revision,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MemberSlackId) Reset() {
+	*x = MemberSlackId{}
+	mi := &file_syntra_v1_administration_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MemberSlackId) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MemberSlackId) ProtoMessage() {}
+
+func (x *MemberSlackId) ProtoReflect() protoreflect.Message {
+	mi := &file_syntra_v1_administration_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MemberSlackId.ProtoReflect.Descriptor instead.
+func (*MemberSlackId) Descriptor() ([]byte, []int) {
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *MemberSlackId) GetSlackMemberId() string {
+	if x != nil {
+		return x.SlackMemberId
+	}
+	return ""
+}
+
+func (x *MemberSlackId) GetRevision() string {
+	if x != nil {
+		return x.Revision
+	}
+	return ""
+}
+
 type GetMemberDependenciesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WorkspaceId   string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
@@ -630,7 +917,7 @@ type GetMemberDependenciesRequest struct {
 
 func (x *GetMemberDependenciesRequest) Reset() {
 	*x = GetMemberDependenciesRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[7]
+	mi := &file_syntra_v1_administration_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -642,7 +929,7 @@ func (x *GetMemberDependenciesRequest) String() string {
 func (*GetMemberDependenciesRequest) ProtoMessage() {}
 
 func (x *GetMemberDependenciesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[7]
+	mi := &file_syntra_v1_administration_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -655,7 +942,7 @@ func (x *GetMemberDependenciesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMemberDependenciesRequest.ProtoReflect.Descriptor instead.
 func (*GetMemberDependenciesRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{7}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetMemberDependenciesRequest) GetWorkspaceId() string {
@@ -699,7 +986,7 @@ type MemberDependency struct {
 
 func (x *MemberDependency) Reset() {
 	*x = MemberDependency{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[8]
+	mi := &file_syntra_v1_administration_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -711,7 +998,7 @@ func (x *MemberDependency) String() string {
 func (*MemberDependency) ProtoMessage() {}
 
 func (x *MemberDependency) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[8]
+	mi := &file_syntra_v1_administration_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -724,7 +1011,7 @@ func (x *MemberDependency) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberDependency.ProtoReflect.Descriptor instead.
 func (*MemberDependency) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{8}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *MemberDependency) GetKind() string {
@@ -773,7 +1060,7 @@ type GetMemberDependenciesResponse struct {
 
 func (x *GetMemberDependenciesResponse) Reset() {
 	*x = GetMemberDependenciesResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[9]
+	mi := &file_syntra_v1_administration_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -785,7 +1072,7 @@ func (x *GetMemberDependenciesResponse) String() string {
 func (*GetMemberDependenciesResponse) ProtoMessage() {}
 
 func (x *GetMemberDependenciesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[9]
+	mi := &file_syntra_v1_administration_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -798,7 +1085,7 @@ func (x *GetMemberDependenciesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMemberDependenciesResponse.ProtoReflect.Descriptor instead.
 func (*GetMemberDependenciesResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{9}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetMemberDependenciesResponse) GetDependencies() []*MemberDependency {
@@ -834,7 +1121,7 @@ type AdministrationPageRequest struct {
 
 func (x *AdministrationPageRequest) Reset() {
 	*x = AdministrationPageRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[10]
+	mi := &file_syntra_v1_administration_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -846,7 +1133,7 @@ func (x *AdministrationPageRequest) String() string {
 func (*AdministrationPageRequest) ProtoMessage() {}
 
 func (x *AdministrationPageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[10]
+	mi := &file_syntra_v1_administration_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -859,7 +1146,7 @@ func (x *AdministrationPageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdministrationPageRequest.ProtoReflect.Descriptor instead.
 func (*AdministrationPageRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{10}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *AdministrationPageRequest) GetWorkspaceId() string {
@@ -897,7 +1184,7 @@ type Team struct {
 
 func (x *Team) Reset() {
 	*x = Team{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[11]
+	mi := &file_syntra_v1_administration_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -909,7 +1196,7 @@ func (x *Team) String() string {
 func (*Team) ProtoMessage() {}
 
 func (x *Team) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[11]
+	mi := &file_syntra_v1_administration_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -922,7 +1209,7 @@ func (x *Team) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Team.ProtoReflect.Descriptor instead.
 func (*Team) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{11}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Team) GetId() string {
@@ -977,7 +1264,7 @@ type ListTeamsResponse struct {
 
 func (x *ListTeamsResponse) Reset() {
 	*x = ListTeamsResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[12]
+	mi := &file_syntra_v1_administration_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -989,7 +1276,7 @@ func (x *ListTeamsResponse) String() string {
 func (*ListTeamsResponse) ProtoMessage() {}
 
 func (x *ListTeamsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[12]
+	mi := &file_syntra_v1_administration_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1002,7 +1289,7 @@ func (x *ListTeamsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTeamsResponse.ProtoReflect.Descriptor instead.
 func (*ListTeamsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{12}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListTeamsResponse) GetTeams() []*Team {
@@ -1038,7 +1325,7 @@ type SaveTeamRequest struct {
 
 func (x *SaveTeamRequest) Reset() {
 	*x = SaveTeamRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[13]
+	mi := &file_syntra_v1_administration_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1050,7 +1337,7 @@ func (x *SaveTeamRequest) String() string {
 func (*SaveTeamRequest) ProtoMessage() {}
 
 func (x *SaveTeamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[13]
+	mi := &file_syntra_v1_administration_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1063,7 +1350,7 @@ func (x *SaveTeamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveTeamRequest.ProtoReflect.Descriptor instead.
 func (*SaveTeamRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{13}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *SaveTeamRequest) GetWorkspaceId() string {
@@ -1134,7 +1421,7 @@ type AuditEntry struct {
 
 func (x *AuditEntry) Reset() {
 	*x = AuditEntry{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[14]
+	mi := &file_syntra_v1_administration_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1146,7 +1433,7 @@ func (x *AuditEntry) String() string {
 func (*AuditEntry) ProtoMessage() {}
 
 func (x *AuditEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[14]
+	mi := &file_syntra_v1_administration_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1159,7 +1446,7 @@ func (x *AuditEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuditEntry.ProtoReflect.Descriptor instead.
 func (*AuditEntry) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{14}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AuditEntry) GetId() string {
@@ -1249,7 +1536,7 @@ type ListAuditResponse struct {
 
 func (x *ListAuditResponse) Reset() {
 	*x = ListAuditResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[15]
+	mi := &file_syntra_v1_administration_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1261,7 +1548,7 @@ func (x *ListAuditResponse) String() string {
 func (*ListAuditResponse) ProtoMessage() {}
 
 func (x *ListAuditResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[15]
+	mi := &file_syntra_v1_administration_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1274,7 +1561,7 @@ func (x *ListAuditResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAuditResponse.ProtoReflect.Descriptor instead.
 func (*ListAuditResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{15}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListAuditResponse) GetEntries() []*AuditEntry {
@@ -1307,7 +1594,7 @@ type SetCreationPermissionRequest struct {
 
 func (x *SetCreationPermissionRequest) Reset() {
 	*x = SetCreationPermissionRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[16]
+	mi := &file_syntra_v1_administration_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1319,7 +1606,7 @@ func (x *SetCreationPermissionRequest) String() string {
 func (*SetCreationPermissionRequest) ProtoMessage() {}
 
 func (x *SetCreationPermissionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[16]
+	mi := &file_syntra_v1_administration_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1332,7 +1619,7 @@ func (x *SetCreationPermissionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetCreationPermissionRequest.ProtoReflect.Descriptor instead.
 func (*SetCreationPermissionRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{16}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SetCreationPermissionRequest) GetProviderSubject() string {
@@ -1389,7 +1676,7 @@ type CreateManagedWorkspaceRequest struct {
 
 func (x *CreateManagedWorkspaceRequest) Reset() {
 	*x = CreateManagedWorkspaceRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[17]
+	mi := &file_syntra_v1_administration_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1401,7 +1688,7 @@ func (x *CreateManagedWorkspaceRequest) String() string {
 func (*CreateManagedWorkspaceRequest) ProtoMessage() {}
 
 func (x *CreateManagedWorkspaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[17]
+	mi := &file_syntra_v1_administration_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1414,7 +1701,7 @@ func (x *CreateManagedWorkspaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateManagedWorkspaceRequest.ProtoReflect.Descriptor instead.
 func (*CreateManagedWorkspaceRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{17}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CreateManagedWorkspaceRequest) GetName() string {
@@ -1457,7 +1744,7 @@ type OperationalWorkspace struct {
 
 func (x *OperationalWorkspace) Reset() {
 	*x = OperationalWorkspace{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[18]
+	mi := &file_syntra_v1_administration_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1469,7 +1756,7 @@ func (x *OperationalWorkspace) String() string {
 func (*OperationalWorkspace) ProtoMessage() {}
 
 func (x *OperationalWorkspace) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[18]
+	mi := &file_syntra_v1_administration_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1482,7 +1769,7 @@ func (x *OperationalWorkspace) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationalWorkspace.ProtoReflect.Descriptor instead.
 func (*OperationalWorkspace) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{18}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *OperationalWorkspace) GetId() string {
@@ -1523,7 +1810,7 @@ type ListManagedWorkspacesResponse struct {
 
 func (x *ListManagedWorkspacesResponse) Reset() {
 	*x = ListManagedWorkspacesResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[19]
+	mi := &file_syntra_v1_administration_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1535,7 +1822,7 @@ func (x *ListManagedWorkspacesResponse) String() string {
 func (*ListManagedWorkspacesResponse) ProtoMessage() {}
 
 func (x *ListManagedWorkspacesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[19]
+	mi := &file_syntra_v1_administration_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1548,7 +1835,7 @@ func (x *ListManagedWorkspacesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListManagedWorkspacesResponse.ProtoReflect.Descriptor instead.
 func (*ListManagedWorkspacesResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{19}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ListManagedWorkspacesResponse) GetWorkspaces() []*OperationalWorkspace {
@@ -1576,7 +1863,7 @@ type RenameWorkspaceResponse struct {
 
 func (x *RenameWorkspaceResponse) Reset() {
 	*x = RenameWorkspaceResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[20]
+	mi := &file_syntra_v1_administration_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1588,7 +1875,7 @@ func (x *RenameWorkspaceResponse) String() string {
 func (*RenameWorkspaceResponse) ProtoMessage() {}
 
 func (x *RenameWorkspaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[20]
+	mi := &file_syntra_v1_administration_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1601,7 +1888,7 @@ func (x *RenameWorkspaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenameWorkspaceResponse.ProtoReflect.Descriptor instead.
 func (*RenameWorkspaceResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{20}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *RenameWorkspaceResponse) GetWorkspace() *Workspace {
@@ -1636,7 +1923,7 @@ type ChangeMemberResponse struct {
 
 func (x *ChangeMemberResponse) Reset() {
 	*x = ChangeMemberResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[21]
+	mi := &file_syntra_v1_administration_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1648,7 +1935,7 @@ func (x *ChangeMemberResponse) String() string {
 func (*ChangeMemberResponse) ProtoMessage() {}
 
 func (x *ChangeMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[21]
+	mi := &file_syntra_v1_administration_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1661,7 +1948,7 @@ func (x *ChangeMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeMemberResponse.ProtoReflect.Descriptor instead.
 func (*ChangeMemberResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{21}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ChangeMemberResponse) GetMember() *MemberState {
@@ -1700,7 +1987,7 @@ type ListDirectoryMembersRequest struct {
 
 func (x *ListDirectoryMembersRequest) Reset() {
 	*x = ListDirectoryMembersRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[22]
+	mi := &file_syntra_v1_administration_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1712,7 +1999,7 @@ func (x *ListDirectoryMembersRequest) String() string {
 func (*ListDirectoryMembersRequest) ProtoMessage() {}
 
 func (x *ListDirectoryMembersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[22]
+	mi := &file_syntra_v1_administration_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1725,7 +2012,7 @@ func (x *ListDirectoryMembersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDirectoryMembersRequest.ProtoReflect.Descriptor instead.
 func (*ListDirectoryMembersRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{22}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ListDirectoryMembersRequest) GetWorkspaceId() string {
@@ -1780,7 +2067,7 @@ type ListDirectoryMembersResponse struct {
 
 func (x *ListDirectoryMembersResponse) Reset() {
 	*x = ListDirectoryMembersResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[23]
+	mi := &file_syntra_v1_administration_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1792,7 +2079,7 @@ func (x *ListDirectoryMembersResponse) String() string {
 func (*ListDirectoryMembersResponse) ProtoMessage() {}
 
 func (x *ListDirectoryMembersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[23]
+	mi := &file_syntra_v1_administration_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1805,7 +2092,7 @@ func (x *ListDirectoryMembersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDirectoryMembersResponse.ProtoReflect.Descriptor instead.
 func (*ListDirectoryMembersResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{23}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *ListDirectoryMembersResponse) GetMembers() []*WorkspaceMember {
@@ -1833,7 +2120,7 @@ type MemberState struct {
 
 func (x *MemberState) Reset() {
 	*x = MemberState{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[24]
+	mi := &file_syntra_v1_administration_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1845,7 +2132,7 @@ func (x *MemberState) String() string {
 func (*MemberState) ProtoMessage() {}
 
 func (x *MemberState) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[24]
+	mi := &file_syntra_v1_administration_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1858,7 +2145,7 @@ func (x *MemberState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberState.ProtoReflect.Descriptor instead.
 func (*MemberState) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{24}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *MemberState) GetMember() *WorkspaceMember {
@@ -1893,7 +2180,7 @@ type MemberChangeDetail struct {
 
 func (x *MemberChangeDetail) Reset() {
 	*x = MemberChangeDetail{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[25]
+	mi := &file_syntra_v1_administration_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1905,7 +2192,7 @@ func (x *MemberChangeDetail) String() string {
 func (*MemberChangeDetail) ProtoMessage() {}
 
 func (x *MemberChangeDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[25]
+	mi := &file_syntra_v1_administration_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1918,7 +2205,7 @@ func (x *MemberChangeDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberChangeDetail.ProtoReflect.Descriptor instead.
 func (*MemberChangeDetail) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{25}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *MemberChangeDetail) GetMember() *MemberState {
@@ -1946,7 +2233,7 @@ type SaveTeamResponse struct {
 
 func (x *SaveTeamResponse) Reset() {
 	*x = SaveTeamResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[26]
+	mi := &file_syntra_v1_administration_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1958,7 +2245,7 @@ func (x *SaveTeamResponse) String() string {
 func (*SaveTeamResponse) ProtoMessage() {}
 
 func (x *SaveTeamResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[26]
+	mi := &file_syntra_v1_administration_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1971,7 +2258,7 @@ func (x *SaveTeamResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveTeamResponse.ProtoReflect.Descriptor instead.
 func (*SaveTeamResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{26}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *SaveTeamResponse) GetTeam() *Team {
@@ -1999,7 +2286,7 @@ type SetCreationPermissionResponse struct {
 
 func (x *SetCreationPermissionResponse) Reset() {
 	*x = SetCreationPermissionResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[27]
+	mi := &file_syntra_v1_administration_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2011,7 +2298,7 @@ func (x *SetCreationPermissionResponse) String() string {
 func (*SetCreationPermissionResponse) ProtoMessage() {}
 
 func (x *SetCreationPermissionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[27]
+	mi := &file_syntra_v1_administration_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2024,7 +2311,7 @@ func (x *SetCreationPermissionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetCreationPermissionResponse.ProtoReflect.Descriptor instead.
 func (*SetCreationPermissionResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{27}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SetCreationPermissionResponse) GetAccount() *CreationAccount {
@@ -2061,7 +2348,7 @@ type ListTeamsRequest struct {
 
 func (x *ListTeamsRequest) Reset() {
 	*x = ListTeamsRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[28]
+	mi := &file_syntra_v1_administration_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2073,7 +2360,7 @@ func (x *ListTeamsRequest) String() string {
 func (*ListTeamsRequest) ProtoMessage() {}
 
 func (x *ListTeamsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[28]
+	mi := &file_syntra_v1_administration_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2086,7 +2373,7 @@ func (x *ListTeamsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTeamsRequest.ProtoReflect.Descriptor instead.
 func (*ListTeamsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{28}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ListTeamsRequest) GetWorkspaceId() string {
@@ -2134,7 +2421,7 @@ type GetTeamRequest struct {
 
 func (x *GetTeamRequest) Reset() {
 	*x = GetTeamRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[29]
+	mi := &file_syntra_v1_administration_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2146,7 +2433,7 @@ func (x *GetTeamRequest) String() string {
 func (*GetTeamRequest) ProtoMessage() {}
 
 func (x *GetTeamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[29]
+	mi := &file_syntra_v1_administration_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2159,7 +2446,7 @@ func (x *GetTeamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTeamRequest.ProtoReflect.Descriptor instead.
 func (*GetTeamRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{29}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *GetTeamRequest) GetWorkspaceId() string {
@@ -2185,7 +2472,7 @@ type GetTeamResponse struct {
 
 func (x *GetTeamResponse) Reset() {
 	*x = GetTeamResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[30]
+	mi := &file_syntra_v1_administration_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2197,7 +2484,7 @@ func (x *GetTeamResponse) String() string {
 func (*GetTeamResponse) ProtoMessage() {}
 
 func (x *GetTeamResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[30]
+	mi := &file_syntra_v1_administration_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2210,7 +2497,7 @@ func (x *GetTeamResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTeamResponse.ProtoReflect.Descriptor instead.
 func (*GetTeamResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{30}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetTeamResponse) GetTeam() *Team {
@@ -2237,7 +2524,7 @@ type ListTeamMembersRequest struct {
 
 func (x *ListTeamMembersRequest) Reset() {
 	*x = ListTeamMembersRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[31]
+	mi := &file_syntra_v1_administration_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2249,7 +2536,7 @@ func (x *ListTeamMembersRequest) String() string {
 func (*ListTeamMembersRequest) ProtoMessage() {}
 
 func (x *ListTeamMembersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[31]
+	mi := &file_syntra_v1_administration_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2262,7 +2549,7 @@ func (x *ListTeamMembersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTeamMembersRequest.ProtoReflect.Descriptor instead.
 func (*ListTeamMembersRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{31}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ListTeamMembersRequest) GetWorkspaceId() string {
@@ -2325,7 +2612,7 @@ type ListTeamMembersResponse struct {
 
 func (x *ListTeamMembersResponse) Reset() {
 	*x = ListTeamMembersResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[32]
+	mi := &file_syntra_v1_administration_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2337,7 +2624,7 @@ func (x *ListTeamMembersResponse) String() string {
 func (*ListTeamMembersResponse) ProtoMessage() {}
 
 func (x *ListTeamMembersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[32]
+	mi := &file_syntra_v1_administration_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2350,7 +2637,7 @@ func (x *ListTeamMembersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTeamMembersResponse.ProtoReflect.Descriptor instead.
 func (*ListTeamMembersResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{32}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ListTeamMembersResponse) GetMembers() []*WorkspaceMember {
@@ -2386,7 +2673,7 @@ type ListAuditRequest struct {
 
 func (x *ListAuditRequest) Reset() {
 	*x = ListAuditRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[33]
+	mi := &file_syntra_v1_administration_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2398,7 +2685,7 @@ func (x *ListAuditRequest) String() string {
 func (*ListAuditRequest) ProtoMessage() {}
 
 func (x *ListAuditRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[33]
+	mi := &file_syntra_v1_administration_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2411,7 +2698,7 @@ func (x *ListAuditRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAuditRequest.ProtoReflect.Descriptor instead.
 func (*ListAuditRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{33}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ListAuditRequest) GetWorkspaceId() string {
@@ -2454,7 +2741,7 @@ type ListManagedWorkspacesRequest struct {
 
 func (x *ListManagedWorkspacesRequest) Reset() {
 	*x = ListManagedWorkspacesRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[34]
+	mi := &file_syntra_v1_administration_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2466,7 +2753,7 @@ func (x *ListManagedWorkspacesRequest) String() string {
 func (*ListManagedWorkspacesRequest) ProtoMessage() {}
 
 func (x *ListManagedWorkspacesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[34]
+	mi := &file_syntra_v1_administration_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2479,7 +2766,7 @@ func (x *ListManagedWorkspacesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListManagedWorkspacesRequest.ProtoReflect.Descriptor instead.
 func (*ListManagedWorkspacesRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{34}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *ListManagedWorkspacesRequest) GetWorkspaceId() string {
@@ -2522,7 +2809,7 @@ type CreateManagedWorkspaceResponse struct {
 
 func (x *CreateManagedWorkspaceResponse) Reset() {
 	*x = CreateManagedWorkspaceResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[35]
+	mi := &file_syntra_v1_administration_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2534,7 +2821,7 @@ func (x *CreateManagedWorkspaceResponse) String() string {
 func (*CreateManagedWorkspaceResponse) ProtoMessage() {}
 
 func (x *CreateManagedWorkspaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[35]
+	mi := &file_syntra_v1_administration_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2547,7 +2834,7 @@ func (x *CreateManagedWorkspaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateManagedWorkspaceResponse.ProtoReflect.Descriptor instead.
 func (*CreateManagedWorkspaceResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{35}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *CreateManagedWorkspaceResponse) GetInvitation() *Invitation {
@@ -2593,7 +2880,7 @@ type CreationAccount struct {
 
 func (x *CreationAccount) Reset() {
 	*x = CreationAccount{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[36]
+	mi := &file_syntra_v1_administration_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2605,7 +2892,7 @@ func (x *CreationAccount) String() string {
 func (*CreationAccount) ProtoMessage() {}
 
 func (x *CreationAccount) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[36]
+	mi := &file_syntra_v1_administration_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2618,7 +2905,7 @@ func (x *CreationAccount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreationAccount.ProtoReflect.Descriptor instead.
 func (*CreationAccount) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{36}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *CreationAccount) GetUserId() string {
@@ -2674,7 +2961,7 @@ type ListCreationAccountsRequest struct {
 
 func (x *ListCreationAccountsRequest) Reset() {
 	*x = ListCreationAccountsRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[37]
+	mi := &file_syntra_v1_administration_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2686,7 +2973,7 @@ func (x *ListCreationAccountsRequest) String() string {
 func (*ListCreationAccountsRequest) ProtoMessage() {}
 
 func (x *ListCreationAccountsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[37]
+	mi := &file_syntra_v1_administration_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2699,7 +2986,7 @@ func (x *ListCreationAccountsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCreationAccountsRequest.ProtoReflect.Descriptor instead.
 func (*ListCreationAccountsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{37}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ListCreationAccountsRequest) GetPageSize() int32 {
@@ -2733,7 +3020,7 @@ type ListCreationAccountsResponse struct {
 
 func (x *ListCreationAccountsResponse) Reset() {
 	*x = ListCreationAccountsResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[38]
+	mi := &file_syntra_v1_administration_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2745,7 +3032,7 @@ func (x *ListCreationAccountsResponse) String() string {
 func (*ListCreationAccountsResponse) ProtoMessage() {}
 
 func (x *ListCreationAccountsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[38]
+	mi := &file_syntra_v1_administration_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2758,7 +3045,7 @@ func (x *ListCreationAccountsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCreationAccountsResponse.ProtoReflect.Descriptor instead.
 func (*ListCreationAccountsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{38}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ListCreationAccountsResponse) GetAccounts() []*CreationAccount {
@@ -2784,7 +3071,7 @@ type GetWorkspaceSettingsRequest struct {
 
 func (x *GetWorkspaceSettingsRequest) Reset() {
 	*x = GetWorkspaceSettingsRequest{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[39]
+	mi := &file_syntra_v1_administration_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2796,7 +3083,7 @@ func (x *GetWorkspaceSettingsRequest) String() string {
 func (*GetWorkspaceSettingsRequest) ProtoMessage() {}
 
 func (x *GetWorkspaceSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[39]
+	mi := &file_syntra_v1_administration_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2809,7 +3096,7 @@ func (x *GetWorkspaceSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkspaceSettingsRequest.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{39}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *GetWorkspaceSettingsRequest) GetWorkspaceId() string {
@@ -2828,7 +3115,7 @@ type GetWorkspaceSettingsResponse struct {
 
 func (x *GetWorkspaceSettingsResponse) Reset() {
 	*x = GetWorkspaceSettingsResponse{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[40]
+	mi := &file_syntra_v1_administration_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2840,7 +3127,7 @@ func (x *GetWorkspaceSettingsResponse) String() string {
 func (*GetWorkspaceSettingsResponse) ProtoMessage() {}
 
 func (x *GetWorkspaceSettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[40]
+	mi := &file_syntra_v1_administration_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2853,7 +3140,7 @@ func (x *GetWorkspaceSettingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkspaceSettingsResponse.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceSettingsResponse) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{40}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *GetWorkspaceSettingsResponse) GetWorkspace() *Workspace {
@@ -2877,7 +3164,7 @@ type AdministrativeDetail struct {
 
 func (x *AdministrativeDetail) Reset() {
 	*x = AdministrativeDetail{}
-	mi := &file_syntra_v1_administration_proto_msgTypes[41]
+	mi := &file_syntra_v1_administration_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2889,7 +3176,7 @@ func (x *AdministrativeDetail) String() string {
 func (*AdministrativeDetail) ProtoMessage() {}
 
 func (x *AdministrativeDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_syntra_v1_administration_proto_msgTypes[41]
+	mi := &file_syntra_v1_administration_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2902,7 +3189,7 @@ func (x *AdministrativeDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdministrativeDetail.ProtoReflect.Descriptor instead.
 func (*AdministrativeDetail) Descriptor() ([]byte, []int) {
-	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{41}
+	return file_syntra_v1_administration_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *AdministrativeDetail) GetName() string {
@@ -2970,7 +3257,26 @@ const file_syntra_v1_administration_proto_rawDesc = "" +
 	"\rexpected_role\x18\x05 \x01(\x0e2\x18.syntra.v1.WorkspaceRoleR\fexpectedRole\x12)\n" +
 	"\x10expected_revoked\x18\x06 \x01(\bR\x0fexpectedRevoked\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\a \x01(\tR\trequestId\"\x96\x01\n" +
+	"request_id\x18\a \x01(\tR\trequestId\"U\n" +
+	"\x17GetMemberSlackIdRequest\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\"J\n" +
+	"\x18GetMemberSlackIdResponse\x12.\n" +
+	"\x05state\x18\x01 \x01(\v2\x18.syntra.v1.MemberSlackIdR\x05state\"\xc9\x01\n" +
+	"\x17SetMemberSlackIdRequest\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12&\n" +
+	"\x0fslack_member_id\x18\x03 \x01(\tR\rslackMemberId\x12+\n" +
+	"\x11expected_revision\x18\x04 \x01(\tR\x10expectedRevision\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x05 \x01(\tR\trequestId\"\x80\x01\n" +
+	"\x18SetMemberSlackIdResponse\x12.\n" +
+	"\x05state\x18\x01 \x01(\v2\x18.syntra.v1.MemberSlackIdR\x05state\x12\x1a\n" +
+	"\breplayed\x18\x02 \x01(\bR\breplayed\x12\x18\n" +
+	"\achanged\x18\x03 \x01(\bR\achanged\"S\n" +
+	"\rMemberSlackId\x12&\n" +
+	"\x0fslack_member_id\x18\x01 \x01(\tR\rslackMemberId\x12\x1a\n" +
+	"\brevision\x18\x02 \x01(\tR\brevision\"\x96\x01\n" +
 	"\x1cGetMemberDependenciesRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1b\n" +
@@ -3182,7 +3488,7 @@ const file_syntra_v1_administration_proto_rawDesc = "" +
 	" ADMINISTRATIVE_ACTION_TEAM_SAVED\x10\x04\x12&\n" +
 	"\"ADMINISTRATIVE_ACTION_ROLE_CHANGED\x10\x05\x12(\n" +
 	"$ADMINISTRATIVE_ACTION_ACCESS_REVOKED\x10\x06\x12-\n" +
-	")ADMINISTRATIVE_ACTION_CREATION_PERMISSION\x10\a2\xd5\v\n" +
+	")ADMINISTRATIVE_ACTION_CREATION_PERMISSION\x10\a2\x8f\r\n" +
 	"\x15AdministrationService\x12g\n" +
 	"\x14ListCreationAccounts\x12&.syntra.v1.ListCreationAccountsRequest\x1a'.syntra.v1.ListCreationAccountsResponse\x12g\n" +
 	"\x14GetWorkspaceSettings\x12&.syntra.v1.GetWorkspaceSettingsRequest\x1a'.syntra.v1.GetWorkspaceSettingsResponse\x12X\n" +
@@ -3190,7 +3496,9 @@ const file_syntra_v1_administration_proto_rawDesc = "" +
 	"\x0fCreateWorkspace\x12!.syntra.v1.CreateWorkspaceRequest\x1a\".syntra.v1.CreateWorkspaceResponse\x12X\n" +
 	"\x0fRenameWorkspace\x12!.syntra.v1.RenameWorkspaceRequest\x1a\".syntra.v1.RenameWorkspaceResponse\x12g\n" +
 	"\x14ListDirectoryMembers\x12&.syntra.v1.ListDirectoryMembersRequest\x1a'.syntra.v1.ListDirectoryMembersResponse\x12O\n" +
-	"\fChangeMember\x12\x1e.syntra.v1.ChangeMemberRequest\x1a\x1f.syntra.v1.ChangeMemberResponse\x12j\n" +
+	"\fChangeMember\x12\x1e.syntra.v1.ChangeMemberRequest\x1a\x1f.syntra.v1.ChangeMemberResponse\x12[\n" +
+	"\x10GetMemberSlackId\x12\".syntra.v1.GetMemberSlackIdRequest\x1a#.syntra.v1.GetMemberSlackIdResponse\x12[\n" +
+	"\x10SetMemberSlackId\x12\".syntra.v1.SetMemberSlackIdRequest\x1a#.syntra.v1.SetMemberSlackIdResponse\x12j\n" +
 	"\x15GetMemberDependencies\x12'.syntra.v1.GetMemberDependenciesRequest\x1a(.syntra.v1.GetMemberDependenciesResponse\x12F\n" +
 	"\tListTeams\x12\x1b.syntra.v1.ListTeamsRequest\x1a\x1c.syntra.v1.ListTeamsResponse\x12@\n" +
 	"\aGetTeam\x12\x19.syntra.v1.GetTeamRequest\x1a\x1a.syntra.v1.GetTeamResponse\x12X\n" +
@@ -3214,7 +3522,7 @@ func file_syntra_v1_administration_proto_rawDescGZIP() []byte {
 }
 
 var file_syntra_v1_administration_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_syntra_v1_administration_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
+var file_syntra_v1_administration_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
 var file_syntra_v1_administration_proto_goTypes = []any{
 	(MemberDependencyType)(0),              // 0: syntra.v1.MemberDependencyType
 	(MemberChangeFailure)(0),               // 1: syntra.v1.MemberChangeFailure
@@ -3227,116 +3535,127 @@ var file_syntra_v1_administration_proto_goTypes = []any{
 	(*RenameWorkspaceRequest)(nil),         // 8: syntra.v1.RenameWorkspaceRequest
 	(*AdministrationResult)(nil),           // 9: syntra.v1.AdministrationResult
 	(*ChangeMemberRequest)(nil),            // 10: syntra.v1.ChangeMemberRequest
-	(*GetMemberDependenciesRequest)(nil),   // 11: syntra.v1.GetMemberDependenciesRequest
-	(*MemberDependency)(nil),               // 12: syntra.v1.MemberDependency
-	(*GetMemberDependenciesResponse)(nil),  // 13: syntra.v1.GetMemberDependenciesResponse
-	(*AdministrationPageRequest)(nil),      // 14: syntra.v1.AdministrationPageRequest
-	(*Team)(nil),                           // 15: syntra.v1.Team
-	(*ListTeamsResponse)(nil),              // 16: syntra.v1.ListTeamsResponse
-	(*SaveTeamRequest)(nil),                // 17: syntra.v1.SaveTeamRequest
-	(*AuditEntry)(nil),                     // 18: syntra.v1.AuditEntry
-	(*ListAuditResponse)(nil),              // 19: syntra.v1.ListAuditResponse
-	(*SetCreationPermissionRequest)(nil),   // 20: syntra.v1.SetCreationPermissionRequest
-	(*CreateManagedWorkspaceRequest)(nil),  // 21: syntra.v1.CreateManagedWorkspaceRequest
-	(*OperationalWorkspace)(nil),           // 22: syntra.v1.OperationalWorkspace
-	(*ListManagedWorkspacesResponse)(nil),  // 23: syntra.v1.ListManagedWorkspacesResponse
-	(*RenameWorkspaceResponse)(nil),        // 24: syntra.v1.RenameWorkspaceResponse
-	(*ChangeMemberResponse)(nil),           // 25: syntra.v1.ChangeMemberResponse
-	(*ListDirectoryMembersRequest)(nil),    // 26: syntra.v1.ListDirectoryMembersRequest
-	(*ListDirectoryMembersResponse)(nil),   // 27: syntra.v1.ListDirectoryMembersResponse
-	(*MemberState)(nil),                    // 28: syntra.v1.MemberState
-	(*MemberChangeDetail)(nil),             // 29: syntra.v1.MemberChangeDetail
-	(*SaveTeamResponse)(nil),               // 30: syntra.v1.SaveTeamResponse
-	(*SetCreationPermissionResponse)(nil),  // 31: syntra.v1.SetCreationPermissionResponse
-	(*ListTeamsRequest)(nil),               // 32: syntra.v1.ListTeamsRequest
-	(*GetTeamRequest)(nil),                 // 33: syntra.v1.GetTeamRequest
-	(*GetTeamResponse)(nil),                // 34: syntra.v1.GetTeamResponse
-	(*ListTeamMembersRequest)(nil),         // 35: syntra.v1.ListTeamMembersRequest
-	(*ListTeamMembersResponse)(nil),        // 36: syntra.v1.ListTeamMembersResponse
-	(*ListAuditRequest)(nil),               // 37: syntra.v1.ListAuditRequest
-	(*ListManagedWorkspacesRequest)(nil),   // 38: syntra.v1.ListManagedWorkspacesRequest
-	(*CreateManagedWorkspaceResponse)(nil), // 39: syntra.v1.CreateManagedWorkspaceResponse
-	(*CreationAccount)(nil),                // 40: syntra.v1.CreationAccount
-	(*ListCreationAccountsRequest)(nil),    // 41: syntra.v1.ListCreationAccountsRequest
-	(*ListCreationAccountsResponse)(nil),   // 42: syntra.v1.ListCreationAccountsResponse
-	(*GetWorkspaceSettingsRequest)(nil),    // 43: syntra.v1.GetWorkspaceSettingsRequest
-	(*GetWorkspaceSettingsResponse)(nil),   // 44: syntra.v1.GetWorkspaceSettingsResponse
-	(*AdministrativeDetail)(nil),           // 45: syntra.v1.AdministrativeDetail
-	(*Workspace)(nil),                      // 46: syntra.v1.Workspace
-	(WorkspaceRole)(0),                     // 47: syntra.v1.WorkspaceRole
-	(*timestamppb.Timestamp)(nil),          // 48: google.protobuf.Timestamp
-	(*WorkspaceMember)(nil),                // 49: syntra.v1.WorkspaceMember
-	(*Invitation)(nil),                     // 50: syntra.v1.Invitation
+	(*GetMemberSlackIdRequest)(nil),        // 11: syntra.v1.GetMemberSlackIdRequest
+	(*GetMemberSlackIdResponse)(nil),       // 12: syntra.v1.GetMemberSlackIdResponse
+	(*SetMemberSlackIdRequest)(nil),        // 13: syntra.v1.SetMemberSlackIdRequest
+	(*SetMemberSlackIdResponse)(nil),       // 14: syntra.v1.SetMemberSlackIdResponse
+	(*MemberSlackId)(nil),                  // 15: syntra.v1.MemberSlackId
+	(*GetMemberDependenciesRequest)(nil),   // 16: syntra.v1.GetMemberDependenciesRequest
+	(*MemberDependency)(nil),               // 17: syntra.v1.MemberDependency
+	(*GetMemberDependenciesResponse)(nil),  // 18: syntra.v1.GetMemberDependenciesResponse
+	(*AdministrationPageRequest)(nil),      // 19: syntra.v1.AdministrationPageRequest
+	(*Team)(nil),                           // 20: syntra.v1.Team
+	(*ListTeamsResponse)(nil),              // 21: syntra.v1.ListTeamsResponse
+	(*SaveTeamRequest)(nil),                // 22: syntra.v1.SaveTeamRequest
+	(*AuditEntry)(nil),                     // 23: syntra.v1.AuditEntry
+	(*ListAuditResponse)(nil),              // 24: syntra.v1.ListAuditResponse
+	(*SetCreationPermissionRequest)(nil),   // 25: syntra.v1.SetCreationPermissionRequest
+	(*CreateManagedWorkspaceRequest)(nil),  // 26: syntra.v1.CreateManagedWorkspaceRequest
+	(*OperationalWorkspace)(nil),           // 27: syntra.v1.OperationalWorkspace
+	(*ListManagedWorkspacesResponse)(nil),  // 28: syntra.v1.ListManagedWorkspacesResponse
+	(*RenameWorkspaceResponse)(nil),        // 29: syntra.v1.RenameWorkspaceResponse
+	(*ChangeMemberResponse)(nil),           // 30: syntra.v1.ChangeMemberResponse
+	(*ListDirectoryMembersRequest)(nil),    // 31: syntra.v1.ListDirectoryMembersRequest
+	(*ListDirectoryMembersResponse)(nil),   // 32: syntra.v1.ListDirectoryMembersResponse
+	(*MemberState)(nil),                    // 33: syntra.v1.MemberState
+	(*MemberChangeDetail)(nil),             // 34: syntra.v1.MemberChangeDetail
+	(*SaveTeamResponse)(nil),               // 35: syntra.v1.SaveTeamResponse
+	(*SetCreationPermissionResponse)(nil),  // 36: syntra.v1.SetCreationPermissionResponse
+	(*ListTeamsRequest)(nil),               // 37: syntra.v1.ListTeamsRequest
+	(*GetTeamRequest)(nil),                 // 38: syntra.v1.GetTeamRequest
+	(*GetTeamResponse)(nil),                // 39: syntra.v1.GetTeamResponse
+	(*ListTeamMembersRequest)(nil),         // 40: syntra.v1.ListTeamMembersRequest
+	(*ListTeamMembersResponse)(nil),        // 41: syntra.v1.ListTeamMembersResponse
+	(*ListAuditRequest)(nil),               // 42: syntra.v1.ListAuditRequest
+	(*ListManagedWorkspacesRequest)(nil),   // 43: syntra.v1.ListManagedWorkspacesRequest
+	(*CreateManagedWorkspaceResponse)(nil), // 44: syntra.v1.CreateManagedWorkspaceResponse
+	(*CreationAccount)(nil),                // 45: syntra.v1.CreationAccount
+	(*ListCreationAccountsRequest)(nil),    // 46: syntra.v1.ListCreationAccountsRequest
+	(*ListCreationAccountsResponse)(nil),   // 47: syntra.v1.ListCreationAccountsResponse
+	(*GetWorkspaceSettingsRequest)(nil),    // 48: syntra.v1.GetWorkspaceSettingsRequest
+	(*GetWorkspaceSettingsResponse)(nil),   // 49: syntra.v1.GetWorkspaceSettingsResponse
+	(*AdministrativeDetail)(nil),           // 50: syntra.v1.AdministrativeDetail
+	(*Workspace)(nil),                      // 51: syntra.v1.Workspace
+	(WorkspaceRole)(0),                     // 52: syntra.v1.WorkspaceRole
+	(*timestamppb.Timestamp)(nil),          // 53: google.protobuf.Timestamp
+	(*WorkspaceMember)(nil),                // 54: syntra.v1.WorkspaceMember
+	(*Invitation)(nil),                     // 55: syntra.v1.Invitation
 }
 var file_syntra_v1_administration_proto_depIdxs = []int32{
-	46, // 0: syntra.v1.CreateWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
-	47, // 1: syntra.v1.ChangeMemberRequest.role:type_name -> syntra.v1.WorkspaceRole
-	47, // 2: syntra.v1.ChangeMemberRequest.expected_role:type_name -> syntra.v1.WorkspaceRole
-	0,  // 3: syntra.v1.MemberDependency.type:type_name -> syntra.v1.MemberDependencyType
-	12, // 4: syntra.v1.GetMemberDependenciesResponse.dependencies:type_name -> syntra.v1.MemberDependency
-	28, // 5: syntra.v1.GetMemberDependenciesResponse.member:type_name -> syntra.v1.MemberState
-	15, // 6: syntra.v1.ListTeamsResponse.teams:type_name -> syntra.v1.Team
-	3,  // 7: syntra.v1.AuditEntry.typed_action:type_name -> syntra.v1.AdministrativeAction
-	45, // 8: syntra.v1.AuditEntry.typed_detail:type_name -> syntra.v1.AdministrativeDetail
-	48, // 9: syntra.v1.AuditEntry.timestamp:type_name -> google.protobuf.Timestamp
-	18, // 10: syntra.v1.ListAuditResponse.entries:type_name -> syntra.v1.AuditEntry
-	22, // 11: syntra.v1.ListManagedWorkspacesResponse.workspaces:type_name -> syntra.v1.OperationalWorkspace
-	46, // 12: syntra.v1.RenameWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
-	28, // 13: syntra.v1.ChangeMemberResponse.member:type_name -> syntra.v1.MemberState
-	47, // 14: syntra.v1.ListDirectoryMembersRequest.role:type_name -> syntra.v1.WorkspaceRole
-	49, // 15: syntra.v1.ListDirectoryMembersResponse.members:type_name -> syntra.v1.WorkspaceMember
-	49, // 16: syntra.v1.MemberState.member:type_name -> syntra.v1.WorkspaceMember
-	28, // 17: syntra.v1.MemberChangeDetail.member:type_name -> syntra.v1.MemberState
-	1,  // 18: syntra.v1.MemberChangeDetail.reason:type_name -> syntra.v1.MemberChangeFailure
-	15, // 19: syntra.v1.SaveTeamResponse.team:type_name -> syntra.v1.Team
-	40, // 20: syntra.v1.SetCreationPermissionResponse.account:type_name -> syntra.v1.CreationAccount
-	2,  // 21: syntra.v1.ListTeamsRequest.archive_filter:type_name -> syntra.v1.TeamArchiveFilter
-	15, // 22: syntra.v1.GetTeamResponse.team:type_name -> syntra.v1.Team
-	47, // 23: syntra.v1.ListTeamMembersRequest.role:type_name -> syntra.v1.WorkspaceRole
-	49, // 24: syntra.v1.ListTeamMembersResponse.members:type_name -> syntra.v1.WorkspaceMember
-	3,  // 25: syntra.v1.ListAuditRequest.action_filter:type_name -> syntra.v1.AdministrativeAction
-	50, // 26: syntra.v1.CreateManagedWorkspaceResponse.invitation:type_name -> syntra.v1.Invitation
-	46, // 27: syntra.v1.CreateManagedWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
-	40, // 28: syntra.v1.ListCreationAccountsResponse.accounts:type_name -> syntra.v1.CreationAccount
-	46, // 29: syntra.v1.GetWorkspaceSettingsResponse.workspace:type_name -> syntra.v1.Workspace
-	47, // 30: syntra.v1.AdministrativeDetail.role:type_name -> syntra.v1.WorkspaceRole
-	41, // 31: syntra.v1.AdministrationService.ListCreationAccounts:input_type -> syntra.v1.ListCreationAccountsRequest
-	43, // 32: syntra.v1.AdministrationService.GetWorkspaceSettings:input_type -> syntra.v1.GetWorkspaceSettingsRequest
-	4,  // 33: syntra.v1.AdministrationService.GetCapabilities:input_type -> syntra.v1.GetCapabilitiesRequest
-	6,  // 34: syntra.v1.AdministrationService.CreateWorkspace:input_type -> syntra.v1.CreateWorkspaceRequest
-	8,  // 35: syntra.v1.AdministrationService.RenameWorkspace:input_type -> syntra.v1.RenameWorkspaceRequest
-	26, // 36: syntra.v1.AdministrationService.ListDirectoryMembers:input_type -> syntra.v1.ListDirectoryMembersRequest
-	10, // 37: syntra.v1.AdministrationService.ChangeMember:input_type -> syntra.v1.ChangeMemberRequest
-	11, // 38: syntra.v1.AdministrationService.GetMemberDependencies:input_type -> syntra.v1.GetMemberDependenciesRequest
-	32, // 39: syntra.v1.AdministrationService.ListTeams:input_type -> syntra.v1.ListTeamsRequest
-	33, // 40: syntra.v1.AdministrationService.GetTeam:input_type -> syntra.v1.GetTeamRequest
-	35, // 41: syntra.v1.AdministrationService.ListTeamMembers:input_type -> syntra.v1.ListTeamMembersRequest
-	17, // 42: syntra.v1.AdministrationService.SaveTeam:input_type -> syntra.v1.SaveTeamRequest
-	37, // 43: syntra.v1.AdministrationService.ListAudit:input_type -> syntra.v1.ListAuditRequest
-	20, // 44: syntra.v1.AdministrationService.SetCreationPermission:input_type -> syntra.v1.SetCreationPermissionRequest
-	21, // 45: syntra.v1.AdministrationService.CreateManagedWorkspace:input_type -> syntra.v1.CreateManagedWorkspaceRequest
-	38, // 46: syntra.v1.AdministrationService.ListManagedWorkspaces:input_type -> syntra.v1.ListManagedWorkspacesRequest
-	42, // 47: syntra.v1.AdministrationService.ListCreationAccounts:output_type -> syntra.v1.ListCreationAccountsResponse
-	44, // 48: syntra.v1.AdministrationService.GetWorkspaceSettings:output_type -> syntra.v1.GetWorkspaceSettingsResponse
-	5,  // 49: syntra.v1.AdministrationService.GetCapabilities:output_type -> syntra.v1.GetCapabilitiesResponse
-	7,  // 50: syntra.v1.AdministrationService.CreateWorkspace:output_type -> syntra.v1.CreateWorkspaceResponse
-	24, // 51: syntra.v1.AdministrationService.RenameWorkspace:output_type -> syntra.v1.RenameWorkspaceResponse
-	27, // 52: syntra.v1.AdministrationService.ListDirectoryMembers:output_type -> syntra.v1.ListDirectoryMembersResponse
-	25, // 53: syntra.v1.AdministrationService.ChangeMember:output_type -> syntra.v1.ChangeMemberResponse
-	13, // 54: syntra.v1.AdministrationService.GetMemberDependencies:output_type -> syntra.v1.GetMemberDependenciesResponse
-	16, // 55: syntra.v1.AdministrationService.ListTeams:output_type -> syntra.v1.ListTeamsResponse
-	34, // 56: syntra.v1.AdministrationService.GetTeam:output_type -> syntra.v1.GetTeamResponse
-	36, // 57: syntra.v1.AdministrationService.ListTeamMembers:output_type -> syntra.v1.ListTeamMembersResponse
-	30, // 58: syntra.v1.AdministrationService.SaveTeam:output_type -> syntra.v1.SaveTeamResponse
-	19, // 59: syntra.v1.AdministrationService.ListAudit:output_type -> syntra.v1.ListAuditResponse
-	31, // 60: syntra.v1.AdministrationService.SetCreationPermission:output_type -> syntra.v1.SetCreationPermissionResponse
-	39, // 61: syntra.v1.AdministrationService.CreateManagedWorkspace:output_type -> syntra.v1.CreateManagedWorkspaceResponse
-	23, // 62: syntra.v1.AdministrationService.ListManagedWorkspaces:output_type -> syntra.v1.ListManagedWorkspacesResponse
-	47, // [47:63] is the sub-list for method output_type
-	31, // [31:47] is the sub-list for method input_type
-	31, // [31:31] is the sub-list for extension type_name
-	31, // [31:31] is the sub-list for extension extendee
-	0,  // [0:31] is the sub-list for field type_name
+	51, // 0: syntra.v1.CreateWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
+	52, // 1: syntra.v1.ChangeMemberRequest.role:type_name -> syntra.v1.WorkspaceRole
+	52, // 2: syntra.v1.ChangeMemberRequest.expected_role:type_name -> syntra.v1.WorkspaceRole
+	15, // 3: syntra.v1.GetMemberSlackIdResponse.state:type_name -> syntra.v1.MemberSlackId
+	15, // 4: syntra.v1.SetMemberSlackIdResponse.state:type_name -> syntra.v1.MemberSlackId
+	0,  // 5: syntra.v1.MemberDependency.type:type_name -> syntra.v1.MemberDependencyType
+	17, // 6: syntra.v1.GetMemberDependenciesResponse.dependencies:type_name -> syntra.v1.MemberDependency
+	33, // 7: syntra.v1.GetMemberDependenciesResponse.member:type_name -> syntra.v1.MemberState
+	20, // 8: syntra.v1.ListTeamsResponse.teams:type_name -> syntra.v1.Team
+	3,  // 9: syntra.v1.AuditEntry.typed_action:type_name -> syntra.v1.AdministrativeAction
+	50, // 10: syntra.v1.AuditEntry.typed_detail:type_name -> syntra.v1.AdministrativeDetail
+	53, // 11: syntra.v1.AuditEntry.timestamp:type_name -> google.protobuf.Timestamp
+	23, // 12: syntra.v1.ListAuditResponse.entries:type_name -> syntra.v1.AuditEntry
+	27, // 13: syntra.v1.ListManagedWorkspacesResponse.workspaces:type_name -> syntra.v1.OperationalWorkspace
+	51, // 14: syntra.v1.RenameWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
+	33, // 15: syntra.v1.ChangeMemberResponse.member:type_name -> syntra.v1.MemberState
+	52, // 16: syntra.v1.ListDirectoryMembersRequest.role:type_name -> syntra.v1.WorkspaceRole
+	54, // 17: syntra.v1.ListDirectoryMembersResponse.members:type_name -> syntra.v1.WorkspaceMember
+	54, // 18: syntra.v1.MemberState.member:type_name -> syntra.v1.WorkspaceMember
+	33, // 19: syntra.v1.MemberChangeDetail.member:type_name -> syntra.v1.MemberState
+	1,  // 20: syntra.v1.MemberChangeDetail.reason:type_name -> syntra.v1.MemberChangeFailure
+	20, // 21: syntra.v1.SaveTeamResponse.team:type_name -> syntra.v1.Team
+	45, // 22: syntra.v1.SetCreationPermissionResponse.account:type_name -> syntra.v1.CreationAccount
+	2,  // 23: syntra.v1.ListTeamsRequest.archive_filter:type_name -> syntra.v1.TeamArchiveFilter
+	20, // 24: syntra.v1.GetTeamResponse.team:type_name -> syntra.v1.Team
+	52, // 25: syntra.v1.ListTeamMembersRequest.role:type_name -> syntra.v1.WorkspaceRole
+	54, // 26: syntra.v1.ListTeamMembersResponse.members:type_name -> syntra.v1.WorkspaceMember
+	3,  // 27: syntra.v1.ListAuditRequest.action_filter:type_name -> syntra.v1.AdministrativeAction
+	55, // 28: syntra.v1.CreateManagedWorkspaceResponse.invitation:type_name -> syntra.v1.Invitation
+	51, // 29: syntra.v1.CreateManagedWorkspaceResponse.workspace:type_name -> syntra.v1.Workspace
+	45, // 30: syntra.v1.ListCreationAccountsResponse.accounts:type_name -> syntra.v1.CreationAccount
+	51, // 31: syntra.v1.GetWorkspaceSettingsResponse.workspace:type_name -> syntra.v1.Workspace
+	52, // 32: syntra.v1.AdministrativeDetail.role:type_name -> syntra.v1.WorkspaceRole
+	46, // 33: syntra.v1.AdministrationService.ListCreationAccounts:input_type -> syntra.v1.ListCreationAccountsRequest
+	48, // 34: syntra.v1.AdministrationService.GetWorkspaceSettings:input_type -> syntra.v1.GetWorkspaceSettingsRequest
+	4,  // 35: syntra.v1.AdministrationService.GetCapabilities:input_type -> syntra.v1.GetCapabilitiesRequest
+	6,  // 36: syntra.v1.AdministrationService.CreateWorkspace:input_type -> syntra.v1.CreateWorkspaceRequest
+	8,  // 37: syntra.v1.AdministrationService.RenameWorkspace:input_type -> syntra.v1.RenameWorkspaceRequest
+	31, // 38: syntra.v1.AdministrationService.ListDirectoryMembers:input_type -> syntra.v1.ListDirectoryMembersRequest
+	10, // 39: syntra.v1.AdministrationService.ChangeMember:input_type -> syntra.v1.ChangeMemberRequest
+	11, // 40: syntra.v1.AdministrationService.GetMemberSlackId:input_type -> syntra.v1.GetMemberSlackIdRequest
+	13, // 41: syntra.v1.AdministrationService.SetMemberSlackId:input_type -> syntra.v1.SetMemberSlackIdRequest
+	16, // 42: syntra.v1.AdministrationService.GetMemberDependencies:input_type -> syntra.v1.GetMemberDependenciesRequest
+	37, // 43: syntra.v1.AdministrationService.ListTeams:input_type -> syntra.v1.ListTeamsRequest
+	38, // 44: syntra.v1.AdministrationService.GetTeam:input_type -> syntra.v1.GetTeamRequest
+	40, // 45: syntra.v1.AdministrationService.ListTeamMembers:input_type -> syntra.v1.ListTeamMembersRequest
+	22, // 46: syntra.v1.AdministrationService.SaveTeam:input_type -> syntra.v1.SaveTeamRequest
+	42, // 47: syntra.v1.AdministrationService.ListAudit:input_type -> syntra.v1.ListAuditRequest
+	25, // 48: syntra.v1.AdministrationService.SetCreationPermission:input_type -> syntra.v1.SetCreationPermissionRequest
+	26, // 49: syntra.v1.AdministrationService.CreateManagedWorkspace:input_type -> syntra.v1.CreateManagedWorkspaceRequest
+	43, // 50: syntra.v1.AdministrationService.ListManagedWorkspaces:input_type -> syntra.v1.ListManagedWorkspacesRequest
+	47, // 51: syntra.v1.AdministrationService.ListCreationAccounts:output_type -> syntra.v1.ListCreationAccountsResponse
+	49, // 52: syntra.v1.AdministrationService.GetWorkspaceSettings:output_type -> syntra.v1.GetWorkspaceSettingsResponse
+	5,  // 53: syntra.v1.AdministrationService.GetCapabilities:output_type -> syntra.v1.GetCapabilitiesResponse
+	7,  // 54: syntra.v1.AdministrationService.CreateWorkspace:output_type -> syntra.v1.CreateWorkspaceResponse
+	29, // 55: syntra.v1.AdministrationService.RenameWorkspace:output_type -> syntra.v1.RenameWorkspaceResponse
+	32, // 56: syntra.v1.AdministrationService.ListDirectoryMembers:output_type -> syntra.v1.ListDirectoryMembersResponse
+	30, // 57: syntra.v1.AdministrationService.ChangeMember:output_type -> syntra.v1.ChangeMemberResponse
+	12, // 58: syntra.v1.AdministrationService.GetMemberSlackId:output_type -> syntra.v1.GetMemberSlackIdResponse
+	14, // 59: syntra.v1.AdministrationService.SetMemberSlackId:output_type -> syntra.v1.SetMemberSlackIdResponse
+	18, // 60: syntra.v1.AdministrationService.GetMemberDependencies:output_type -> syntra.v1.GetMemberDependenciesResponse
+	21, // 61: syntra.v1.AdministrationService.ListTeams:output_type -> syntra.v1.ListTeamsResponse
+	39, // 62: syntra.v1.AdministrationService.GetTeam:output_type -> syntra.v1.GetTeamResponse
+	41, // 63: syntra.v1.AdministrationService.ListTeamMembers:output_type -> syntra.v1.ListTeamMembersResponse
+	35, // 64: syntra.v1.AdministrationService.SaveTeam:output_type -> syntra.v1.SaveTeamResponse
+	24, // 65: syntra.v1.AdministrationService.ListAudit:output_type -> syntra.v1.ListAuditResponse
+	36, // 66: syntra.v1.AdministrationService.SetCreationPermission:output_type -> syntra.v1.SetCreationPermissionResponse
+	44, // 67: syntra.v1.AdministrationService.CreateManagedWorkspace:output_type -> syntra.v1.CreateManagedWorkspaceResponse
+	28, // 68: syntra.v1.AdministrationService.ListManagedWorkspaces:output_type -> syntra.v1.ListManagedWorkspacesResponse
+	51, // [51:69] is the sub-list for method output_type
+	33, // [33:51] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_syntra_v1_administration_proto_init() }
@@ -3345,15 +3664,15 @@ func file_syntra_v1_administration_proto_init() {
 		return
 	}
 	file_syntra_v1_identity_proto_init()
-	file_syntra_v1_administration_proto_msgTypes[16].OneofWrappers = []any{}
-	file_syntra_v1_administration_proto_msgTypes[41].OneofWrappers = []any{}
+	file_syntra_v1_administration_proto_msgTypes[21].OneofWrappers = []any{}
+	file_syntra_v1_administration_proto_msgTypes[46].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_syntra_v1_administration_proto_rawDesc), len(file_syntra_v1_administration_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   42,
+			NumMessages:   47,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

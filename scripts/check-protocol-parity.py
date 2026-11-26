@@ -13,9 +13,9 @@ import uuid
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE_ID = "syntra-mcp-wire-v1"
 MANIFEST_REL = "reference/source-manifest.json"
-MANIFEST_SHA256 = "d8954a6752ab333be8876ffe7401b102339b3f0f279cc0b32c14ff927fba3bb9"
+MANIFEST_SHA256 = "4fc48cd2af56cccd5526ad3279a95b33e1ac4c4feba16aa2e9b43d1eeb2472fa"
 TRANSITIONS_REL = "reference/contract-transitions.json"
-TRANSITIONS_SHA256 = "dae65185cecfc28f089c7c6cc3d4a5b4074bc77405750b576982b3bee1901fdb"
+TRANSITIONS_SHA256 = "265db431f3f4ed68443af1e7158d1ccdbc2ec6a4f6eb234d4408d6b358b77ae5"
 FINGERPRINT_REL = "reference/device-fingerprint-v1.json"
 FINGERPRINT_SHA256 = "d47c6d43307122886e60300607ffb5f4109199837c00a300143df6378f0b104e"
 CONTENT_VECTOR_REL = "core/fixtures/content-integrity-v1.json"
@@ -146,7 +146,7 @@ def apply_transitions(digests):
         for transition in transitions:
             for entry in transition["files"]:
                 relative, old, new = entry["path"], entry["fromSha256"], entry["toSha256"]
-                if relative not in digests and (old is not None or not relative.startswith(("reference/proto/", "core/gen/"))):
+                if relative not in digests and (old is not None or (relative != "core/fixtures/content-integrity-message-anchors.json" and not relative.startswith(("reference/proto/", "core/gen/")))):
                     raise ParityError(f"{TRANSITIONS_REL}: {relative} is not a valid new wire path")
                 if new is None:
                     if relative == CONTENT_VECTOR_REL or relative not in digests or digests[relative] != old:
@@ -189,8 +189,7 @@ def check_fingerprint_vector():
         )
 
 
-def check_content_vectors():
-    relative = CONTENT_VECTOR_REL
+def check_content_vectors(relative=CONTENT_VECTOR_REL):
     vectors = read_json(relative)
     if not isinstance(vectors, list):
         raise ParityError(f"{relative}: expected an array of vectors")
@@ -216,6 +215,8 @@ def check():
     check_file_digest(FINGERPRINT_REL, FINGERPRINT_SHA256)
     check_fingerprint_vector()
     check_content_vectors()
+    if "core/fixtures/content-integrity-message-anchors.json" in digests:
+        check_content_vectors("core/fixtures/content-integrity-message-anchors.json")
     return proto_count, generated_count
 
 
