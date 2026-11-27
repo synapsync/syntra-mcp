@@ -13,9 +13,9 @@ import uuid
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE_ID = "syntra-mcp-wire-v1"
 MANIFEST_REL = "reference/source-manifest.json"
-MANIFEST_SHA256 = "4fc48cd2af56cccd5526ad3279a95b33e1ac4c4feba16aa2e9b43d1eeb2472fa"
+MANIFEST_SHA256 = "edc9dfb32f5679ad128b39fa4b69ce9837142c80cff5095943facf04dab3b3a8"
 TRANSITIONS_REL = "reference/contract-transitions.json"
-TRANSITIONS_SHA256 = "265db431f3f4ed68443af1e7158d1ccdbc2ec6a4f6eb234d4408d6b358b77ae5"
+TRANSITIONS_SHA256 = "aa612e89d5a80c91dfba1cfe1c1bd175f6ce59ad4ec7a9beace6381fe5d2a0fe"
 FINGERPRINT_REL = "reference/device-fingerprint-v1.json"
 FINGERPRINT_SHA256 = "d47c6d43307122886e60300607ffb5f4109199837c00a300143df6378f0b104e"
 CONTENT_VECTOR_REL = "core/fixtures/content-integrity-v1.json"
@@ -146,7 +146,7 @@ def apply_transitions(digests):
         for transition in transitions:
             for entry in transition["files"]:
                 relative, old, new = entry["path"], entry["fromSha256"], entry["toSha256"]
-                if relative not in digests and (old is not None or (relative != "core/fixtures/content-integrity-message-anchors.json" and not relative.startswith(("reference/proto/", "core/gen/")))):
+                if relative not in digests and (old is not None or (relative not in ("core/fixtures/content-integrity-message-anchors.json", "core/fixtures/content-integrity-v3.json") and not relative.startswith(("reference/proto/", "core/gen/")))):
                     raise ParityError(f"{TRANSITIONS_REL}: {relative} is not a valid new wire path")
                 if new is None:
                     if relative == CONTENT_VECTOR_REL or relative not in digests or digests[relative] != old:
@@ -194,12 +194,23 @@ def encode_content(content):
     version = content["formatVersion"]
     thread = content.get("existingThreadId")
     anchor = content.get("replyToMessageId")
-    if type(version) is not int or version not in (1, 2):
+    if type(version) is not int or version not in (1, 2, 3):
         raise ValueError("unsupported content version")
     if version == 1 and "replyToMessageId" in content:
         raise ValueError("format v1 cannot carry a reply anchor")
     if version == 2 and (thread is None or anchor is None):
         raise ValueError("format v2 requires an anchored reply")
+    if version == 3:
+        if anchor is not None and thread is None:
+            raise ValueError("a reply anchor requires an existing thread")
+        if content.get("summary", "") != "":
+            raise ValueError("messages have no title")
+        whitespace = ("\t\n\v\f\r \x85\xa0\u1680"
+                      "\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a"
+                      "\u2028\u2029\u202f\u205f\u3000")
+        body = content["contextMarkdown"]
+        if not isinstance(body, str) or not body.strip(whitespace):
+            raise ValueError("message body is required")
 
     def field(value, limit, allow_empty=False):
         if not isinstance(value, str):
@@ -235,8 +246,10 @@ def encode_content(content):
         field(content["expectedAuthorUserId"], 128), field(content["workspaceId"], 128),
         optional(content.get("projectId")), b"\0", optional(thread),
         field(content["title"], 1024), field(content["originalDestinationIntent"], 1024),
-        target, field(content["summary"], 8192), field(content["contextMarkdown"], 131072, True),
-        optional(anchor) if version == 2 else b"",
+        target,
+        field(content["summary"], 8192) if version < 3 else b"",
+        field(content["contextMarkdown"], 131072, version < 3),
+        optional(anchor) if version >= 2 else b"",
     ))
 
 
@@ -271,6 +284,8 @@ def check():
     check_content_vectors()
     if "core/fixtures/content-integrity-message-anchors.json" in digests:
         check_content_vectors("core/fixtures/content-integrity-message-anchors.json")
+    if "core/fixtures/content-integrity-v3.json" in digests:
+        check_content_vectors("core/fixtures/content-integrity-v3.json")
     return proto_count, generated_count
 
 

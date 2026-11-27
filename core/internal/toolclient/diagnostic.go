@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	ci "syntra.local/mcp/internal/contentintegrity"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 )
 
 // diagnoseJSON only describes names and types, never values. It is client-side;
@@ -31,6 +32,9 @@ func diagnoseObject(raw []byte, desc protoreflect.MessageDescriptor, path string
 	names := []string{}
 	for i := 0; i < desc.Fields().Len(); i++ {
 		f := desc.Fields().Get(i)
+		if f.JSONName() == "summary" {
+			continue
+		}
 		fields[f.JSONName()] = f
 		names = append(names, f.JSONName())
 	}
@@ -43,6 +47,9 @@ func diagnoseObject(raw []byte, desc protoreflect.MessageDescriptor, path string
 		name, ok := k.(string)
 		if !ok {
 			return ci.ErrWire
+		}
+		if name == "summary" {
+			return actionable.New(actionable.MessageHasNoTitle)
 		}
 		if !safeDiagnosticToken(name) {
 			return fmt.Errorf("%w: an invalid key at %s", ci.ErrWire, path)
@@ -172,6 +179,9 @@ func descriptorLocations(root protoreflect.MessageDescriptor) map[string][]strin
 			for i := 0; i < d.Fields().Len(); i++ {
 				f := d.Fields().Get(i)
 				key := f.JSONName()
+				if key == "summary" {
+					continue
+				}
 				fieldPath := path + "." + key
 				locations[key] = append(locations[key], fieldPath)
 				if f.Kind() == protoreflect.MessageKind && !f.IsMap() && !f.IsList() {
@@ -238,7 +248,7 @@ func checkPlaceholders(c *v1.AuthoredContent) error {
 	if c == nil {
 		return nil
 	}
-	for _, f := range []struct{ name, value string }{{"title", c.Title}, {"originalDestinationIntent", c.OriginalDestinationIntent}, {"summary", c.Summary}, {"contextMarkdown", c.ContextMarkdown}, {"destination.unlinkedLabel", c.GetDestination().GetUnlinkedLabel()}} {
+	for _, f := range []struct{ name, value string }{{"title", c.Title}, {"originalDestinationIntent", c.OriginalDestinationIntent}, {"contextMarkdown", c.ContextMarkdown}, {"destination.unlinkedLabel", c.GetDestination().GetUnlinkedLabel()}} {
 		if strings.Contains(f.value, "TODO: SYNTRA") {
 			return fmt.Errorf("%w: content.%s contains a TODO: SYNTRA placeholder; replace it before preparing", ci.ErrWire, f.name)
 		}

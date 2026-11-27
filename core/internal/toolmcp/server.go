@@ -89,7 +89,7 @@ func result(value any, isError bool) *mcp.CallToolResult {
 	var raw []byte
 	var e error
 	if m, ok := value.(proto.Message); ok {
-		raw, e = protojson.Marshal(m)
+		raw, e = toolclient.MarshalPublicResult(m)
 	} else {
 		raw, e = json.Marshal(value)
 	}
@@ -296,6 +296,12 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 					return a, e
 				}
 			}
+		}
+	}
+	var supplied map[string]json.RawMessage
+	if json.Unmarshal(raw, &supplied) == nil {
+		if _, sent := supplied["summary"]; sent {
+			return a, errors.New("messages have no title; put your text in contextMarkdown")
 		}
 	}
 	m, e := object(raw, required, optional)

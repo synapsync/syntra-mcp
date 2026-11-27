@@ -35,6 +35,8 @@ class ProtocolParityTests(unittest.TestCase):
         ]
         if (ROOT / "core/fixtures/content-integrity-message-anchors.json").is_file():
             files.append("core/fixtures/content-integrity-message-anchors.json")
+        if (ROOT / "core/fixtures/content-integrity-v3.json").is_file():
+            files.append("core/fixtures/content-integrity-v3.json")
         for relative in files:
             source = ROOT / relative
             target = self.project / relative

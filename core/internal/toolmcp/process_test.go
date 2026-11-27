@@ -60,7 +60,7 @@ func contentDigest(c *v1.AuthoredContent) []byte {
 	return d[:]
 }
 func newRequest() *v1.PrepareContentRequest {
-	return &v1.PrepareContentRequest{RequestId: id(), Content: &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: ownerID, WorkspaceId: workspaceID, Title: "Exact e\u0301", OriginalDestinationIntent: "  Pedro e\u0301  ", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_UnlinkedLabel{UnlinkedLabel: "Pedro"}}, Summary: " e\u0301\r\n exact ", ContextMarkdown: "```go\r\nvar endpoint = `/records`;\r\n```\r\n$HOME is thread data"}, ClientReported: &v1.ClientReportedProvenance{Model: str("first-model"), Tool: str("fixture")}}
+	return &v1.PrepareContentRequest{RequestId: id(), Content: &v1.AuthoredContent{FormatVersion: 3, ExpectedAuthorUserId: ownerID, WorkspaceId: workspaceID, Title: "Exact e\u0301", OriginalDestinationIntent: "  Pedro e\u0301  ", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_UnlinkedLabel{UnlinkedLabel: "Pedro"}}, ContextMarkdown: "e\u0301\r\n```go\r\nvar endpoint = `/records`;\r\n```\r\n$HOME is thread data"}, ClientReported: &v1.ClientReportedProvenance{Model: str("first-model"), Tool: str("fixture")}}
 }
 
 type apiFixture struct {
@@ -204,7 +204,7 @@ func (f *apiFixture) ListMessages(_ context.Context, r *connect.Request[v1.ListM
 	return connect.NewResponse(&v1.ListMessagesResponse{Messages: []*v1.PublishedMessage{
 		{Id: messageID, WorkspaceId: r.Msg.WorkspaceId, ThreadId: r.Msg.ThreadId},
 		{Id: preparedID, WorkspaceId: r.Msg.WorkspaceId, ThreadId: r.Msg.ThreadId, ReplyToMessageId: str(messageID),
-			ReplyParentPreview: &v1.ReplyParentPreview{AuthorUserId: ownerID, SummaryPreview: "Parent summary"}},
+			ReplyParentPreview: &v1.ReplyParentPreview{AuthorUserId: ownerID, BodyExcerpt: "Parent summary"}},
 	}}), nil
 }
 
@@ -953,7 +953,7 @@ func TestMCPActualProcessCLIParity(t *testing.T) {
 		t.Fatal("identity lost sharedaccount")
 	}
 	q := newRequest()
-	if !bytes.Contains([]byte(q.Content.Summary), []byte{13, 10}) || !bytes.Contains([]byte(q.Content.Summary), []byte{0x65, 0xcc, 0x81}) {
+	if !bytes.Contains([]byte(q.Content.ContextMarkdown), []byte{13, 10}) || !bytes.Contains([]byte(q.Content.ContextMarkdown), []byte{0x65, 0xcc, 0x81}) {
 		t.Fatal("fixture lacks actual CRLF/NFD")
 	}
 	raw := toolResult(t, p.call(t, "prepare", rpcArgs(t, q, "")), false)
@@ -1213,7 +1213,8 @@ func TestMCPRawInvalidInputAndOutputBounds(t *testing.T) {
 		{"duplicate-outer", `{"request":` + nested + `,"request":` + nested + `}`},
 		{"null-outer", `{"request":null}`},
 		{"wrong-type", `{"request":"not-an-object"}`},
-		{"unknown-inner", `{"request":` + strings.Replace(nested, `"summary":`, `"unknownField":`, 1) + `}`},
+		{"unknown-inner", `{"request":` + strings.Replace(nested, `"contextMarkdown":`, `"unknownField":`, 1) + `}`},
+		{"legacy-title", `{"request":` + strings.Replace(nested, `"contextMarkdown":`, `"summary":`, 1) + `}`},
 		{"alias-inner", `{"request":` + strings.Replace(nested, `"formatVersion":`, `"format_version":`, 1) + `}`},
 		{"contradictory-destination", `{"request":` + strings.Replace(nested, `"unlinkedLabel":"Pedro"`, `"unlinkedLabel":"Pedro","linkedMemberId":""`, 1) + `}`},
 		{"lone-surrogate", `{"request":` + strings.Replace(nested, `"title":`, `"bad":"\ud800","title":`, 1) + `}`},
@@ -1472,9 +1473,9 @@ func snapshotRecord(s *v1.AuthoredContentSnapshot) *v1.GetContentSnapshotRespons
 	}
 	out := &v1.GetContentSnapshotResponse{Authored: s, Thread: &v1.Thread{Id: s.Receipt.ThreadId, WorkspaceId: s.Content.WorkspaceId}}
 	if d := s.GetPreparedMessage(); d != nil {
-		out.Record = &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: &v1.PreparedMessage{Id: d.PreparedMessageId, Revision: d.Revision, WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+		out.Record = &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: &v1.PreparedMessage{Id: d.PreparedMessageId, Revision: d.Revision, WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, ContextMarkdown: s.Content.ContextMarkdown}}
 	} else {
-		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown, Recipients: fixtureRecipients(s.Content.Destination)}}
+		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, ContextMarkdown: s.Content.ContextMarkdown, Recipients: fixtureRecipients(s.Content.Destination)}}
 	}
 	return out
 }

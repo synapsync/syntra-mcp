@@ -41,6 +41,10 @@ to select none. `extraMemberIds` adds active workspace members. The creator is
 included in the limit of 11 distinct participants. Creation sends no
 notification. Resend the same arguments and request ID to retry.
 
-In `prepare`, set `request.content.replyToMessageId` to a published message in
-the same thread and `request.content.formatVersion` to 2 to quote it. The
-anchor is part of the content digest. Keep format 1 for unanchored content.
+Only threads have titles. A message has no title: `prepare` takes its recipients
+and a nonblank Markdown body in `request.content.contextMarkdown`, with
+`request.content.formatVersion` set to 3. `content.title` is the thread title.
+To quote a published message in the same thread, set
+`request.content.replyToMessageId`. The anchor is part of the content digest.
+A private preparation saved in format 1 or 2 must be prepared again in format 3
+before it can be linked or sent.

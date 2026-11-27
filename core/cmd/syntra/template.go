@@ -19,7 +19,7 @@ func printTemplate(kind, workspace, project, account string, thread *v1.Thread, 
 	if e != nil {
 		return e
 	}
-	content := map[string]any{"formatVersion": 1, "expectedAuthorUserId": account, "workspaceId": workspace, "title": "TODO: SYNTRA title", "originalDestinationIntent": "TODO: SYNTRA recipient", "destination": map[string]any{"unlinkedLabel": "TODO: SYNTRA recipient"}, "summary": "TODO: SYNTRA summary", "contextMarkdown": "TODO: SYNTRA context"}
+	content := map[string]any{"formatVersion": 3, "expectedAuthorUserId": account, "workspaceId": workspace, "title": "TODO: SYNTRA title", "originalDestinationIntent": "TODO: SYNTRA recipient", "destination": map[string]any{"unlinkedLabel": "TODO: SYNTRA recipient"}, "contextMarkdown": "TODO: SYNTRA message body"}
 	request := map[string]any{"requestId": uuid, "content": content}
 	if project != "" {
 		content["projectId"] = project
@@ -33,7 +33,6 @@ func printTemplate(kind, workspace, project, account string, thread *v1.Thread, 
 		}
 		content["existingThreadId"] = thread.Id
 		if message != "" {
-			content["formatVersion"] = 2
 			content["replyToMessageId"] = message
 		}
 		content["title"] = thread.Title

@@ -112,7 +112,13 @@ func TestRejectInactiveDestinationVariant(t *testing.T) {
 }
 
 func TestMessageAnchorVectors(t *testing.T) {
-	data, err := os.ReadFile("../../fixtures/content-integrity-message-anchors.json")
+	testPortableVectors(t, "../../fixtures/content-integrity-message-anchors.json")
+	testPortableVectors(t, "../../fixtures/content-integrity-v3.json")
+}
+
+func testPortableVectors(t *testing.T, path string) {
+	t.Helper()
+	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
