@@ -26,15 +26,15 @@ Read `threads`, `thread`, `messages` and `snapshot` as needed. These reads do no
 
 A message can go to one person, to several people (`resolve` with `recipients`, at most 10) or to a whole project team (`resolve` with `team` and `asTeam`, expanded to its active members when the message is sent). Use the `destination` returned by `resolve` exactly. A reply (`syntra reply` or `replyAll`) is addressed to every other participant of the thread; replying to a single person is not supported, so tell the user who will receive it before publishing. Threads have no responsible person.
 
-Prepare the user's intended message using `prepare`: author, recipient intent, **Resumen**, and free-form Markdown. Plain text is valid Markdown. Do not impose headings, next-action fields or version/approval badges.
+Prepare the user's intended message using `prepare`: author, recipient intent and a nonblank free-form Markdown body. Messages have no title; only threads do. Plain text is valid Markdown. Do not impose headings, next-action fields or version/approval badges.
 
 ## Formatting the context
 
-Plain text is always fine. When it helps the reader, the context (`contextMarkdown`) may also use Markdown (headings, lists, tables, task lists, fenced code blocks with a language, links, blockquotes, footnotes) and a small safe subset of inline HTML (for example `<details><summary>…</summary>…</details>` to fold long logs, `<kbd>`, `<sub>`, `<sup>`, `<br>`, `<table>`). Use it for readability only: short structured text, not a web page. The web app renders it sanitized: scripts, styles, iframes, forms and event handlers are removed, images are never loaded (only their alt text shows), and only `http(s)`, `mailto` and in-page `#` links work. The **Resumen** is plain text; do not put Markdown or HTML there. Do not rely on formatting for meaning that must survive plain text (CLI/MCP readers see the raw source).
+Plain text is always fine. When it helps the reader, the context (`contextMarkdown`) may also use Markdown (headings, lists, tables, task lists, fenced code blocks with a language, links, blockquotes, footnotes) and a small safe subset of inline HTML (for example `<details><summary>…</summary>…</details>` to fold long logs, `<kbd>`, `<sub>`, `<sup>`, `<br>`, `<table>`). Use it for readability only: short structured text, not a web page. The web app renders it sanitized: scripts, styles, iframes, forms and event handlers are removed, images are never loaded (only their alt text shows), and only `http(s)`, `mailto` and in-page `#` links work. Do not rely on formatting for meaning that must survive plain text (CLI/MCP readers see the raw source).
 
 ## Unsent drafts
 
-An unsent draft is fully editable by its author's agent: `prepare` with an `update` expectation can change the title, recipients, summary and context (the project stays fixed). `discard` deletes an unsent draft (the initial draft also removes its pending thread); it needs the PREPARE capability and the exact revisions. Neither publishes anything. Preserve supplied text, whitespace, Unicode and code exactly. If suggesting a rewritten message, distinguish that suggestion from text the user authorized to send.
+An unsent draft is fully editable by its author's agent: `prepare` with an `update` expectation can change the thread title, recipients and body (the project stays fixed). `discard` deletes an unsent draft (the initial draft also removes its pending thread); it needs the PREPARE capability and the exact revisions. Neither publishes anything. Preserve supplied text, whitespace, Unicode and code exactly. If suggesting a rewritten message, distinguish that suggestion from text the user authorized to send.
 
 When a recipient does not exist or is ambiguous, keep the original name as an explicit unlinked private destination. Never invite, create a person, choose a different person or claim the named person received it. Use `link` only for an explicit resolved destination; linking remains private and does not send.
 
@@ -43,7 +43,7 @@ thread and the connection has PUBLISH. The seed can have up to 11 distinct
 participants including the creator. Preserve the request ID and arguments to
 retry an uncertain result.
 
-For a reply, read the current published thread and use its ID and opaque revision. Its state must be open. To quote a published message in that thread, use format 2 with `replyToMessageId` in the authored content, or `syntra reply --message MESSAGE_UUID`. Use format 1 for unanchored replies. Follow the [tool guide](references/tools.md) for the exact fields.
+For a reply, read the current published thread and use its ID and opaque revision. Its state must be open. Use format 3. To quote a published message in that thread, set `replyToMessageId` in the authored content, or use `syntra reply --message MESSAGE_UUID`. A `LEGACY_CONTENT_FORMAT` rejection means the private preparation must be prepared again in format 3. Follow the [tool guide](references/tools.md) for the exact fields.
 
 ## Publish and recover
 
@@ -51,7 +51,7 @@ For a reply, read the current published thread and use its ID and opaque revisio
 
 After a timeout or ambiguous result, do not create a new request, rebase, rewrite or claim rollback. Use `retry` with the original retained request ID only when retry is authorized; it can repeat publication if the original operation was publication. Preserve original provider/model/tool/run metadata; these are self-reported assertions, not attestation.
 
-Report what actually happened: private preparation, unlinked destination, publication, rejection, or unknown outcome. Distinguish a verified retained snapshot from receipt consistency or legacy content without a digest. Never claim that publishing authorizes local execution or deployment.
+Report what actually happened: private preparation, unlinked destination, publication, rejection, or unknown outcome. Distinguish a verified retained snapshot from receipt consistency or an ordinary server record without retained authored evidence. Never claim that publishing authorizes local execution or deployment.
 
 For exact tool purposes and examples, read [the tool guide](references/tools.md).
 

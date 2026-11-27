@@ -55,13 +55,14 @@ command for publication. Check who will receive it before publishing.
 ```sh
 syntra threads --workspace WORKSPACE_UUID
 syntra thread --workspace WORKSPACE_UUID --thread THREAD_UUID
-syntra reply --workspace WORKSPACE_UUID --thread THREAD_UUID --summary "Update" --context-file context.md
+syntra reply --workspace WORKSPACE_UUID --thread THREAD_UUID --context-file context.md
 ```
 
-Add `--message MESSAGE_UUID` to quote a published message in the same thread.
-In MCP `prepare`, set `request.content.replyToMessageId` and set
-`request.content.formatVersion` to 2.
-An unanchored reply uses format 1.
+Only threads have titles. A message is its recipients and a nonblank Markdown
+body. Add `--message MESSAGE_UUID` to quote a published message in the same
+thread. In MCP `prepare`, set `request.content.formatVersion` to 3 and
+`request.content.replyToMessageId` when quoting. This requires Syntra 0.1.76 or
+later; earlier client versions can read, but cannot prepare or send messages.
 
 To fork, run `syntra fork --workspace W --thread T --message M --title "Follow-up" --request-id R`.
 The new thread opens without a notification and seeds at most 11 participants,
