@@ -448,6 +448,41 @@
           "toSha256": "6e6af30e0cf0b7f71a7393179c66fae4dffcb6fc19427a47870019551b5b0916"
         }
       ]
+    },
+    {
+      "sourceCommit": "9e1edbbf39f27a0eddb19ed7e8e59457595560e8",
+      "files": [
+        {
+          "path": "core/fixtures/content-integrity-v3.json",
+          "fromSha256": null,
+          "toSha256": "815e1678e94dd9d7d986fea23ed583250090c7d2b2c15ff067106327eaae8088"
+        },
+        {
+          "path": "core/gen/syntra/v1/authored_content.pb.go",
+          "fromSha256": "79d999a9f19989fe71c773931dac8fc1bed52f52f9cb89eb2d5e090298abd19d",
+          "toSha256": "a50e9d7222cae59c9d5f569455c0b378ad194b9a05a2ed288b418aa054d83d86"
+        },
+        {
+          "path": "core/gen/syntra/v1/collaboration.pb.go",
+          "fromSha256": "0ffb349eba81d71383cd805989c61f4c0c10436dd4df0013ec7384b3ecd5c0dc",
+          "toSha256": "2b9886fe8128baf28af83aac13272b1985933337d917411b3c300ca41c306110"
+        },
+        {
+          "path": "core/gen/syntra/v1/syntrav1connect/collaboration.connect.go",
+          "fromSha256": "a4aeaafc10ca29817ed03cadb63a2d87c72292704e923a966059096d41412867",
+          "toSha256": "97a034cf0e12f81154578709953af46f89049d7d129ba29e72c26f622e2c0ee2"
+        },
+        {
+          "path": "reference/proto/syntra/v1/authored_content.proto",
+          "fromSha256": "e725935907c780399259b7b38eacfc56dcd127a521d716397b725cf6a92d773b",
+          "toSha256": "4262d5538f84f829e6e541d9f2abc19268e9cd6e8a70645ded67fd11d5192c54"
+        },
+        {
+          "path": "reference/proto/syntra/v1/collaboration.proto",
+          "fromSha256": "6e6af30e0cf0b7f71a7393179c66fae4dffcb6fc19427a47870019551b5b0916",
+          "toSha256": "b20c99d8540c7a2fc62a7dc59ae1e4c750e4fc069b8c1c2e77b11b187bd3d8b1"
+        }
+      ]
     }
   ]
 }

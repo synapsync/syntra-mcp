@@ -10,6 +10,7 @@ import (
 
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	ci "syntra.local/mcp/internal/contentintegrity"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 )
 
 func clientField(name, message string) error {
@@ -63,14 +64,19 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 	if c == nil {
 		return clientField(name, "is required")
 	}
-	switch {
-	case c.FormatVersion == 1 && c.ReplyToMessageId == nil:
-	case c.FormatVersion == 2 && c.ReplyToMessageId != nil:
+	if c.Summary != "" {
+		return actionable.New(actionable.MessageHasNoTitle)
+	}
+	if c.FormatVersion != ci.CurrentFormat {
+		return actionable.New(actionable.LegacyContentFormat)
+	}
+	if c.ReplyToMessageId != nil {
 		if err := ValidateReplyAnchor(name+".replyToMessageId", c.GetExistingThreadId(), *c.ReplyToMessageId); err != nil {
 			return err
 		}
-	default:
-		return clientField(name+".formatVersion", "use 1 without replyToMessageId or 2 with replyToMessageId")
+	}
+	if strings.TrimSpace(c.ContextMarkdown) == "" {
+		return actionable.New(actionable.MessageBodyRequired)
 	}
 	for _, f := range []struct{ name, value string }{{"expectedAuthorUserId", c.ExpectedAuthorUserId}, {"workspaceId", c.WorkspaceId}} {
 		if err := clientID(name+"."+f.name, f.value); err != nil {
@@ -90,7 +96,7 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 	if owner != "" && c.ExpectedAuthorUserId != owner {
 		return fmt.Errorf("%w: %s.expectedAuthorUserId must equal the account shown by syntra identity", ci.ErrIntegrity, name)
 	}
-	for _, f := range []struct{ name, value string }{{"title", c.Title}, {"originalDestinationIntent", c.OriginalDestinationIntent}, {"summary", c.Summary}} {
+	for _, f := range []struct{ name, value string }{{"title", c.Title}, {"originalDestinationIntent", c.OriginalDestinationIntent}} {
 		if f.value == "" {
 			return clientField(name+"."+f.name, "is required and must be a non-empty string")
 		}
@@ -98,7 +104,7 @@ func clientContent(name string, c *v1.AuthoredContent, owner string) error {
 	for _, f := range []struct {
 		name, value string
 		max         int
-	}{{"title", c.Title, 1024}, {"originalDestinationIntent", c.OriginalDestinationIntent, 1024}, {"summary", c.Summary, 8192}, {"contextMarkdown", c.ContextMarkdown, 131072}} {
+	}{{"title", c.Title, 1024}, {"originalDestinationIntent", c.OriginalDestinationIntent, 1024}, {"contextMarkdown", c.ContextMarkdown, 131072}} {
 		if len(f.value) > f.max || !utf8.ValidString(f.value) || strings.ContainsRune(f.value, 0) {
 			return clientField(name+"."+f.name, fmt.Sprintf("must be valid UTF-8 without NUL and at most %d bytes", f.max))
 		}
@@ -182,8 +188,10 @@ func ValidateLocalContentRequest(target proto.Message, baseID string) error {
 			if err := clientExpectation("update", q.Update); err != nil {
 				return err
 			}
-			if err := clientID("base", baseID); err != nil {
-				return err
+			if baseID != "" {
+				if err := clientID("base", baseID); err != nil {
+					return err
+				}
 			}
 		} else if q.Content.ExistingThreadId != nil {
 			if err := clientRevision("expectedThreadRevision", q.GetExpectedThreadRevision()); err != nil {
@@ -230,27 +238,27 @@ func ValidateLocalContentRequest(target proto.Message, baseID string) error {
 	}
 }
 
-// ValidateReplyInput checks locally supplied arguments without touching a profile.
-func ValidateReplyInput(workspace, thread, summary, context string) error {
+// ValidateReplyRouting checks IDs before a CLI command reads the message file.
+func ValidateReplyRouting(workspace, thread string) error {
 	if err := clientID("workspace", workspace); err != nil {
 		return err
 	}
-	if err := clientID("thread", thread); err != nil {
+	return clientID("thread", thread)
+}
+
+// ValidateReplyInput checks locally supplied arguments without touching a profile.
+func ValidateReplyInput(workspace, thread, body string) error {
+	if err := ValidateReplyRouting(workspace, thread); err != nil {
 		return err
 	}
-	if summary == "" {
-		return clientField("summary", "is required")
+	if strings.TrimSpace(body) == "" {
+		return actionable.New(actionable.MessageBodyRequired)
 	}
-	for _, f := range []struct {
-		name, value string
-		max         int
-	}{{"summary", summary, 8192}, {"contextMarkdown", context, 131072}} {
-		if len(f.value) > f.max || !utf8.ValidString(f.value) || strings.ContainsRune(f.value, 0) {
-			return clientField(f.name, fmt.Sprintf("must be valid UTF-8 without NUL and at most %d bytes", f.max))
-		}
-		if strings.Contains(f.value, "TODO: SYNTRA") {
-			return clientField(f.name, "contains a TODO: SYNTRA placeholder; replace it before preparing")
-		}
+	if len(body) > 131072 || !utf8.ValidString(body) || strings.ContainsRune(body, 0) {
+		return clientField("contextMarkdown", "must be valid UTF-8 without NUL and at most 131072 bytes")
+	}
+	if strings.Contains(body, "TODO: SYNTRA") {
+		return clientField("contextMarkdown", "contains a TODO: SYNTRA placeholder; replace it before preparing")
 	}
 	return nil
 }

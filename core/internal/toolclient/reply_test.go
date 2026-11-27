@@ -41,7 +41,7 @@ func TestAuthoredRPCGuidance(t *testing.T) {
 		{actionable.RecipientNotEligible, "Check syntra members"},
 		{actionable.RecipientNotLinked, "syntra link"},
 		{actionable.InitialPreparedMessageAlreadyPublished, "prepare a reply"},
-		{actionable.PreparedRoutingChange, "may change only the summary and Markdown"},
+		{actionable.PreparedRoutingChange, "may change only the Markdown body"},
 		{actionable.PreparedAlreadyLinked, "prepare a new prepared for a different person"},
 		{actionable.LinkContentChange, "may change only the prepared's destination"},
 		{actionable.RequestIDConflict, "use a fresh requestId"},
@@ -196,7 +196,7 @@ func TestCompiledCLIActionableReplyErrors(t *testing.T) {
 	closed := actionable.New(actionable.ThreadClosed)
 	check(closed, "prepare", "--file", input)
 	check(closed, "prepare", "--template", "reply", "--workspace", workspaceID, "--thread", threadID)
-	check(closed, "reply", "--workspace", workspaceID, "--thread", threadID, "--summary", "Update", "--context-file", ctxPath)
+	check(closed, "reply", "--workspace", workspaceID, "--thread", threadID, "--context-file", ctxPath)
 
 	out, err := cliCall(t, binary, "thread", "--workspace", workspaceID, "--thread", threadID, "--profile-dir", profile)
 	if err != nil || !bytes.Contains(out, []byte("THREAD_STATE_CLOSED")) || !bytes.Contains(out, []byte("Closed threads accept no replies")) {
@@ -226,7 +226,7 @@ func TestReplyRequiresExplicitOpen(t *testing.T) {
 func TestAnchoredReplyRejectsSubstitutedAnchorOnRetry(t *testing.T) {
 	a, f, _, _ := setupContent(t)
 	r := fixtureReply()
-	r.Content.FormatVersion = 2
+	r.Content.FormatVersion = 3
 	r.Content.ReplyToMessageId = ptr(messageID)
 	ctx := context.Background()
 	f.tamper = "reply-anchor"

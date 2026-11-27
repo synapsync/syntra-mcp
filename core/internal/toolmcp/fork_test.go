@@ -147,7 +147,7 @@ func TestAnchoredReplyRejectionsCLIAndMCP(t *testing.T) {
 			f.api.mutationError = public.Connect()
 			f.api.mu.Unlock()
 			r := newRequest()
-			r.Content.FormatVersion = 2
+			r.Content.FormatVersion = 3
 			r.Content.ExistingThreadId = str(threadID)
 			r.Content.ReplyToMessageId = str(messageID)
 			r.Content.Title = "Visible title"
@@ -158,7 +158,7 @@ func TestAnchoredReplyRejectionsCLIAndMCP(t *testing.T) {
 				t.Fatalf("MCP prepare = %q, want %q", got, want)
 			}
 			cmd := exec.Command(f.binary, "reply", "--profile-dir", f.dir, "--workspace", workspaceID, "--thread", threadID,
-				"--message", messageID, "--summary", "Reply", "--context-file", "-")
+				"--message", messageID, "--context-file", "-")
 			cmd.Env = testsupport.FixtureCLIEnv()
 			cmd.Stdin = strings.NewReader("Reply context")
 			if out, err := cmd.CombinedOutput(); err == nil || !bytes.HasPrefix(out, []byte(public.Error()+" (retained request ")) {

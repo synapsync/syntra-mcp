@@ -261,3 +261,46 @@ func TestSnapshotSelector(t *testing.T) {
 		t.Fatal("ambiguous selector accepted")
 	}
 }
+
+func TestV3ReplacementOfLegacyPrepared(t *testing.T) {
+	owner := "11111111-1111-4111-8111-111111111111"
+	thread := "33333333-3333-4333-8333-333333333333"
+	anchor := "44444444-4444-4444-8444-444444444444"
+	for _, version := range []uint32{1, 2} {
+		prior := &v1.AuthoredContent{
+			FormatVersion: version, ExpectedAuthorUserId: owner,
+			WorkspaceId: "22222222-2222-4222-8222-222222222222",
+			Title:       "Thread title", OriginalDestinationIntent: "reply all",
+			ExistingThreadId: &thread, Summary: "Recover this title-only draft",
+			Destination: &v1.ContentDestination{Target: &v1.ContentDestination_ReplyAll{ReplyAll: true}},
+		}
+		if version == 2 {
+			prior.ReplyToMessageId = &anchor
+		}
+		next := proto.Clone(prior).(*v1.AuthoredContent)
+		next.FormatVersion, next.ContextMarkdown, next.Summary = CurrentFormat, prior.Summary, ""
+		if err := ValidateReplacement(prior, next); err != nil {
+			t.Fatalf("v%d replacement: %v", version, err)
+		}
+		if err := ValidateDraftReplacement(prior, next); err != nil {
+			t.Fatalf("v%d pending replacement: %v", version, err)
+		}
+		if prior.Summary == "" || prior.FormatVersion != version || prior.ContextMarkdown != "" {
+			t.Fatal("replacement rewrote its legacy preimage")
+		}
+		next.ContextMarkdown = " \t\u0085"
+		if _, err := FromProto(next); err == nil {
+			t.Fatal("v3 accepted a blank body")
+		}
+		next.ContextMarkdown = "Recovered body"
+		next.Summary = "Removed message title"
+		if _, err := FromProto(next); err == nil {
+			t.Fatal("v3 accepted a message title")
+		}
+		next.Summary = ""
+		next.ReplyToMessageId = nil
+		if version == 2 && ValidateReplacement(prior, next) == nil {
+			t.Fatal("v3 replacement removed the quote anchor")
+		}
+	}
+}

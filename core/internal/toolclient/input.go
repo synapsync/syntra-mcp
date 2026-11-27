@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	v1 "syntra.local/mcp/gen/syntra/v1"
 	ci "syntra.local/mcp/internal/contentintegrity"
+	"syntra.local/mcp/internal/contentintegrity/actionable"
 )
 
 // ReadContentInputWithCorrections reports client-side corrections without changing
@@ -75,8 +76,14 @@ func normalizeRoot(b []byte, contentKey, expectationKey string, report func(stri
 		return nil, ci.ErrWire
 	}
 	var content map[string]json.RawMessage
+	if _, sent := root["summary"]; sent {
+		return nil, actionable.New(actionable.MessageHasNoTitle)
+	}
 	if json.Unmarshal(root[contentKey], &content) != nil || content == nil {
 		return b, nil
+	}
+	if _, sent := content["summary"]; sent {
+		return nil, actionable.New(actionable.MessageHasNoTitle)
 	}
 	changed := false
 	for _, key := range []string{"expectedThreadRevision", "expectedPreparedMessageRevision"} {

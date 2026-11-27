@@ -114,7 +114,7 @@ func (s *Store) writeAtomicPrivateFile(name string, raw []byte, replace bool, ex
 }
 
 func (s *Store) retain(kind, id string, raw []byte) error {
-	if !validUUID(id) || (kind != "attempt" && kind != "result") {
+	if !validUUID(id) || (kind != "attempt" && kind != "result" && kind != "legacy-base") {
 		return ErrProfile
 	}
 	sum := sha256.Sum256(raw)
@@ -127,7 +127,7 @@ func (s *Store) retain(kind, id string, raw []byte) error {
 }
 
 func (s *Store) retained(kind, id string) ([]byte, error) {
-	if !validUUID(id) || (kind != "attempt" && kind != "result") {
+	if !validUUID(id) || (kind != "attempt" && kind != "result" && kind != "legacy-base") {
 		return nil, ErrProfile
 	}
 	raw, err := s.readRecord(kind + "-" + id + ".json")

@@ -5,8 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"strings"
 	"unicode/utf8"
 )
+
+// CurrentFormat is the only version accepted for new mutations.
+const CurrentFormat = 3
 
 // MaxRecipients is the structural ceiling of one message's recipient set (also enforced by the database).
 // The configured limit may only lower it.
@@ -47,6 +51,16 @@ func Encode(c Content) ([]byte, error) {
 	case 2:
 		if c.ExistingThreadID == nil || c.ReplyToMessageID == nil {
 			return nil, errors.New("format v2 requires an anchored reply")
+		}
+	case CurrentFormat:
+		if c.ReplyToMessageID != nil && c.ExistingThreadID == nil {
+			return nil, errors.New("a reply anchor requires an existing thread")
+		}
+		if c.Summary != "" {
+			return nil, errors.New("messages have no title")
+		}
+		if strings.TrimSpace(c.ContextMarkdown) == "" {
+			return nil, errors.New("message body is required")
 		}
 	default:
 		return nil, errors.New("unsupported content version")
@@ -122,9 +136,11 @@ func Encode(c Content) ([]byte, error) {
 	default:
 		return nil, errors.New("invalid destination")
 	}
-	field(c.Summary, 8192, false)
-	field(c.ContextMarkdown, 131072, true)
-	if c.FormatVersion == 2 {
+	if c.FormatVersion < CurrentFormat {
+		field(c.Summary, 8192, false)
+	}
+	field(c.ContextMarkdown, 131072, c.FormatVersion < CurrentFormat)
+	if c.FormatVersion >= 2 {
 		optional(c.ReplyToMessageID)
 	}
 	if failure != nil {

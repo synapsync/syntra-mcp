@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	v1 "syntra.local/mcp/gen/syntra/v1"
@@ -32,7 +31,6 @@ func runContent(parent context.Context, args []string) error {
 	api := f.String("api", "", "exact retained API origin")
 	timeout := f.Duration("timeout", time.Minute, "operation deadline")
 	template := f.String("template", "", "new or reply template")
-	summary := f.String("summary", "", "reply summary")
 	contextFile := f.String("context-file", "", "Markdown file or - for stdin")
 	file := f.String("file", "", "strict bounded request JSON file, or - for stdin")
 	base := f.String("base", "", "retained request ID anchoring exact CAS/preimage")
@@ -59,6 +57,9 @@ func runContent(parent context.Context, args []string) error {
 	})
 	requestID := f.String("request-id", "", "add-participant: fresh canonical UUID; resend it to retry")
 	if err := f.Parse(args[1:]); err != nil {
+		if err.Error() == "flag provided but not defined: -summary" {
+			return errors.New("messages have no title; put the message body in --context-file")
+		}
 		return optionError(args[0], err)
 	}
 	if f.NArg() != 0 || *timeout <= 0 || *timeout > 10*time.Minute {
@@ -97,7 +98,7 @@ func runContent(parent context.Context, args []string) error {
 			allowed[s] = true
 		}
 	case "reply":
-		for _, s := range []string{"workspace", "thread", "message", "summary", "context-file"} {
+		for _, s := range []string{"workspace", "thread", "message", "context-file"} {
 			allowed[s] = true
 		}
 	case "prepare":
@@ -170,12 +171,13 @@ func runContent(parent context.Context, args []string) error {
 			return err
 		}
 	}
-	replyOpts := replyOptions{Workspace: *workspace, ThreadID: *thread, MessageID: *messageID, Summary: *summary}
+	replyOpts := replyOptions{Workspace: *workspace, ThreadID: *thread, MessageID: *messageID}
 	if args[0] == "reply" {
 		if *contextFile == "" {
-			return errors.New("reply requires --workspace, --thread, --summary and --context-file")
+			return errors.New("reply requires --workspace, --thread and --context-file")
 		}
-		if err := toolclient.ValidateReplyInput(*workspace, *thread, *summary, ""); err != nil {
+
+		if err := toolclient.ValidateReplyRouting(*workspace, *thread); err != nil {
 			return err
 		}
 		data, err := readReplyContext(ctx, *contextFile)
@@ -183,7 +185,7 @@ func runContent(parent context.Context, args []string) error {
 			return err
 		}
 		replyOpts.ContextMarkdown = string(data)
-		if err = toolclient.ValidateReplyInput(*workspace, *thread, *summary, replyOpts.ContextMarkdown); err != nil {
+		if err = toolclient.ValidateReplyInput(*workspace, *thread, replyOpts.ContextMarkdown); err != nil {
 			return err
 		}
 	}
@@ -325,7 +327,7 @@ func runContent(parent context.Context, args []string) error {
 		return e
 	}
 	if message != nil {
-		raw, err := protojson.Marshal(message)
+		raw, err := toolclient.MarshalPublicResult(message)
 		if err != nil {
 			return errors.New("response encoding failed")
 		}
