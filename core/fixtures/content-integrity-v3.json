@@ -1,0 +1,58 @@
+[
+  {
+    "name": "v3 new thread",
+    "content": {
+      "formatVersion": 3,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "title": "Subject",
+      "originalDestinationIntent": "Thread participants",
+      "destination": {
+        "kind": "linked",
+        "memberId": "member"
+      },
+      "contextMarkdown": "Body"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740003000000056f776e657200000009776f726b7370616365000000000000075375626a65637400000013546872656164207061727469636970616e747301000000066d656d62657200000004426f647900",
+    "sha256": "1c5547c1bf6fda45766bad0da3b9175d42dc30688b6fb5a169db82f79eedfa7a"
+  },
+  {
+    "name": "v3 unquoted reply",
+    "content": {
+      "formatVersion": 3,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": null,
+      "existingThreadId": "thread",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Thread participants",
+      "destination": {
+        "kind": "replyAll",
+        "replyAll": true
+      },
+      "contextMarkdown": "\tLine one\r\nLine two"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740003000000056f776e657200000009776f726b7370616365000001000000067468726561640000000850726567756e746100000013546872656164207061727469636970616e74730500000013094c696e65206f6e650d0a4c696e652074776f00",
+    "sha256": "25caf6a95dfec096fc0418e2dca7d0035716d38789edf8dc5a995a115377dd88"
+  },
+  {
+    "name": "v3 anchored reply",
+    "content": {
+      "formatVersion": 3,
+      "expectedAuthorUserId": "owner",
+      "workspaceId": "workspace",
+      "projectId": null,
+      "existingThreadId": "thread",
+      "title": "Pregunta",
+      "originalDestinationIntent": "Thread participants",
+      "destination": {
+        "kind": "replyAll",
+        "replyAll": true
+      },
+      "contextMarkdown": "\tLine one\r\nLine two",
+      "replyToMessageId": "parent"
+    },
+    "encodingHex": "73796e7472612e617574686f7265642d636f6e74656e740003000000056f776e657200000009776f726b7370616365000001000000067468726561640000000850726567756e746100000013546872656164207061727469636970616e74730500000013094c696e65206f6e650d0a4c696e652074776f0100000006706172656e74",
+    "sha256": "ef3b63352ae3881610f3ac92361801ed1bd8a3c14f00738b984d0f2b6ee8fda8"
+  }
+]

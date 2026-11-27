@@ -299,7 +299,7 @@ func setupContent(t *testing.T) (*App, *contentFixture, string, *x509.Certificat
 	return app, f, dir, srv.Certificate()
 }
 func request() *v1.PrepareContentRequest {
-	return &v1.PrepareContentRequest{RequestId: randomUUID(), Content: &v1.AuthoredContent{FormatVersion: 1, ExpectedAuthorUserId: accountA, WorkspaceId: workspaceID, Title: "Issue e\u0301", OriginalDestinationIntent: "  Pedro e\u0301  ", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_UnlinkedLabel{UnlinkedLabel: "Pedro"}}, Summary: "  exact\r\n e\u0301  ", ContextMarkdown: "```go\r\nvar token = `input`\r\n```\r\n/api/v1?q=$HOME"}, ClientReported: &v1.ClientReportedProvenance{Model: ptr("first-model")}}
+	return &v1.PrepareContentRequest{RequestId: randomUUID(), Content: &v1.AuthoredContent{FormatVersion: 3, ExpectedAuthorUserId: accountA, WorkspaceId: workspaceID, Title: "Issue e\u0301", OriginalDestinationIntent: "  Pedro e\u0301  ", Destination: &v1.ContentDestination{Target: &v1.ContentDestination_UnlinkedLabel{UnlinkedLabel: "Pedro"}}, ContextMarkdown: "e\u0301\r\n```go\r\nvar token = `input`\r\n```\r\n/api/v1?q=$HOME"}, ClientReported: &v1.ClientReportedProvenance{Model: ptr("first-model")}}
 }
 func TestProjectTeamDiscoveryReturnsEffectiveMembersOnly(t *testing.T) {
 	a, _, _, _ := setupContent(t)
@@ -541,14 +541,14 @@ func TestRetainedTamperingAndCapabilities(t *testing.T) {
 	}
 }
 func TestStrictContentInput(t *testing.T) {
-	valid := `{"content":{"formatVersion":1,"expectedAuthorUserId":"` + accountA + `","workspaceId":"` + workspaceID + `","title":"x","originalDestinationIntent":"Pedro","destination":{"unlinkedLabel":"Pedro"},"summary":"e\u0301\r\n","contextMarkdown":"code"}}`
-	for _, raw := range []string{strings.Replace(valid, `"title":"x"`, `"title":"x","title":"y"`, 1), strings.Replace(valid, `"title":"x"`, `"unknown":"x"`, 1), strings.Replace(valid, `"title":"x"`, `"title":null`, 1), strings.Replace(valid, `"unlinkedLabel":"Pedro"`, `"unlinkedLabel":"Pedro","linkedMemberId":""`, 1), strings.Replace(valid, `"formatVersion":1`, `"format_version":1`, 1), strings.Replace(valid, "code", string([]byte{255}), 1)} {
+	valid := `{"content":{"formatVersion":3,"expectedAuthorUserId":"` + accountA + `","workspaceId":"` + workspaceID + `","title":"x","originalDestinationIntent":"Pedro","destination":{"unlinkedLabel":"Pedro"},"contextMarkdown":"e\u0301\r\n"}}`
+	for _, raw := range []string{strings.Replace(valid, `"title":"x"`, `"title":"x","title":"y"`, 1), strings.Replace(valid, `"title":"x"`, `"unknown":"x"`, 1), strings.Replace(valid, `"title":"x"`, `"title":null`, 1), strings.Replace(valid, `"unlinkedLabel":"Pedro"`, `"unlinkedLabel":"Pedro","linkedMemberId":""`, 1), strings.Replace(valid, `"formatVersion":3`, `"format_version":1`, 1), strings.Replace(valid, `e\u0301`, string([]byte{255}), 1)} {
 		if e := ReadContentInput(strings.NewReader(raw), &v1.PrepareContentRequest{}); e == nil {
 			t.Fatal("strict gate accepted malformed input")
 		}
 	}
 	var r v1.PrepareContentRequest
-	if e := ReadContentInput(strings.NewReader(valid), &r); e != nil || r.Content.Summary != "e\u0301\r\n" {
+	if e := ReadContentInput(strings.NewReader(valid), &r); e != nil || r.Content.ContextMarkdown != "e\u0301\r\n" {
 		t.Fatal("exact decoder failed", e)
 	}
 	if e := ReadContentInput(strings.NewReader(strings.Repeat(" ", maxResponseBytes+1)), &r); e == nil {
@@ -565,7 +565,7 @@ func TestCompiledCLIProcessCrashRetryAndLocking(t *testing.T) {
 	a, f, dir, certificate := setupContent(t)
 	binary := testsupport.BuildCLI(t, "../../cmd/syntra", certificate)
 	r := request()
-	if !bytes.Contains([]byte(r.Content.Summary), []byte{13, 10}) || !bytes.Contains([]byte(r.Content.Summary), []byte{0x65, 0xcc, 0x81}) {
+	if !bytes.Contains([]byte(r.Content.ContextMarkdown), []byte{13, 10}) || !bytes.Contains([]byte(r.Content.ContextMarkdown), []byte{0x65, 0xcc, 0x81}) {
 		t.Fatal("compiled fixture lacks actual CRLF/NFD")
 	}
 	raw, _ := protojson.Marshal(r)
@@ -756,10 +756,10 @@ func TestNilExplicitIDEditCASAndPublicationCapability(t *testing.T) {
 	}
 	x, _ := expectation(s)
 	edited := proto.Clone(s.Content).(*v1.AuthoredContent)
-	edited.Summary = "new exact summary\r\n"
+	edited.ContextMarkdown = "new exact summary\r\n"
 	edit := &v1.PrepareContentRequest{Content: edited, RequestId: randomUUID(), Update: x}
 	s2, e := a.Prepare(ctx, edit, q.RequestId)
-	if e != nil || s2.Content.Summary != edited.Summary {
+	if e != nil || s2.Content.ContextMarkdown != edited.ContextMarkdown {
 		t.Fatal("permitted edit failed", e)
 	}
 	bad := proto.Clone(edit).(*v1.PrepareContentRequest)
@@ -856,7 +856,7 @@ func TestRetainedRecordDirectorySyncOnFirstAndExistingRetry(t *testing.T) {
 func TestActualUnicodeCRLFAndLiteralBackslashRemainDistinct(t *testing.T) {
 	a, _, _, _ := setupContent(t)
 	q := request()
-	if !bytes.Contains([]byte(q.Content.Summary), []byte{13, 10}) || !bytes.Contains([]byte(q.Content.Summary), []byte{0x65, 0xcc, 0x81}) {
+	if !bytes.Contains([]byte(q.Content.ContextMarkdown), []byte{13, 10}) || !bytes.Contains([]byte(q.Content.ContextMarkdown), []byte{0x65, 0xcc, 0x81}) {
 		t.Fatal("fixture must contain actual CRLF and decomposed e-acute")
 	}
 	first, e := a.Prepare(context.Background(), q, "")
@@ -864,12 +864,12 @@ func TestActualUnicodeCRLFAndLiteralBackslashRemainDistinct(t *testing.T) {
 		t.Fatal(e)
 	}
 	literal := request()
-	literal.Content.Summary = `  exact\r\n e\u0301  `
+	literal.Content.ContextMarkdown = `  exact\r\n e\u0301  `
 	second, e := a.Prepare(context.Background(), literal, "")
 	if e != nil {
 		t.Fatal(e)
 	}
-	if bytes.Equal(first.Receipt.ContentDigest, second.Receipt.ContentDigest) || first.Content.Summary == second.Content.Summary {
+	if bytes.Equal(first.Receipt.ContentDigest, second.Receipt.ContentDigest) || first.Content.ContextMarkdown == second.Content.ContextMarkdown {
 		t.Fatal("literal backslashes normalized into actual Unicode/newlines")
 	}
 }
@@ -1046,7 +1046,7 @@ func TestReturnedThreadCASModeRules(t *testing.T) {
 			switch kind {
 			case "edit-preserves":
 				edited := proto.Clone(s.Content).(*v1.AuthoredContent)
-				edited.Summary = "edit"
+				edited.ContextMarkdown = "edit"
 				f.mu.Lock()
 				f.tamper = "thread-cas"
 				f.mu.Unlock()
@@ -1198,7 +1198,7 @@ func TestPrepareReportsInvalidReplyFieldsWithoutContent(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := request()
-			r.Content.Summary = "PRIVATE-SENTINEL"
+			r.Content.ContextMarkdown = "PRIVATE-SENTINEL"
 			tc.change(r)
 			_, err := a.Prepare(context.Background(), r, "")
 			if !errors.Is(err, ci.ErrWire) || !strings.Contains(err.Error(), tc.field) || strings.Contains(err.Error(), "PRIVATE-SENTINEL") {
@@ -1239,7 +1239,7 @@ func TestCompiledCLIReplyRevision(t *testing.T) {
 }
 
 func TestNestedThreadRevisionNormalization(t *testing.T) {
-	raw := `{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"22222222-2222-4222-8222-222222222222","projectId":"33333333-3333-4333-8333-333333333333","existingThreadId":"44444444-4444-4444-8444-444444444444","expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title":"...","originalDestinationIntent":"...","summary":"...","contextMarkdown":"","destination":{"unlinkedLabel":"..."}},"clientReported":{"tool":"Claude Code","model":"..."}}`
+	raw := `{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":3,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"22222222-2222-4222-8222-222222222222","projectId":"33333333-3333-4333-8333-333333333333","existingThreadId":"44444444-4444-4444-8444-444444444444","expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","title":"...","originalDestinationIntent":"...","contextMarkdown":"Body","destination":{"unlinkedLabel":"..."}},"clientReported":{"tool":"Claude Code","model":"..."}}`
 	var request v1.PrepareContentRequest
 	var correction string
 	if err := ReadContentInputWithCorrections(strings.NewReader(raw), &request, func(s string) { correction = s }); err != nil {
@@ -1262,7 +1262,7 @@ func TestNestedThreadRevisionNormalization(t *testing.T) {
 	if err != nil || !bytes.Equal(first, second) {
 		t.Fatal("normalization changed content digest")
 	}
-	if err := ReadContentInput(strings.NewReader(strings.Replace(raw, `"summary":"..."`, `"summary":"TODO: SYNTRA summary"`, 1)), &request); err == nil {
+	if err := ReadContentInput(strings.NewReader(strings.Replace(raw, `"contextMarkdown":"Body"`, `"contextMarkdown":"TODO: SYNTRA body"`, 1)), &request); err == nil {
 		t.Fatal("placeholder accepted")
 	}
 }
@@ -1284,7 +1284,7 @@ func compiledReplyPublishesOnlyOnExplicitCommand(t *testing.T, anchored bool) {
 	if err := os.WriteFile(contextPath, []byte("Details"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	args := []string{"reply", "--profile-dir", dir, "--workspace", workspaceID, "--thread", threadID, "--summary", "Resolved", "--context-file", contextPath}
+	args := []string{"reply", "--profile-dir", dir, "--workspace", workspaceID, "--thread", threadID, "--context-file", contextPath}
 	if anchored {
 		args = append(args, "--message", messageID)
 	}
@@ -1313,11 +1313,11 @@ func compiledReplyPublishesOnlyOnExplicitCommand(t *testing.T, anchored bool) {
 		t.Fatalf("not published: %s", published)
 	}
 	if anchored {
-		if snapshot.Content.FormatVersion != 2 || snapshot.Content.GetReplyToMessageId() != messageID {
-			t.Fatal("published reply lost the format 2 anchor")
+		if snapshot.Content.FormatVersion != 3 || snapshot.Content.GetReplyToMessageId() != messageID {
+			t.Fatal("published reply lost the format 3 anchor")
 		}
-	} else if snapshot.Content.FormatVersion != 1 || snapshot.Content.ReplyToMessageId != nil {
-		t.Fatal("unanchored reply must retain format 1")
+	} else if snapshot.Content.FormatVersion != 3 || snapshot.Content.ReplyToMessageId != nil {
+		t.Fatal("unanchored reply must use format 3")
 	}
 }
 
@@ -1346,7 +1346,6 @@ func TestCompiledTemplateToPrepare(t *testing.T) {
 		t.Fatalf("placeholder: %v %s", err, rejected)
 	}
 	content["originalDestinationIntent"] = "Pedro"
-	content["summary"] = "Done"
 	content["contextMarkdown"] = "Details"
 	body, err := json.Marshal(raw)
 	if err != nil {
@@ -1371,9 +1370,9 @@ func snapshotRecord(s *v1.AuthoredContentSnapshot) *v1.GetContentSnapshotRespons
 	}
 	out := &v1.GetContentSnapshotResponse{Authored: s, Thread: &v1.Thread{Id: s.Receipt.ThreadId, WorkspaceId: s.Content.WorkspaceId}}
 	if d := s.GetPreparedMessage(); d != nil {
-		out.Record = &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: &v1.PreparedMessage{Id: d.PreparedMessageId, Revision: d.Revision, WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+		out.Record = &v1.GetContentSnapshotResponse_CurrentPreparedMessage{CurrentPreparedMessage: &v1.PreparedMessage{Id: d.PreparedMessageId, Revision: d.Revision, WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, ContextMarkdown: s.Content.ContextMarkdown}}
 	} else {
-		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, Summary: s.Content.Summary, ContextMarkdown: s.Content.ContextMarkdown}}
+		out.Record = &v1.GetContentSnapshotResponse_PublishedMessage{PublishedMessage: &v1.PublishedMessage{Id: s.GetPublishedMessageId(), WorkspaceId: s.Content.WorkspaceId, ThreadId: s.Receipt.ThreadId, AuthorUserId: s.Content.ExpectedAuthorUserId, ContextMarkdown: s.Content.ContextMarkdown}}
 	}
 	return out
 }
@@ -1387,13 +1386,13 @@ func TestHistoricalAuthoredEvidenceIsSeparateFromCurrentPrivateRecord(t *testing
 	}
 	response := snapshotRecord(old)
 	response.GetCurrentPreparedMessage().Revision = rev(99)
-	response.GetCurrentPreparedMessage().Summary = "Current edited server text"
+	response.GetCurrentPreparedMessage().ContextMarkdown = "Current edited server text"
 	f.mu.Lock()
 	f.record = response
 	f.mu.Unlock()
 	r := &v1.GetContentSnapshotRequest{WorkspaceId: workspaceID, ThreadId: threadID, Record: &v1.GetContentSnapshotRequest_PreparedMessage{PreparedMessage: old.GetPreparedMessage()}}
 	got, e := a.Snapshot(ctx, r, "")
-	if e != nil || !proto.Equal(got.Snapshot, old) || got.Snapshot.Content.Summary == response.GetCurrentPreparedMessage().Summary {
+	if e != nil || !proto.Equal(got.Snapshot, old) || got.Snapshot.Content.ContextMarkdown == response.GetCurrentPreparedMessage().ContextMarkdown {
 		t.Fatal("historical authored evidence conflated with current record", e)
 	}
 }
@@ -1432,5 +1431,56 @@ func TestResolveTeamAndSeveralPeopleDestinations(t *testing.T) {
 		if _, e = a.Resolve(ctx, s); e == nil {
 			t.Fatalf("%s accepted", name)
 		}
+	}
+}
+
+func TestLegacyPreparationUpgradeWithoutLocalBase(t *testing.T) {
+	a, f, _, _ := setupContent(t)
+	ctx := context.Background()
+	old, err := a.Prepare(ctx, request(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Install a remote-only retained v1 result with an old signed thread token.
+	old = proto.CloneOf(old)
+	old.Content.FormatVersion = 1
+	old.Content.Summary = "Recovered message"
+	old.Content.ContextMarkdown = ""
+	old.Receipt.ContentDigest, err = digest(old.Content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	old.Receipt.RequestId = randomUUID()
+	record := snapshotRecord(old)
+	record.Thread.Revision = rev(99)
+	record.GetCurrentPreparedMessage().ContextMarkdown = "Recovered message"
+	f.mu.Lock()
+	f.record = record
+	f.mu.Unlock()
+
+	display, err := MarshalPublicResult(old)
+	if err != nil || bytes.Contains(display, []byte(`"summary"`)) || old.Content.Summary != "Recovered message" ||
+		!bytes.Contains(display, []byte(`"contextMarkdown":"Recovered message"`)) {
+		t.Fatalf("legacy projection or retained bytes changed: %v", err)
+	}
+
+	update, err := expectation(old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	update.ExpectedThreadRevision = record.Thread.Revision
+	replacement := proto.CloneOf(old.Content)
+	replacement.FormatVersion, replacement.Summary, replacement.ContextMarkdown = 3, "", record.GetCurrentPreparedMessage().ContextMarkdown
+	in := &v1.PrepareContentRequest{Content: replacement, Update: update, RequestId: randomUUID()}
+	upgraded, err := a.Prepare(ctx, in, "")
+	if err != nil || !proto.Equal(upgraded.GetContent(), replacement) {
+		t.Fatalf("legacy replacement: %v", err)
+	}
+	f.mu.Lock()
+	f.record = nil
+	f.mu.Unlock()
+	replayed, err := a.Retry(ctx, in.RequestId)
+	if err != nil || !proto.Equal(replayed, upgraded) {
+		t.Fatalf("legacy replacement replay without current legacy preparation: %v", err)
 	}
 }

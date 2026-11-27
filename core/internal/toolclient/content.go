@@ -39,12 +39,26 @@ type SnapshotOutput struct {
 	Recipients   json.RawMessage `json:"recipients,omitempty"`
 }
 
-// Output renders the snapshot exactly as the authored snapshot (or server record), plus the full recipient set.
+// MarshalPublicResult omits legacy title bytes from user-visible output. The
+// verified original remains available for local integrity checks and retries.
+func MarshalPublicResult(m proto.Message) ([]byte, error) {
+	if snapshot, ok := m.(*v1.AuthoredContentSnapshot); ok && snapshot.GetContent() != nil && snapshot.Content.Summary != "" {
+		display := proto.Clone(snapshot).(*v1.AuthoredContentSnapshot)
+		if display.GetPreparedMessage() != nil && strings.TrimSpace(display.Content.ContextMarkdown) == "" {
+			display.Content.ContextMarkdown = display.Content.Summary
+		}
+		display.Content.Summary = ""
+		m = display
+	}
+	return protojson.Marshal(m)
+}
+
+// Output renders a verified snapshot or server record plus the full recipient set.
 func (s *VerifiedSnapshot) Output() (*SnapshotOutput, error) {
 	var raw []byte
 	var e error
 	if s.Snapshot != nil {
-		raw, e = protojson.Marshal(s.Snapshot)
+		raw, e = MarshalPublicResult(s.Snapshot)
 	} else {
 		raw, e = protojson.Marshal(s.Record)
 	}
@@ -180,16 +194,18 @@ func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 		return nil, e
 	}
 	if r.Update != nil {
-		s, e := a.base(baseID)
+		var e error
+		var base *v1.AuthoredContentSnapshot
+		if baseID == "" {
+			base, e = a.legacyPrepareBase(ctx, r, true)
+		} else {
+			base, e = a.base(baseID)
+		}
 		if e != nil {
 			return nil, e
 		}
-		x, e := expectation(s)
-		if e != nil || !proto.Equal(x, r.Update) {
-			return nil, ci.ErrIntegrity
-		}
-		if e = ci.ValidatePrepareUpdate(r, s.Content, a.profile.AccountID); e != nil {
-			return nil, preparedValidationError(e)
+		if e = a.validateReplacement(r, base); e != nil {
+			return nil, e
 		}
 	} else if baseID != "" {
 		return nil, ci.ErrWire
@@ -201,6 +217,78 @@ func (a *App) prepare(ctx context.Context, in *v1.PrepareContentRequest, baseID 
 	}
 	return a.executeNew(ctx, "prepare", r, r.Content, r.RequestId, baseID)
 }
+
+// Recover only the caller's current legacy private preparation. Store the
+// verified original separately from the replacement so retries can revalidate
+// the exact transformation even after the private object changes revision.
+func (a *App) legacyPrepareBase(ctx context.Context, r *v1.PrepareContentRequest, fetch bool) (*v1.AuthoredContentSnapshot, error) {
+	raw, err := a.store.retained("legacy-base", r.RequestId)
+	if err == nil {
+		var base v1.AuthoredContentSnapshot
+		if protojson.Unmarshal(raw, &base) != nil || snapshotShape(&base) != nil ||
+			base.GetContent().GetFormatVersion() >= ci.CurrentFormat || base.GetPreparedMessage() == nil {
+			return nil, ci.ErrIntegrity
+		}
+		return &base, nil
+	}
+	if !fetch || !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+	update := r.Update
+	verified, err := a.Snapshot(ctx, &v1.GetContentSnapshotRequest{
+		WorkspaceId: r.Content.WorkspaceId,
+		ThreadId:    update.ThreadId,
+		Record: &v1.GetContentSnapshotRequest_PreparedMessage{PreparedMessage: &v1.PrivateContentRevision{
+			PreparedMessageId: update.PreparedMessageId,
+			Revision:          update.ExpectedPreparedMessageRevision,
+		}},
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+	base := verified.Snapshot
+	if base == nil || base.GetContent().GetFormatVersion() >= ci.CurrentFormat {
+		return nil, clientField("base", "is required for a preparation already in the current format")
+	}
+	if verified.Record.GetThread().GetRevision() != update.ExpectedThreadRevision ||
+		verified.Record.GetCurrentPreparedMessage().GetRevision() != update.ExpectedPreparedMessageRevision {
+		return nil, actionable.New(actionable.StalePreparedMessageRevision)
+	}
+	if err = a.validateReplacement(r, base); err != nil {
+		return nil, err
+	}
+	raw, err = jsonProto(base)
+	if err != nil {
+		return nil, err
+	}
+	if err = a.store.retain("legacy-base", r.RequestId, raw); err != nil {
+		return nil, err
+	}
+	return base, nil
+}
+
+func (a *App) validateReplacement(r *v1.PrepareContentRequest, base *v1.AuthoredContentSnapshot) error {
+	if r.GetContent() == nil || r.GetUpdate() == nil {
+		return ci.ErrWire
+	}
+	expected, err := expectation(base)
+	if err != nil {
+		return ci.ErrIntegrity
+	}
+	if base.Content.FormatVersion < ci.CurrentFormat && r.Content.FormatVersion == ci.CurrentFormat {
+		// The signed preparation's historical thread token can predate other
+		// replies. The service checks the caller's current token transactionally.
+		expected.ExpectedThreadRevision = r.Update.ExpectedThreadRevision
+	}
+	if !proto.Equal(expected, r.Update) {
+		return ci.ErrIntegrity
+	}
+	if err = ci.ValidatePrepareUpdate(r, base.Content, a.profile.AccountID); err != nil {
+		return preparedValidationError(err)
+	}
+	return nil
+}
+
 func (a *App) Link(ctx context.Context, in *v1.LinkContentRequest, baseID string) (*v1.AuthoredContentSnapshot, error) {
 	if in == nil || !validUUID(in.RequestId) {
 		return nil, clientField("requestId", "must be a fresh canonical lowercase UUID at the top level")
@@ -252,6 +340,9 @@ func (a *App) Publish(ctx context.Context, in *v1.PublishContentRequest, baseID 
 	x, e := expectation(s)
 	if e != nil || !proto.Equal(x, r.Current) || ci.ValidatePublishBinding(r, s.Content, a.profile.AccountID) != nil {
 		return nil, ci.ErrIntegrity
+	}
+	if s.Content.FormatVersion != ci.CurrentFormat {
+		return nil, actionable.New(actionable.LegacyContentFormat)
 	}
 	if !ci.LinkedDestination(s.Content.Destination) {
 		return nil, actionable.New(actionable.RecipientNotLinked)
@@ -326,8 +417,8 @@ func (a *App) Retry(ctx context.Context, id string) (*v1.AuthoredContentSnapshot
 		}
 		switch r := req.(type) {
 		case *v1.PrepareContentRequest:
-			if !proto.Equal(x, r.Update) || ci.ValidatePrepareUpdate(r, prior.Content, a.profile.AccountID) != nil {
-				return nil, ci.ErrIntegrity
+			if err := a.validateReplacement(r, prior); err != nil {
+				return nil, err
 			}
 		case *v1.LinkContentRequest:
 			if !proto.Equal(x, r.Current) || ci.ValidateLink(r, prior.Content, a.profile.AccountID) != nil {
@@ -338,11 +429,22 @@ func (a *App) Retry(ctx context.Context, id string) (*v1.AuthoredContentSnapshot
 				return nil, ci.ErrIntegrity
 			}
 		}
-	} else if t.Method != "prepare" || req.(*v1.PrepareContentRequest).Update != nil {
+	} else if t.Method != "prepare" {
 		return nil, ci.ErrIntegrity
 	}
-	if r, ok := req.(*v1.PrepareContentRequest); ok && (ci.ValidatePrepare(r, a.profile.AccountID) != nil || !proto.Equal(r.Content, c)) {
-		return nil, ci.ErrIntegrity
+	if r, ok := req.(*v1.PrepareContentRequest); ok {
+		if ci.ValidatePrepare(r, a.profile.AccountID) != nil || !proto.Equal(r.Content, c) {
+			return nil, ci.ErrIntegrity
+		}
+		if t.BaseID == "" && r.Update != nil {
+			prior, err := a.legacyPrepareBase(ctx, r, false)
+			if err != nil {
+				return nil, err
+			}
+			if err := a.validateReplacement(r, prior); err != nil {
+				return nil, err
+			}
+		}
 	}
 	var old *v1.AuthoredContentSnapshot
 	raw, e := a.store.retained("result", id)

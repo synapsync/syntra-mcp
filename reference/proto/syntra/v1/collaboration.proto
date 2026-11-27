@@ -46,6 +46,8 @@ service MessageService {
   rpc SavePreparedMessage(SavePreparedMessageRequest) returns (SavePreparedMessageResponse);
   rpc PublishMessage(PublishMessageRequest) returns (PublishMessageResponse);
   rpc DiscardPreparedMessage(DiscardPreparedMessageRequest) returns (DiscardPreparedMessageResponse);
+  rpc EditPublishedMessage(EditPublishedMessageRequest) returns (EditPublishedMessageResponse);
+  rpc DeletePublishedMessage(DeletePublishedMessageRequest) returns (DeletePublishedMessageResponse);
   rpc MarkThreadRead(MarkThreadReadRequest) returns (MarkThreadReadResponse);
   rpc MarkReviewed(MarkReviewedRequest) returns (MarkReviewedResponse);
 }
@@ -112,6 +114,8 @@ enum ThreadEventKind {
   // A person was included in a published thread without a message; actor is who added, target_user_id who was added.
   THREAD_EVENT_KIND_PARTICIPANT_ADDED = 10;
   THREAD_EVENT_KIND_THREAD_FORKED = 11;
+  THREAD_EVENT_KIND_MESSAGE_EDITED = 12;
+  THREAD_EVENT_KIND_MESSAGE_DELETED = 13;
 }
 
 // Workspace catalog metadata; writes require current ADMIN. Names are 1..120 scalars/480 bytes, descriptions 0..2000 scalars/8000 bytes.
@@ -184,10 +188,10 @@ message Thread {
   optional string closed_by_user_id = 17;
   google.protobuf.Timestamp closed_at = 18;
   string closure_reason = 19;
-  // Display-only preview, filled by ListThreads only (empty everywhere else): the first 240 Unicode scalar values of the
-  // summary of the latest published message (published visibility) or of the caller's own current prepared message (own-prepared
+  // Display-only preview, filled by ListThreads only (empty everywhere else): up to 240 Unicode scalar values of readable text from the
+  // body of the latest published message (published visibility) or of the caller's own current prepared message (own-prepared
   // visibility). It carries no more authority than the message itself and is never a substitute for reading the message.
-  string summary_preview = 20;
+  string body_excerpt = 20;
   // Published ListThreads only. Up to three distinct participant IDs, with the creator first.
   repeated string participant_preview_user_ids = 21;
   // Published ListThreads only. Counts the creator and the authors and recipients of published messages once each.
@@ -221,9 +225,9 @@ message PreparedMessage {
   string author_user_id = 4;
   reserved 5;
   reserved "recipient_user_id";
-  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
-  string summary = 6;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  reserved 6;
+  reserved "summary";
+  // Free-form Markdown. Required and nonblank for published content. Preserve exact UTF-8 bytes.
   string context_markdown = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
@@ -242,7 +246,7 @@ message PreparedMessage {
   optional string reply_to_message_id = 16;
 }
 
-// Immutable exact published content and server-derived author. Receipt is separate per message/recipient; no global reviewed flag.
+// Current version of the published content and server-derived author. Receipt is separate per message/recipient; no global reviewed flag.
 message PublishedMessage {
   string id = 1;
   // Canonical lowercase non-nil UUID; all resource references must bind to this current workspace.
@@ -252,9 +256,9 @@ message PublishedMessage {
   string author_user_id = 4;
   reserved 5;
   reserved "recipient_user_id";
-  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
-  string summary = 6;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  reserved 6;
+  reserved "summary";
+  // Free-form Markdown. Required and nonblank for published content. Preserve exact UTF-8 bytes.
   string context_markdown = 7;
   google.protobuf.Timestamp published_at = 8;
   // The receipt of the caller when the caller is a recipient, otherwise the primary recipient's receipt.
@@ -265,13 +269,20 @@ message PublishedMessage {
   // Set only when the message was sent to an explicit team that was expanded at send time.
   optional string origin_team_id = 11;
   optional string reply_to_message_id = 12;
-  // The referenced message's author and at most 240 Unicode scalar values of its summary.
+  // The referenced message's author and at most 240 Unicode scalar values of its body as plain text.
   ReplyParentPreview reply_parent_preview = 13;
+  string revision = 14;
+  google.protobuf.Timestamp edited_at = 15;
+  google.protobuf.Timestamp deleted_at = 16;
+  // Human actions on ListMessages and edit/delete responses. Rechecked inside each mutation.
+  bool can_edit = 17;
+  bool can_delete = 18;
 }
 
 message ReplyParentPreview {
   string author_user_id = 1;
-  string summary_preview = 2;
+  string body_excerpt = 2;
+  bool deleted = 3;
 }
 
 // One member of a message's recipient set. Receipt facts are per recipient and independent.
@@ -500,9 +511,9 @@ message CreateThreadRequest {
   string title = 4;
   // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
   string recipient_user_id = 6;
-  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
-  string summary = 7;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  reserved 7;
+  reserved "summary";
+  // Free-form Markdown. Required and nonblank for published content. Preserve exact UTF-8 bytes.
   string context_markdown = 8;
   // Canonical UUID; retry key binds method/actor/workspace and exact canonical payload for resource lifetime.
   string request_id = 9;
@@ -638,9 +649,9 @@ message SavePreparedMessageRequest {
   optional string prepared_message_id = 3;
   // Exactly one explicit application user UUID; must be an active enabled member at save/publication.
   string recipient_user_id = 4;
-  // UI label Resumen. Prepared: 0..2000 scalars/8000 bytes; publication requires nonblank. Preserve exact UTF-8.
-  string summary = 5;
-  // Free-form Markdown, 0..65536 UTF-8 bytes in prepared messages; publication requires nonblank. Preserve exact bytes, no template/normalization.
+  reserved 5;
+  reserved "summary";
+  // Free-form Markdown. Required and nonblank for published content. Preserve exact UTF-8 bytes.
   string context_markdown = 6;
   // Exact prepared message revision; absent only on prepared-message creation.
   optional string expected_prepared_message_revision = 7;
@@ -670,7 +681,7 @@ message PublishMessageRequest {
   string request_id = 6;
 }
 
-// Published content is immutable; later publication preserves nonclosed lifecycle state and advances thread revision.
+// Later publication preserves nonclosed lifecycle state and advances thread revision.
 message PublishMessageResponse {
   Thread thread = 1;
   PublishedMessage message = 2;
@@ -768,4 +779,30 @@ message GetOverviewRequest {
 
 message GetOverviewResponse {
   Overview overview = 1;
+}
+
+message EditPublishedMessageRequest {
+  string workspace_id = 1;
+  string thread_id = 2;
+  string message_id = 3;
+  string request_id = 4;
+  string expected_revision = 5;
+  reserved 6;
+  reserved "summary";
+  string context_markdown = 7;
+}
+message EditPublishedMessageResponse {
+  PublishedMessage message = 1;
+  bool replayed = 2;
+}
+message DeletePublishedMessageRequest {
+  string workspace_id = 1;
+  string thread_id = 2;
+  string message_id = 3;
+  string request_id = 4;
+  string expected_revision = 5;
+}
+message DeletePublishedMessageResponse {
+  PublishedMessage message = 1;
+  bool replayed = 2;
 }

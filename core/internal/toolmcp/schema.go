@@ -75,7 +75,7 @@ func toolDefinition(name string) *mcp.Tool {
 		switch name {
 		case "prepare":
 			request = &v1.PrepareContentRequest{}
-			description = "Prepare private content, no send. For an anchored reply set content.replyToMessageId and content.formatVersion to 2. For replies copy thread revision to request.expectedThreadRevision (beside content). Example: {\"request\":{\"requestId\":\"UUID\",\"expectedThreadRevision\":\"THREAD_REVISION\",\"content\":{\"formatVersion\":1,\"expectedAuthorUserId\":\"ACCOUNT_UUID\",\"workspaceId\":\"WORKSPACE_UUID\",\"existingThreadId\":\"THREAD_UUID\",\"title\":\"Title\",\"originalDestinationIntent\":\"Alex\",\"destination\":{\"linkedMemberId\":\"MEMBER_UUID\"},\"summary\":\"Summary\",\"contextMarkdown\":\"Context\"}}}. CLI: syntra prepare --template reply --workspace UUID --thread UUID."
+			description = "Prepare private content, no send. For an anchored reply set content.replyToMessageId in format v3. For replies copy thread revision to request.expectedThreadRevision (beside content). Example: {\"request\":{\"requestId\":\"UUID\",\"expectedThreadRevision\":\"THREAD_REVISION\",\"content\":{\"formatVersion\":3,\"expectedAuthorUserId\":\"ACCOUNT_UUID\",\"workspaceId\":\"WORKSPACE_UUID\",\"existingThreadId\":\"THREAD_UUID\",\"title\":\"Title\",\"originalDestinationIntent\":\"Alex\",\"destination\":{\"linkedMemberId\":\"MEMBER_UUID\"},\"contextMarkdown\":\"Context\"}}}. CLI: syntra prepare --template reply --workspace UUID --thread UUID."
 		case "link":
 			request = &v1.LinkContentRequest{}
 			description = "Explicitly link private unlinked content to a real authorized member; preserves original intent and every other byte. Never publishes."
@@ -101,7 +101,7 @@ func toolDefinition(name string) *mcp.Tool {
 	examples := map[string]string{
 		"resolve": `{"workspace":"Acme","project":"Backend","recipient":"Alex"}`,
 		"thread":  `{"workspaceId":"44444444-4444-4444-8444-444444444444","threadId":"77777777-7777-4777-8777-777777777777"}`,
-		"link":    `{"base":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","request":{"requestId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","current":{"threadId":"77777777-7777-4777-8777-777777777777","preparedMessageId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedPreparedMessageRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedContentDigest":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},"linkedContent":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"44444444-4444-4444-8444-444444444444","title":"Title","originalDestinationIntent":"Alex","destination":{"linkedMemberId":"88888888-8888-4888-8888-888888888888"},"summary":"Summary","contextMarkdown":"Context"}}}`,
+		"link":    `{"base":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","request":{"requestId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","current":{"threadId":"77777777-7777-4777-8777-777777777777","preparedMessageId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedPreparedMessageRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedContentDigest":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},"linkedContent":{"formatVersion":3,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"44444444-4444-4444-8444-444444444444","title":"Title","originalDestinationIntent":"Alex","destination":{"linkedMemberId":"88888888-8888-4888-8888-888888888888"},"contextMarkdown":"Context"}}}`,
 		"publish": `{"base":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","request":{"requestId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","workspaceId":"44444444-4444-4444-8444-444444444444","expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","current":{"threadId":"77777777-7777-4777-8777-777777777777","preparedMessageId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","expectedThreadRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedPreparedMessageRevision":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","expectedContentDigest":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}}}`,
 	}
 	if example, ok := examples[name]; ok {
@@ -114,6 +114,9 @@ func messageSchema(d protoreflect.MessageDescriptor) map[string]any {
 	properties := map[string]any{}
 	for i := 0; i < d.Fields().Len(); i++ {
 		f := d.Fields().Get(i)
+		if f.JSONName() == "summary" {
+			continue
+		}
 		var schema any
 		switch f.Kind() {
 		case protoreflect.MessageKind:
@@ -164,7 +167,7 @@ func messageSchema(d protoreflect.MessageDescriptor) map[string]any {
 
 func fieldDescription(name string) string {
 	descriptions := map[string]string{
-		"formatVersion": "Use 1 without replyToMessageId or 2 with replyToMessageId.", "workspaceId": "Required authorized workspace UUID.", "projectId": "Optional project UUID; omit if none.", "existingThreadId": "Existing thread UUID for a reply; omit for a new thread.", "replyToMessageId": "Optional published message UUID in existingThreadId. Requires formatVersion 2. The anchor is bound by the content digest.", "title": "Required exact thread title.", "originalDestinationIntent": "Required human-readable original recipient intent.", "destination": "Required target; exactly one of linkedMemberId (one person), linkedMemberSet (2 to 10 distinct people), teamId (an explicit team, expanded to its active members when sent), replyAll (true; replies only: every other participant of the thread, expanded when sent) or unlinkedLabel.", "replyAll": "Only true, only with existingThreadId: addresses every other participant of the thread (its creator and the authors and recipients of its published messages), expanded when sent and limited by the global recipient limit.", "linkedMemberId": "Authorized destination member user UUID; required to publish.", "linkedMemberSet": "Two to ten distinct authorized member UUIDs in display order; every recipient sees the others.", "memberIds": "Distinct authorized member user UUIDs (2 to 10).", "teamId": "Explicit workspace team UUID. The team is expanded to its active members at send time; changed rosters require a fresh preparation.", "unlinkedLabel": "Nonempty unresolved recipient name; remains private until explicitly linked.", "summary": "Required nonempty human-readable summary.", "contextMarkdown": "Free-form context; empty string is allowed. Plain text, Markdown (tables, code blocks, task lists, links) and a safe inline HTML subset (details, kbd, tables) are rendered by the web app; scripts, styles, iframes, forms and images are removed. Keep it readable, not a web page.", "current": "Required exact retained private prepared message expectation for link or publish.", "update": "Optional exact retained private prepared message expectation for a replacement.", "linkedContent": "Exact retained content with only destination changed to linkedMemberId.", "threadId": "Thread UUID from the retained snapshot receipt.", "preparedMessageId": "Private prepared UUID from the retained snapshot.", "provider": "Optional unverified provider assertion.", "model": "Optional unverified model assertion.", "tool": "Optional unverified tool assertion.", "run": "Optional unverified run assertion.", "clientReported": "Optional unverified provider/model/tool/run assertions.", "publishedMessageId": "Published message UUID; mutually exclusive with preparedMessage.", "preparedMessage": "Private prepared identifier and exact revision; mutually exclusive with publishedMessageId.", "revision": "Opaque private prepared message revision from the retained snapshot.",
+		"formatVersion": "Use 3 for new messages and replies.", "workspaceId": "Required authorized workspace UUID.", "projectId": "Optional project UUID; omit if none.", "existingThreadId": "Existing thread UUID for a reply; omit for a new thread.", "replyToMessageId": "Optional published message UUID in existingThreadId. The anchor is bound by the content digest.", "title": "Required exact thread title.", "originalDestinationIntent": "Required human-readable original recipient intent.", "destination": "Required target; exactly one of linkedMemberId (one person), linkedMemberSet (2 to 10 distinct people), teamId (an explicit team, expanded to its active members when sent), replyAll (true; replies only: every other participant of the thread, expanded when sent) or unlinkedLabel.", "replyAll": "Only true, only with existingThreadId: addresses every other participant of the thread (its creator and the authors and recipients of its published messages), expanded when sent and limited by the global recipient limit.", "linkedMemberId": "Authorized destination member user UUID; required to publish.", "linkedMemberSet": "Two to ten distinct authorized member UUIDs in display order; every recipient sees the others.", "memberIds": "Distinct authorized member user UUIDs (2 to 10).", "teamId": "Explicit workspace team UUID. The team is expanded to its active members at send time; changed rosters require a fresh preparation.", "unlinkedLabel": "Nonempty unresolved recipient name; remains private until explicitly linked.", "contextMarkdown": "Required nonblank message body in free-form Markdown. Plain text, Markdown (tables, code blocks, task lists, links) and a safe inline HTML subset (details, kbd, tables) are rendered by the web app; scripts, styles, iframes, forms and images are removed. Keep it readable, not a web page.", "current": "Required exact retained private prepared message expectation for link or publish.", "update": "Optional exact private prepared message expectation for a replacement. An omitted base can recover a current legacy v1/v2 preparation.", "linkedContent": "Exact retained content with only destination changed to linkedMemberId.", "threadId": "Thread UUID from the retained snapshot receipt.", "preparedMessageId": "Private prepared UUID from the retained snapshot.", "provider": "Optional unverified provider assertion.", "model": "Optional unverified model assertion.", "tool": "Optional unverified tool assertion.", "run": "Optional unverified run assertion.", "clientReported": "Optional unverified provider/model/tool/run assertions.", "publishedMessageId": "Published message UUID; mutually exclusive with preparedMessage.", "preparedMessage": "Private prepared identifier and exact revision; mutually exclusive with publishedMessageId.", "revision": "Opaque private prepared message revision from the retained snapshot.",
 	}
 	if d, ok := descriptions[name]; ok {
 		return d
@@ -175,6 +178,9 @@ func fieldExample(name string, kind protoreflect.Kind) any {
 	if kind == protoreflect.MessageKind {
 		return map[string]any{}
 	}
+	if name == "formatVersion" {
+		return 3
+	}
 	if kind == protoreflect.Uint32Kind || kind == protoreflect.Int32Kind {
 		return 1
 	}
@@ -183,8 +189,6 @@ func fieldExample(name string, kind protoreflect.Kind) any {
 		return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	case "expectedContentDigest":
 		return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-	case "summary":
-		return "Summary"
 	case "contextMarkdown":
 		return "Context"
 	case "title":
@@ -205,7 +209,7 @@ func exampleMessage(d protoreflect.MessageDescriptor) map[string]any {
 	const request = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 	const revision = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	const digest = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-	content := map[string]any{"formatVersion": 1, "expectedAuthorUserId": account, "workspaceId": workspace, "title": "Title", "originalDestinationIntent": "Alex", "destination": map[string]any{"linkedMemberId": account}, "summary": "Summary", "contextMarkdown": "Context"}
+	content := map[string]any{"formatVersion": 3, "expectedAuthorUserId": account, "workspaceId": workspace, "title": "Title", "originalDestinationIntent": "Alex", "destination": map[string]any{"linkedMemberId": account}, "contextMarkdown": "Context"}
 	current := map[string]any{"threadId": "77777777-7777-4777-8777-777777777777", "preparedMessageId": "88888888-8888-4888-8888-888888888888", "expectedThreadRevision": revision, "expectedPreparedMessageRevision": revision, "expectedContentDigest": digest}
 	switch d.Name() {
 	case "ContentDestination":

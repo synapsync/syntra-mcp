@@ -35,9 +35,16 @@ const (
 	ForkParticipantLimit       Reason = "FORK_PARTICIPANT_LIMIT"
 	ForkSourcePending          Reason = "FORK_SOURCE_PENDING"
 	AnchorUnavailable          Reason = "ANCHOR_UNAVAILABLE"
+	ForkExtraMemberIneligible  Reason = "FORK_EXTRA_MEMBER_INELIGIBLE"
 	ForkSourceMemberInactive   Reason = "FORK_SOURCE_MEMBER_INACTIVE"
 	ForkWorkspaceUnavailable   Reason = "FORK_WORKSPACE_UNAVAILABLE"
 	ReplyParticipationRequired Reason = "REPLY_PARTICIPATION_REQUIRED"
+)
+
+const (
+	LegacyContentFormat Reason = "LEGACY_CONTENT_FORMAT"
+	MessageHasNoTitle   Reason = "MESSAGE_HAS_NO_TITLE"
+	MessageBodyRequired Reason = "MESSAGE_BODY_REQUIRED"
 )
 
 type guidance struct {
@@ -46,9 +53,13 @@ type guidance struct {
 }
 
 var reasons = map[Reason]guidance{
+	LegacyContentFormat:                    {connect.CodeFailedPrecondition, "New writes require authored content format v3. Upgrade your client and re-prepare the message from the current private preparation before linking or sending."},
+	MessageHasNoTitle:                      {connect.CodeInvalidArgument, "Messages have no title. Put your text in contextMarkdown."},
+	MessageBodyRequired:                    {connect.CodeInvalidArgument, "Enter a nonblank message body in contextMarkdown."},
 	ForkParticipantLimit:                   {connect.CodeInvalidArgument, "The fork participant limit is 11 including the creator; select a smaller explicit list of source participants with --source-member or sourceMemberIds, or use --no-source-members or an empty sourceMemberIds array. Reduce extra members if needed."},
 	ForkSourcePending:                      {connect.CodeFailedPrecondition, "Publish the source thread's initial message before forking from it."},
 	AnchorUnavailable:                      {connect.CodeNotFound, "Choose a published message from the selected thread. Use syntra messages or the MCP messages tool to find its message ID."},
+	ForkExtraMemberIneligible:              {connect.CodeFailedPrecondition, "Select only active extra members of the workspace. Refresh the member list before retrying."},
 	ForkSourceMemberInactive:               {connect.CodeFailedPrecondition, "Select only active participants of the source thread with --source-member or sourceMemberIds. Use syntra thread or the MCP thread tool to check its participants."},
 	ForkWorkspaceUnavailable:               {connect.CodeNotFound, "Choose a workspace where your connected account is an active member. Check syntra workspaces or the MCP workspaces tool."},
 	ReplyParticipationRequired:             {connect.CodePermissionDenied, "To reply, your connected account must be a thread participant or workspace administrator. Ask a participant or administrator to add you to the thread."},
@@ -58,11 +69,11 @@ var reasons = map[Reason]guidance{
 	ProjectMismatch:                        {connect.CodeFailedPrecondition, "The reply project differs from the thread's project. Copy the exact projectId from syntra thread, or omit it if the thread has no project. Use syntra prepare --template reply to fill it automatically."},
 	StaleThreadRevision:                    {connect.CodeAborted, "The thread revision is stale. Re-read it with syntra thread and retry with the new revision and a fresh requestId."},
 	StalePreparedMessageRevision:           {connect.CodeAborted, "The prepared revision is stale. Get the current prepared revision with syntra messages --view own-prepared, read it with syntra snapshot, and retry with the current verified base and a fresh requestId."},
-	NotAuthoredPrepared:                    {connect.CodeFailedPrecondition, "The private prepared does not use authored content v1. Use syntra prepare to create a new authored prepared."},
+	NotAuthoredPrepared:                    {connect.CodeFailedPrecondition, "The private prepared does not use the authored-content workflow. Use syntra prepare to create a new authored prepared."},
 	RecipientNotEligible:                   {connect.CodeNotFound, "The recorded recipient is no longer eligible for this workspace. Check syntra members, then prepare a new prepared for an eligible recipient."},
 	InitialPreparedMessageAlreadyPublished: {connect.CodeFailedPrecondition, "This initial prepared cannot be published on an already published thread. Use syntra thread to refresh the state, then prepare a reply with syntra prepare --template reply."},
 	RecipientNotLinked:                     {connect.CodeInvalidArgument, "The prepared has no linked recipient. Resolve an active recipient with syntra members and link the prepared with syntra link before publishing."},
-	PreparedRoutingChange:                  {connect.CodeInvalidArgument, "A prepared update may change only the summary and Markdown. Keep its thread, title, project and recipient unchanged, or prepare a new prepared."},
+	PreparedRoutingChange:                  {connect.CodeInvalidArgument, "A prepared update may change only the Markdown body. Keep its thread, title, project and recipient unchanged, or prepare a new prepared."},
 	PreparedAlreadyLinked:                  {connect.CodeInvalidArgument, "The private prepared already has a linked recipient. Publish the current prepared if it has the intended recipient, or prepare a new prepared for a different person."},
 	LinkContentChange:                      {connect.CodeInvalidArgument, "Linking may change only the prepared's destination. Copy the verified base content exactly and replace the destination with the selected linked member."},
 	RecipientLimitExceeded:                 {connect.CodeInvalidArgument, "The destination names more recipients than the configured per-message recipient limit allows. Address fewer people, or send separate messages. Nothing was written."},

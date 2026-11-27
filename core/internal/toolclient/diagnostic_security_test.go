@@ -30,7 +30,7 @@ func TestNestedDiagnosticPathsAndSuggestion(t *testing.T) {
 		{`{"content":{"destination":{"unknowne":"secret"}}}`, "request.content.destination", &v1.PrepareContentRequest{}},
 		{`{"update":{"preparedMessageId":null}}`, "request.update.preparedMessageId", &v1.PrepareContentRequest{}},
 		{`{"linkedContent":{"destination":{"linkedMemberId":null}}}`, "request.linkedContent.destination.linkedMemberId", &v1.LinkContentRequest{}},
-		{`{"content":{"summry":"value"}}`, "did you mean summary?", &v1.PrepareContentRequest{}},
+		{`{"content":{"titel":"value"}}`, "did you mean title?", &v1.PrepareContentRequest{}},
 	}
 	for _, c := range cases {
 		err := ReadContentInput(strings.NewReader(c.raw), c.target)
@@ -51,6 +51,9 @@ func TestDescriptorLocationsCoverEveryField(t *testing.T) {
 			defer delete(stack, d.FullName())
 			for i := 0; i < d.Fields().Len(); i++ {
 				f := d.Fields().Get(i)
+				if f.JSONName() == "summary" {
+					continue
+				}
 				full := path + "." + f.JSONName()
 				found := false
 				for _, got := range locations[f.JSONName()] {
@@ -71,12 +74,12 @@ func TestDescriptorLocationsCoverEveryField(t *testing.T) {
 }
 func TestNormalizationHelpers(t *testing.T) {
 	q := &v1.PrepareContentRequest{}
-	same := []byte(" { \"content\" : { \"summary\": \"x\" } } ")
+	same := []byte(" { \"content\" : { \"contextMarkdown\": \"x\" } } ")
 	got, err := normalizeRoot(same, "content", "update", nil)
 	if err != nil || !bytes.Equal(got, same) {
 		t.Fatalf("unchanged bytes: %v", err)
 	}
-	if err = rejectDuplicates([]byte(`{"content":{"summary":"x","summary":"y"}}`), q); err == nil || !strings.Contains(err.Error(), "duplicate key summary") {
+	if err = rejectDuplicates([]byte(`{"content":{"contextMarkdown":"x","contextMarkdown":"y"}}`), q); err == nil || !strings.Contains(err.Error(), "duplicate key contextMarkdown") {
 		t.Fatal(err)
 	}
 	root := map[string]json.RawMessage{}

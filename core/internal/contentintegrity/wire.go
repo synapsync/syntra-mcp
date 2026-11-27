@@ -64,8 +64,16 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 		return Content{}, ErrWire
 	}
 	c := Content{FormatVersion: m.FormatVersion, ExpectedAuthorUserID: m.ExpectedAuthorUserId, WorkspaceID: m.WorkspaceId, ProjectID: m.ProjectId, ExistingThreadID: m.ExistingThreadId, Title: m.Title, OriginalDestinationIntent: m.OriginalDestinationIntent, Summary: m.Summary, ContextMarkdown: m.ContextMarkdown, ReplyToMessageID: m.ReplyToMessageId}
-	if c.FormatVersion != 1 && c.FormatVersion != 2 {
+	if c.FormatVersion < 1 || c.FormatVersion > CurrentFormat {
 		return Content{}, invalidField("content.formatVersion")
+	}
+	if c.FormatVersion == CurrentFormat {
+		if c.Summary != "" {
+			return Content{}, actionable.New(actionable.MessageHasNoTitle)
+		}
+		if strings.TrimSpace(c.ContextMarkdown) == "" {
+			return Content{}, actionable.New(actionable.MessageBodyRequired)
+		}
 	}
 	for _, f := range []struct {
 		name, value string
@@ -74,7 +82,7 @@ func FromProto(m *v1.AuthoredContent) (Content, error) {
 	}{
 		{"content.title", c.Title, 1024, false},
 		{"content.originalDestinationIntent", c.OriginalDestinationIntent, 1024, false},
-		{"content.summary", c.Summary, 8192, false},
+		{"content.summary", c.Summary, 8192, c.FormatVersion == CurrentFormat},
 		{"content.contextMarkdown", c.ContextMarkdown, 131072, true},
 	} {
 		if len(f.value) > f.max || (!f.empty && len(f.value) == 0) || !utf8.ValidString(f.value) || strings.ContainsRune(f.value, 0) {
@@ -227,8 +235,7 @@ func validatePrepareUpdate(r *v1.PrepareContentRequest, prior *v1.AuthoredConten
 }
 
 // ValidateDraftReplacement lets an unsent initial draft change everything an author chose
-// (title, destination and its intent, summary, Markdown) but never its identity:
-// format, author, workspace or the thread it replies to.
+// (title, destination and its intent, Markdown) while keeping the author, workspace and thread binding.
 func ValidateDraftReplacement(prior, next *v1.AuthoredContent) error {
 	if _, e := FromProto(prior); e != nil {
 		return e
@@ -240,7 +247,7 @@ func ValidateDraftReplacement(prior, next *v1.AuthoredContent) error {
 	copy.Title = next.Title
 	copy.OriginalDestinationIntent = next.OriginalDestinationIntent
 	copy.Destination = next.Destination
-	copy.Summary = next.Summary
+	upgradeLegacyReplacement(copy, next)
 	copy.ContextMarkdown = next.ContextMarkdown
 	if !proto.Equal(copy, next) {
 		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.PreparedRoutingChange))
@@ -248,7 +255,7 @@ func ValidateDraftReplacement(prior, next *v1.AuthoredContent) error {
 	return nil
 }
 
-// ValidateReplacement restricts Prepare updates to exact summary/Markdown edits.
+// ValidateReplacement restricts Prepare updates to exact Markdown edits.
 // Changing routing, subject, intent or recipient is not an incidental prepared edit.
 func ValidateReplacement(prior, next *v1.AuthoredContent) error {
 	if _, e := FromProto(prior); e != nil {
@@ -258,12 +265,23 @@ func ValidateReplacement(prior, next *v1.AuthoredContent) error {
 		return e
 	}
 	copy := proto.Clone(prior).(*v1.AuthoredContent)
-	copy.Summary = next.Summary
+	upgradeLegacyReplacement(copy, next)
 	copy.ContextMarkdown = next.ContextMarkdown
 	if !proto.Equal(copy, next) {
 		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.PreparedRoutingChange))
 	}
 	return nil
+}
+
+// A legacy preparation can be replaced with the current format. Its original
+// digest is verified separately and its stored preimage remains untouched.
+func upgradeLegacyReplacement(copy, next *v1.AuthoredContent) {
+	if copy.FormatVersion < CurrentFormat && next.FormatVersion == CurrentFormat {
+		copy.FormatVersion = CurrentFormat
+		copy.Summary = ""
+	} else if next.FormatVersion < CurrentFormat {
+		copy.Summary = next.Summary
+	}
 }
 
 // ValidateLink requires the retained preimage; only destination may change.
@@ -288,6 +306,9 @@ func ValidateLink(r *v1.LinkContentRequest, prior *v1.AuthoredContent, owner str
 		return ErrWire
 	}
 	copy := proto.Clone(prior).(*v1.AuthoredContent)
+	if prior.FormatVersion < CurrentFormat && r.LinkedContent.FormatVersion == CurrentFormat {
+		return actionable.New(actionable.LegacyContentFormat)
+	}
 	copy.Destination = proto.Clone(r.LinkedContent.Destination).(*v1.ContentDestination)
 	if !proto.Equal(copy, r.LinkedContent) {
 		return fmt.Errorf("%w: %w", ErrWire, actionable.New(actionable.LinkContentChange))

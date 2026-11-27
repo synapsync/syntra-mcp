@@ -261,9 +261,12 @@ type AuthoredContent struct {
 	Title                     string                 `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
 	OriginalDestinationIntent string                 `protobuf:"bytes,8,opt,name=original_destination_intent,json=originalDestinationIntent,proto3" json:"original_destination_intent,omitempty"`
 	Destination               *ContentDestination    `protobuf:"bytes,9,opt,name=destination,proto3" json:"destination,omitempty"`
-	Summary                   string                 `protobuf:"bytes,10,opt,name=summary,proto3" json:"summary,omitempty"`
-	ContextMarkdown           string                 `protobuf:"bytes,11,opt,name=context_markdown,json=contextMarkdown,proto3" json:"context_markdown,omitempty"`
-	// Present only in format v2 and only for replies to a published message in existing_thread_id.
+	// Legacy digest and retry compatibility only. Must be empty in format v3.
+	//
+	// Deprecated: Marked as deprecated in syntra/v1/authored_content.proto.
+	Summary         string `protobuf:"bytes,10,opt,name=summary,proto3" json:"summary,omitempty"`
+	ContextMarkdown string `protobuf:"bytes,11,opt,name=context_markdown,json=contextMarkdown,proto3" json:"context_markdown,omitempty"`
+	// Required in format v2 and optional in v3. An anchor must identify a published message in existing_thread_id.
 	ReplyToMessageId *string `protobuf:"bytes,12,opt,name=reply_to_message_id,json=replyToMessageId,proto3,oneof" json:"reply_to_message_id,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -355,6 +358,7 @@ func (x *AuthoredContent) GetDestination() *ContentDestination {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in syntra/v1/authored_content.proto.
 func (x *AuthoredContent) GetSummary() string {
 	if x != nil {
 		return x.Summary
@@ -569,7 +573,7 @@ const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	"\x06target\"0\n" +
 	"\x0fLinkedMemberSet\x12\x1d\n" +
 	"\n" +
-	"member_ids\x18\x01 \x03(\tR\tmemberIds\"\xb7\x04\n" +
+	"member_ids\x18\x01 \x03(\tR\tmemberIds\"\xbb\x04\n" +
 	"\x0fAuthoredContent\x12%\n" +
 	"\x0eformat_version\x18\x01 \x01(\rR\rformatVersion\x125\n" +
 	"\x17expected_author_user_id\x18\x02 \x01(\tR\x14expectedAuthorUserId\x12!\n" +
@@ -579,9 +583,9 @@ const file_syntra_v1_authored_content_proto_rawDesc = "" +
 	"\x12existing_thread_id\x18\x06 \x01(\tH\x01R\x10existingThreadId\x88\x01\x01\x12\x14\n" +
 	"\x05title\x18\a \x01(\tR\x05title\x12>\n" +
 	"\x1boriginal_destination_intent\x18\b \x01(\tR\x19originalDestinationIntent\x12?\n" +
-	"\vdestination\x18\t \x01(\v2\x1d.syntra.v1.ContentDestinationR\vdestination\x12\x18\n" +
+	"\vdestination\x18\t \x01(\v2\x1d.syntra.v1.ContentDestinationR\vdestination\x12\x1c\n" +
 	"\asummary\x18\n" +
-	" \x01(\tR\asummary\x12)\n" +
+	" \x01(\tB\x02\x18\x01R\asummary\x12)\n" +
 	"\x10context_markdown\x18\v \x01(\tR\x0fcontextMarkdown\x122\n" +
 	"\x13reply_to_message_id\x18\f \x01(\tH\x02R\x10replyToMessageId\x88\x01\x01B\r\n" +
 	"\v_project_idB\x15\n" +

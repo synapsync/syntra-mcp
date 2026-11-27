@@ -28,7 +28,7 @@ func TestBadInputBeforeProfile(t *testing.T) {
 			}
 		})
 	}
-	out, err := exec.Command(binary, "reply", "--profile-dir", profile, "--workspace", "44444444-4444-4444-8444-444444444444", "--thread", "77777777-7777-4777-8777-777777777777", "--summary", "hello", "--context-file", filepath.Join(root, "absent")).CombinedOutput()
+	out, err := exec.Command(binary, "reply", "--profile-dir", profile, "--workspace", "44444444-4444-4444-8444-444444444444", "--thread", "77777777-7777-4777-8777-777777777777", "--context-file", filepath.Join(root, "absent")).CombinedOutput()
 	if err == nil || !strings.Contains(string(out), "context file unavailable") || strings.Contains(string(out), "profile") {
 		t.Fatalf("reply: %v %s", err, out)
 	}
@@ -48,7 +48,7 @@ func TestBadInputBeforeProfile(t *testing.T) {
 		t.Fatalf("input validation touched profile: %v", err)
 	}
 	valid := filepath.Join(root, "valid.json")
-	if err = os.WriteFile(valid, []byte(`{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":1,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"44444444-4444-4444-8444-444444444444","title":"Title","originalDestinationIntent":"Alex","summary":"Summary","destination":{"unlinkedLabel":"Alex"}}}`), 0600); err != nil {
+	if err = os.WriteFile(valid, []byte(`{"requestId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","content":{"formatVersion":3,"expectedAuthorUserId":"11111111-1111-4111-8111-111111111111","workspaceId":"44444444-4444-4444-8444-444444444444","title":"Title","originalDestinationIntent":"Alex","contextMarkdown":"Body","destination":{"unlinkedLabel":"Alex"}}}`), 0600); err != nil {
 		t.Fatal(err)
 	}
 	out, err = exec.Command(binary, "prepare", "--profile-dir", profile, "--file", valid).CombinedOutput()
