@@ -50,6 +50,7 @@ service MessageService {
   rpc DeletePublishedMessage(DeletePublishedMessageRequest) returns (DeletePublishedMessageResponse);
   rpc MarkThreadRead(MarkThreadReadRequest) returns (MarkThreadReadResponse);
   rpc MarkReviewed(MarkReviewedRequest) returns (MarkReviewedResponse);
+  rpc SetMessageReaction(SetMessageReactionRequest) returns (SetMessageReactionResponse);
 }
 
 // InboxService uses current workspace authorization on every request and retry.
@@ -207,6 +208,9 @@ message Thread {
   uint64 message_count = 25;
   // Direct source only. Its messages remain in the source thread.
   ThreadForkOrigin forked_from = 26;
+  // Published ListThreads only. Publication time of the message used for body_excerpt.
+  // Absent when the thread has no non-withdrawn published message of its own.
+  optional google.protobuf.Timestamp last_message_published_at = 27;
 }
 
 message ThreadForkOrigin {
@@ -277,6 +281,36 @@ message PublishedMessage {
   // Human actions on ListMessages and edit/delete responses. Rechecked inside each mutation.
   bool can_edit = 17;
   bool can_delete = 18;
+  repeated MessageReactionSummary reactions = 19;
+}
+
+enum MessageReactionEmoji {
+  MESSAGE_REACTION_EMOJI_UNSPECIFIED = 0;
+  MESSAGE_REACTION_EMOJI_THUMBS_UP = 1;
+  MESSAGE_REACTION_EMOJI_EYES = 2;
+  MESSAGE_REACTION_EMOJI_HEART = 3;
+  MESSAGE_REACTION_EMOJI_THANKS = 4;
+  MESSAGE_REACTION_EMOJI_LAUGH = 5;
+  MESSAGE_REACTION_EMOJI_CELEBRATE = 6;
+}
+
+message MessageReactionSummary {
+  MessageReactionEmoji emoji = 1;
+  int32 count = 2;
+  bool reacted_by_me = 3;
+}
+
+message SetMessageReactionRequest {
+  string workspace_id = 1;
+  string thread_id = 2;
+  string message_id = 3;
+  // Omit to remove the caller's current reaction.
+  optional MessageReactionEmoji emoji = 4;
+  string request_id = 5;
+}
+
+message SetMessageReactionResponse {
+  repeated MessageReactionSummary reactions = 1;
 }
 
 message ReplyParentPreview {

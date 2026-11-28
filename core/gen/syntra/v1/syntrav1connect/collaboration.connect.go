@@ -116,6 +116,9 @@ const (
 	// MessageServiceMarkReviewedProcedure is the fully-qualified name of the MessageService's
 	// MarkReviewed RPC.
 	MessageServiceMarkReviewedProcedure = "/syntra.v1.MessageService/MarkReviewed"
+	// MessageServiceSetMessageReactionProcedure is the fully-qualified name of the MessageService's
+	// SetMessageReaction RPC.
+	MessageServiceSetMessageReactionProcedure = "/syntra.v1.MessageService/SetMessageReaction"
 	// InboxServiceListInboxItemsProcedure is the fully-qualified name of the InboxService's
 	// ListInboxItems RPC.
 	InboxServiceListInboxItemsProcedure = "/syntra.v1.InboxService/ListInboxItems"
@@ -685,6 +688,7 @@ type MessageServiceClient interface {
 	DeletePublishedMessage(context.Context, *connect.Request[v1.DeletePublishedMessageRequest]) (*connect.Response[v1.DeletePublishedMessageResponse], error)
 	MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
+	SetMessageReaction(context.Context, *connect.Request[v1.SetMessageReactionRequest]) (*connect.Response[v1.SetMessageReactionResponse], error)
 }
 
 // NewMessageServiceClient constructs a client for the syntra.v1.MessageService service. By default,
@@ -746,6 +750,12 @@ func NewMessageServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(messageServiceMethods.ByName("MarkReviewed")),
 			connect.WithClientOptions(opts...),
 		),
+		setMessageReaction: connect.NewClient[v1.SetMessageReactionRequest, v1.SetMessageReactionResponse](
+			httpClient,
+			baseURL+MessageServiceSetMessageReactionProcedure,
+			connect.WithSchema(messageServiceMethods.ByName("SetMessageReaction")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -759,6 +769,7 @@ type messageServiceClient struct {
 	deletePublishedMessage *connect.Client[v1.DeletePublishedMessageRequest, v1.DeletePublishedMessageResponse]
 	markThreadRead         *connect.Client[v1.MarkThreadReadRequest, v1.MarkThreadReadResponse]
 	markReviewed           *connect.Client[v1.MarkReviewedRequest, v1.MarkReviewedResponse]
+	setMessageReaction     *connect.Client[v1.SetMessageReactionRequest, v1.SetMessageReactionResponse]
 }
 
 // ListMessages calls syntra.v1.MessageService.ListMessages.
@@ -801,6 +812,11 @@ func (c *messageServiceClient) MarkReviewed(ctx context.Context, req *connect.Re
 	return c.markReviewed.CallUnary(ctx, req)
 }
 
+// SetMessageReaction calls syntra.v1.MessageService.SetMessageReaction.
+func (c *messageServiceClient) SetMessageReaction(ctx context.Context, req *connect.Request[v1.SetMessageReactionRequest]) (*connect.Response[v1.SetMessageReactionResponse], error) {
+	return c.setMessageReaction.CallUnary(ctx, req)
+}
+
 // MessageServiceHandler is an implementation of the syntra.v1.MessageService service.
 type MessageServiceHandler interface {
 	ListMessages(context.Context, *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error)
@@ -811,6 +827,7 @@ type MessageServiceHandler interface {
 	DeletePublishedMessage(context.Context, *connect.Request[v1.DeletePublishedMessageRequest]) (*connect.Response[v1.DeletePublishedMessageResponse], error)
 	MarkThreadRead(context.Context, *connect.Request[v1.MarkThreadReadRequest]) (*connect.Response[v1.MarkThreadReadResponse], error)
 	MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error)
+	SetMessageReaction(context.Context, *connect.Request[v1.SetMessageReactionRequest]) (*connect.Response[v1.SetMessageReactionResponse], error)
 }
 
 // NewMessageServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -868,6 +885,12 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 		connect.WithSchema(messageServiceMethods.ByName("MarkReviewed")),
 		connect.WithHandlerOptions(opts...),
 	)
+	messageServiceSetMessageReactionHandler := connect.NewUnaryHandler(
+		MessageServiceSetMessageReactionProcedure,
+		svc.SetMessageReaction,
+		connect.WithSchema(messageServiceMethods.ByName("SetMessageReaction")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/syntra.v1.MessageService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case MessageServiceListMessagesProcedure:
@@ -886,6 +909,8 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect.Handler
 			messageServiceMarkThreadReadHandler.ServeHTTP(w, r)
 		case MessageServiceMarkReviewedProcedure:
 			messageServiceMarkReviewedHandler.ServeHTTP(w, r)
+		case MessageServiceSetMessageReactionProcedure:
+			messageServiceSetMessageReactionHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -925,6 +950,10 @@ func (UnimplementedMessageServiceHandler) MarkThreadRead(context.Context, *conne
 
 func (UnimplementedMessageServiceHandler) MarkReviewed(context.Context, *connect.Request[v1.MarkReviewedRequest]) (*connect.Response[v1.MarkReviewedResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.MarkReviewed is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) SetMessageReaction(context.Context, *connect.Request[v1.SetMessageReactionRequest]) (*connect.Response[v1.SetMessageReactionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("syntra.v1.MessageService.SetMessageReaction is not implemented"))
 }
 
 // InboxServiceClient is a client for the syntra.v1.InboxService service.
