@@ -34,7 +34,7 @@ const HANDOFF_TOOLS = Object.freeze([
   'identity', 'workspaces', 'projects', 'teams', 'members', 'resolve',
   'threads', 'thread', 'messages', 'snapshot', 'prepare', 'link', 'publish', 'discard', 'retry', 'add-participant',
 ]);
-const EXPECTED_TOOLS = Object.freeze([...HANDOFF_TOOLS, 'fork']);
+const EXPECTED_TOOLS = Object.freeze([...HANDOFF_TOOLS, 'fork', 'ancestry']);
 const EXPECTED_EMPTY_PROFILE_ERROR = /No Syntra connection\. Run: syntra login/;
 
 function fail(message) {
