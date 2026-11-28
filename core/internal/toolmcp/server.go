@@ -85,7 +85,38 @@ func openApp(ctx context.Context, cfg Config) (*toolclient.App, func(), error) {
 func toolError(message string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: message}}}
 }
-func result(value any, isError bool) *mcp.CallToolResult {
+
+// readOnlyTool reports whether a tool only reads. Read tools never write, so
+// their failures must not mention retained requests, rollback or retrying.
+func readOnlyTool(name string) bool {
+	switch name {
+	case "prepare", "link", "publish", "discard", "retry", "add-participant", "fork":
+		return false
+	}
+	return true
+}
+
+const (
+	writeOversize = "result exceeds the MCP output bound; no rollback is implied; reuse the same requestId for exact retry"
+	readOversize  = "result exceeds the MCP output bound (1 MiB); nothing was changed. Narrow the request or read the data with the syntra command line in a terminal on this machine."
+	// An MCP result carries the payload twice (text and structured content), so about half of the
+	// bound is available to the data itself, less when it holds many quotes or line breaks.
+	ancestryOversize = "this ancestry is larger than the MCP result bound allows (1 MiB, with the data carried twice, so roughly 500 KB of ancestry JSON). Nothing was changed. Read it with `syntra ancestry` in a terminal on this machine, or read each ancestor with thread and messages."
+	writeFallback    = "operation rejected or response could not be verified; no rollback is implied; reuse the same requestId for exact retry"
+	readFallback     = "the read was rejected or its response could not be verified; nothing was changed. Check the IDs and your access, then try again."
+)
+
+func oversizeMessage(name string) string {
+	switch {
+	case name == "ancestry":
+		return ancestryOversize
+	case readOnlyTool(name):
+		return readOversize
+	}
+	return writeOversize
+}
+
+func result(value any, isError bool, oversize string) *mcp.CallToolResult {
 	var raw []byte
 	var e error
 	if m, ok := value.(proto.Message); ok {
@@ -99,7 +130,7 @@ func result(value any, isError bool) *mcp.CallToolResult {
 	out := &mcp.CallToolResult{IsError: isError, Content: []mcp.Content{&mcp.TextContent{Text: string(raw)}}, StructuredContent: json.RawMessage(raw)}
 	encoded, e := json.Marshal(out)
 	if e != nil || len(encoded) > MaxResultBytes {
-		return toolError("result exceeds the MCP output bound; no rollback is implied; reuse the same requestId for exact retry")
+		return toolError(oversize)
 	}
 	return out
 }
@@ -162,6 +193,8 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 			view = v1.MessageView_MESSAGE_VIEW_OWN_PREPARED
 		}
 		out, e = app.Messages(ctx, args.workspace, args.thread, view)
+	case "ancestry":
+		out, e = app.Ancestry(ctx, args.workspace, args.thread)
 	case "prepare":
 		out, e = app.Prepare(ctx, args.request.(*v1.PrepareContentRequest), args.base)
 	case "link":
@@ -188,7 +221,7 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 	if e != nil {
 		var clarification *toolclient.Clarification
 		if errors.As(e, &clarification) {
-			return result(clarification, true)
+			return result(clarification, true, writeOversize)
 		}
 		if ctx.Err() != nil {
 			return toolError("operation cancelled or deadline exceeded; retain the original requestId for exact retry")
@@ -200,9 +233,12 @@ func handle(parent context.Context, cfg Config, name string, raw json.RawMessage
 		if errors.As(e, &reason) || errors.Is(e, ci.ErrWire) || errors.Is(e, ci.ErrIntegrity) {
 			return toolError(e.Error())
 		}
-		return toolError("operation rejected or response could not be verified; no rollback is implied; reuse the same requestId for exact retry")
+		if readOnlyTool(name) {
+			return toolError(readFallback)
+		}
+		return toolError(writeFallback)
 	}
-	return result(out, false)
+	return result(out, false, oversizeMessage(name))
 }
 
 // Preserve the existing top-level identity fields and add profile diagnostics.
@@ -256,6 +292,8 @@ func decodeArgs(name string, raw json.RawMessage) (arguments, error) {
 	case "messages":
 		required = []string{"workspaceId", "threadId"}
 		optional = []string{"view"}
+	case "ancestry":
+		required = []string{"workspaceId", "threadId"}
 	case "prepare", "snapshot":
 		required = []string{"request"}
 		optional = []string{"base"}

@@ -445,10 +445,21 @@ func (a *App) readThread(ctx context.Context, w, t string) (*v1.Thread, error) {
 		return nil, a.authoredRPCError(e)
 	}
 	if r.Msg.Thread == nil || r.Msg.Thread.Id != t || r.Msg.Thread.WorkspaceId != w {
-		return nil, ErrProfile
+		return nil, errThreadMismatch
 	}
 	return r.Msg.Thread, nil
 }
+
+// errThreadMismatch reports a server record that is not the requested thread. It still
+// matches ErrProfile for callers that test for it, but says what actually went wrong.
+var errThreadMismatch error = threadMismatch{}
+
+type threadMismatch struct{}
+
+func (threadMismatch) Error() string {
+	return "the server returned a different thread or workspace than requested; nothing was used"
+}
+func (threadMismatch) Is(target error) bool { return target == ErrProfile }
 
 // Messages exposes complete read-only published history OR own private prepared messages.
 // Selecting a view is explicit; neither view sets a read/review receipt.

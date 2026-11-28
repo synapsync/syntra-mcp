@@ -19,7 +19,7 @@ import (
 
 func isContentCommand(c string) bool {
 	switch c {
-	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "discard", "retry", "snapshot", "threads", "thread", "messages", "add-participant", "fork":
+	case "workspaces", "projects", "teams", "members", "resolve", "prepare", "reply", "link", "publish", "discard", "retry", "snapshot", "threads", "thread", "messages", "ancestry", "add-participant", "fork":
 		return true
 	}
 	return false
@@ -43,6 +43,7 @@ func runContent(parent context.Context, args []string) error {
 	asTeam := f.Bool("as-team", false, "resolve: address the whole selected --team")
 	thread := f.String("thread", "", "thread ID")
 	view := f.String("view", "published", "messages: published or own-prepared")
+	format := f.String("format", "json", "threads: json (default) or text with each thread's last-message age")
 	var members, sourceMembers []string
 	noSource := f.Bool("no-source-members", false, "fork: select no source participants")
 	title := f.String("title", "", "fork: new thread title")
@@ -73,11 +74,12 @@ func runContent(parent context.Context, args []string) error {
 		allowed["workspace"] = true
 		if args[0] == "threads" {
 			allowed["view"] = true
+			allowed["format"] = true
 		}
 	case "teams":
 		allowed["workspace"] = true
 		allowed["project"] = true
-	case "thread", "messages":
+	case "thread", "messages", "ancestry":
 		if args[0] == "messages" {
 			allowed["view"] = true
 		}
@@ -119,6 +121,9 @@ func runContent(parent context.Context, args []string) error {
 	})
 	if invalid != "" {
 		return fmt.Errorf("option unavailable for this command: --%s. %s", invalid, usage(args[0]))
+	}
+	if args[0] == "threads" && *format != "json" && *format != "text" {
+		return errors.New("invalid --format: use json or text")
 	}
 	if args[0] == "add-participant" && len(members) != 1 {
 		return optionError(args[0], nil)
@@ -270,6 +275,9 @@ func runContent(parent context.Context, args []string) error {
 		}
 		rows, err := app.Threads(ctx, *workspace, v)
 		e = err
+		if e == nil && *format == "text" {
+			return writeThreadsText(os.Stdout, rows, time.Now())
+		}
 		if e == nil {
 			message = &v1.ListThreadsResponse{Threads: rows}
 		}
@@ -281,6 +289,8 @@ func runContent(parent context.Context, args []string) error {
 			return errors.New("invalid explicit message view")
 		}
 		message, e = app.Messages(ctx, *workspace, *thread, v)
+	case "ancestry":
+		result, e = app.Ancestry(ctx, *workspace, *thread)
 	case "thread":
 		var t *v1.Thread
 		t, e = app.Thread(ctx, *workspace, *thread)

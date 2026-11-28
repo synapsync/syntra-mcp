@@ -45,7 +45,7 @@ func TestProjectTeamsArguments(t *testing.T) {
 }
 
 func TestResultBoundIsNotPartialSuccess(t *testing.T) {
-	out := result(map[string]string{"content": strings.Repeat("x", MaxResultBytes)}, false)
+	out := result(map[string]string{"content": strings.Repeat("x", MaxResultBytes)}, false, writeOversize)
 	if !out.IsError {
 		t.Fatal("oversized tool result reported success")
 	}

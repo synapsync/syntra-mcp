@@ -86,6 +86,8 @@ type apiFixture struct {
 	workspaces    []*v1.AccessibleWorkspace
 	publishes     int
 	forks         []*v1.ForkThreadRequest
+	// ancestryMessages > 0 makes the through-anchor read of threadID return that many messages of ancestryBody bytes.
+	ancestryMessages, ancestryBody int
 }
 
 func (f *apiFixture) ForkThread(_ context.Context, r *connect.Request[v1.ForkThreadRequest]) (*connect.Response[v1.ForkThreadResponse], error) {
@@ -187,6 +189,8 @@ func (f *apiFixture) GetThread(_ context.Context, r *connect.Request[v1.GetThrea
 	return connect.NewResponse(&v1.GetThreadResponse{Thread: thread}), nil
 }
 
+var lastMessageAt = time.Now().Add(-3 * time.Hour).UTC().Truncate(time.Second)
+
 const forkReadID = "99999999-9999-4999-8999-999999999999"
 
 func forkOrigin() *v1.ThreadForkOrigin {
@@ -196,11 +200,32 @@ func forkOrigin() *v1.ThreadForkOrigin {
 func (f *apiFixture) ListThreads(_ context.Context, r *connect.Request[v1.ListThreadsRequest]) (*connect.Response[v1.ListThreadsResponse], error) {
 	return connect.NewResponse(&v1.ListThreadsResponse{Threads: []*v1.Thread{
 		{Id: forkReadID, WorkspaceId: r.Msg.WorkspaceId, ForkedFrom: forkOrigin()},
-		{Id: threadID, WorkspaceId: r.Msg.WorkspaceId},
+		{Id: threadID, WorkspaceId: r.Msg.WorkspaceId, LastMessagePublishedAt: timestamppb.New(lastMessageAt)},
 	}}), nil
 }
 
 func (f *apiFixture) ListMessages(_ context.Context, r *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error) {
+	f.mu.Lock()
+	total, body := f.ancestryMessages, f.ancestryBody
+	f.mu.Unlock()
+	if total > 0 && r.Msg.ThroughMessageId != nil {
+		// Newest first, page by page: the token is the number of messages already returned.
+		start, size := 0, int(r.Msg.PageSize)
+		if r.Msg.PageToken != "" {
+			fmt.Sscanf(r.Msg.PageToken, "after:%d", &start)
+		}
+		out := &v1.ListMessagesResponse{}
+		for i := start; i < total && len(out.Messages) < size; i++ {
+			out.Messages = append(out.Messages, &v1.PublishedMessage{
+				Id: fmt.Sprintf("%08x-0000-4000-8000-%012x", total-i, total-i), WorkspaceId: r.Msg.WorkspaceId, ThreadId: r.Msg.ThreadId,
+				ContextMarkdown: strings.Repeat("x", body)})
+			out.NextPageToken = ""
+			if i+1 < total {
+				out.NextPageToken = fmt.Sprintf("after:%d", i+1)
+			}
+		}
+		return connect.NewResponse(out), nil
+	}
 	return connect.NewResponse(&v1.ListMessagesResponse{Messages: []*v1.PublishedMessage{
 		{Id: messageID, WorkspaceId: r.Msg.WorkspaceId, ThreadId: r.Msg.ThreadId},
 		{Id: preparedID, WorkspaceId: r.Msg.WorkspaceId, ThreadId: r.Msg.ThreadId, ReplyToMessageId: str(messageID),
@@ -928,7 +953,7 @@ func TestForkProcessCLIParity(t *testing.T) {
 }
 
 func TestMCPActualProcessCLIParity(t *testing.T) {
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant", "fork"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "ancestry", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant", "fork"}
 	f := fixture(t)
 	p := spawn(t, f)
 	p.init(t)
@@ -1132,13 +1157,13 @@ func TestBrowserCLIRecoveryThenMCPProcess(t *testing.T) {
 	process.next++
 	process.send(t, []byte(fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":"tools/list","params":{}}`, process.next)))
 	listed := process.receive(t)
-	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant", "fork"}
+	expectedTools := []string{"identity", "workspaces", "projects", "teams", "members", "resolve", "threads", "thread", "messages", "ancestry", "snapshot", "prepare", "link", "publish", "discard", "retry", "add-participant", "fork"}
 	var catalog struct {
 		Tools []struct {
 			Name string `json:"name"`
 		} `json:"tools"`
 	}
-	if json.Unmarshal(listed["result"], &catalog) != nil || len(catalog.Tools) != 17 {
+	if json.Unmarshal(listed["result"], &catalog) != nil || len(catalog.Tools) != len(expectedTools) {
 		t.Fatal("browser profile MCP tool allowlist changed", string(listed["result"]))
 	}
 	for _, tool := range catalog.Tools {

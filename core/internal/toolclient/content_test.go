@@ -74,6 +74,7 @@ type contentFixture struct {
 	committed           chan struct{}
 	snapshot            *v1.AuthoredContentSnapshot
 	record              *v1.GetContentSnapshotResponse
+	chain               *ancestryChain
 }
 
 func (f *contentFixture) GetIdentity(context.Context, *connect.Request[v1.GetIdentityRequest]) (*connect.Response[v1.GetIdentityResponse], error) {
@@ -978,6 +979,9 @@ func TestDirectoryAggregateByteBoundAndCursorLoop(t *testing.T) {
 }
 
 func (f *contentFixture) ListMessages(_ context.Context, r *connect.Request[v1.ListMessagesRequest]) (*connect.Response[v1.ListMessagesResponse], error) {
+	if f.chain != nil {
+		return f.chain.listMessages(r.Msg)
+	}
 	if r.Msg.View == v1.MessageView_MESSAGE_VIEW_OWN_PREPARED {
 		return connect.NewResponse(&v1.ListMessagesResponse{PreparedMessages: []*v1.PreparedMessage{{Id: preparedID, WorkspaceId: workspaceID, ThreadId: threadID, AuthorUserId: accountA}}}), nil
 	}
@@ -996,6 +1000,9 @@ func (f *contentFixture) ListThreads(_ context.Context, r *connect.Request[v1.Li
 	return connect.NewResponse(&v1.ListThreadsResponse{Threads: []*v1.Thread{{Id: threadID, WorkspaceId: workspaceID}}}), nil
 }
 func (f *contentFixture) GetThread(_ context.Context, r *connect.Request[v1.GetThreadRequest]) (*connect.Response[v1.GetThreadResponse], error) {
+	if f.chain != nil {
+		return f.chain.getThread(r.Msg)
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.threadReads++
